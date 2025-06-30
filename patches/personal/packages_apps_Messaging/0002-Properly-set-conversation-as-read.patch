@@ -1,4 +1,4 @@
-From 1639299ac4f9611583ea8b267d3bc13bcf9b12e1 Mon Sep 17 00:00:00 2001
+From 91bcd9860d42e5561e07655376f7b1d364f5ad9a Mon Sep 17 00:00:00 2001
 From: Luca Stefani <luca.stefani.ge1@gmail.com>
 Date: Sat, 28 Mar 2020 15:10:57 +0100
 Subject: [PATCH 2/2] Properly set conversation as read
@@ -18,10 +18,10 @@ Change-Id: I468e0d50f82129a029fb1f27bb9fa4fec45f2945
  6 files changed, 23 insertions(+), 26 deletions(-)
 
 diff --git a/src/com/android/messaging/datamodel/BugleNotifications.java b/src/com/android/messaging/datamodel/BugleNotifications.java
-index 3610788a..243d6a0d 100644
+index 37030d7f..7e7ed9f5 100644
 --- a/src/com/android/messaging/datamodel/BugleNotifications.java
 +++ b/src/com/android/messaging/datamodel/BugleNotifications.java
-@@ -823,11 +823,25 @@ public class BugleNotifications {
+@@ -810,11 +810,25 @@ public class BugleNotifications {
  
      private static void addReadAction(final NotificationCompat.Builder notifBuilder,
              final WearableExtender wearableExtender, final NotificationState notificationState) {
@@ -49,10 +49,10 @@ index 3610788a..243d6a0d 100644
  
          // Support the action on a wearable device as well
 diff --git a/src/com/android/messaging/datamodel/MessageNotificationState.java b/src/com/android/messaging/datamodel/MessageNotificationState.java
-index 66d6cf5b..575e3166 100644
+index e96f6058..cece0721 100644
 --- a/src/com/android/messaging/datamodel/MessageNotificationState.java
 +++ b/src/com/android/messaging/datamodel/MessageNotificationState.java
-@@ -335,14 +335,6 @@ public abstract class MessageNotificationState extends NotificationState {
+@@ -327,14 +327,6 @@ public abstract class MessageNotificationState extends NotificationState {
                      getClearIntentRequestCode());
      }
  
@@ -68,7 +68,7 @@ index 66d6cf5b..575e3166 100644
       * Notification for multiple messages in at least 2 different conversations.
       */
 diff --git a/src/com/android/messaging/datamodel/NotificationState.java b/src/com/android/messaging/datamodel/NotificationState.java
-index f425551d..abbb41a1 100644
+index 8a109a88..03b832eb 100644
 --- a/src/com/android/messaging/datamodel/NotificationState.java
 +++ b/src/com/android/messaging/datamodel/NotificationState.java
 @@ -80,11 +80,6 @@ public abstract class NotificationState {
@@ -84,10 +84,10 @@ index f425551d..abbb41a1 100644
          return null;
      }
 diff --git a/src/com/android/messaging/receiver/NotificationReceiver.java b/src/com/android/messaging/receiver/NotificationReceiver.java
-index f87779c1..ae30f03a 100644
+index 141c0ea1..98e1d5c3 100644
 --- a/src/com/android/messaging/receiver/NotificationReceiver.java
 +++ b/src/com/android/messaging/receiver/NotificationReceiver.java
-@@ -54,13 +54,10 @@ public class NotificationReceiver extends BroadcastReceiver {
+@@ -52,13 +52,10 @@ public class NotificationReceiver extends BroadcastReceiver {
                  }
              }
          } else if (intent.getAction().equals(UIIntents.ACTION_MARK_AS_READ)) {
@@ -119,7 +119,7 @@ index f8fe097b..95caf47e 100644
      /**
       * Get a PendingIntent for showing a new message to a secondary user.
 diff --git a/src/com/android/messaging/ui/UIIntentsImpl.java b/src/com/android/messaging/ui/UIIntentsImpl.java
-index 55b0be6d..1dfac718 100644
+index fff2836a..d0ca0df8 100644
 --- a/src/com/android/messaging/ui/UIIntentsImpl.java
 +++ b/src/com/android/messaging/ui/UIIntentsImpl.java
 @@ -382,12 +382,11 @@ public class UIIntentsImpl extends UIIntents {

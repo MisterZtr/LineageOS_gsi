@@ -41,7 +41,7 @@ index 3d250fd82473..0497029b2a3c 100644
 @@ -696,6 +696,10 @@ android_library {
          "TraceurCommon",
          "Traceur-res",
-         "vendor.lineage.powershare-V1.0-java",
+         "vendor.lineage.powershare-V1-java",
 +        "vendor.goodix.hardware.biometrics.fingerprint-V2.1-java",
 +        "vendor.xiaomi.hw.touchfeature-V1.0-java",
 +        "vendor.xiaomi.hardware.fingerprintextension-V1.0-java",

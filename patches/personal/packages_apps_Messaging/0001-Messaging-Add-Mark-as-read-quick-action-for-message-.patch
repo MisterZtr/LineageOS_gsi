@@ -1,4 +1,4 @@
-From ee14e6e4c8184fc60ec44367761445ecb23a5245 Mon Sep 17 00:00:00 2001
+From a4045e14c20a7220673986a67ec62ecdaa508eca Mon Sep 17 00:00:00 2001
 From: Paul Keith <javelinanddart@gmail.com>
 Date: Tue, 30 Oct 2018 15:46:18 +0100
 Subject: [PATCH 1/2] Messaging: Add "Mark as read" quick action for message
@@ -12,10 +12,10 @@ Change-Id: I7194dca022e5062926fa35709de282721ca64320
  .../messaging/datamodel/BugleNotifications.java    | 14 ++++++++++++++
  .../datamodel/MessageNotificationState.java        |  8 ++++++++
  .../messaging/datamodel/NotificationState.java     | 12 +++++++++++-
- .../messaging/receiver/NotificationReceiver.java   | 12 +++++++++++-
+ .../messaging/receiver/NotificationReceiver.java   | 10 ++++++++++
  src/com/android/messaging/ui/UIIntents.java        | 11 +++++++++++
  src/com/android/messaging/ui/UIIntentsImpl.java    | 14 ++++++++++++++
- 9 files changed, 82 insertions(+), 2 deletions(-)
+ 9 files changed, 81 insertions(+), 1 deletion(-)
  create mode 100644 res/drawable/ic_wear_read.xml
 
 diff --git a/res/drawable/ic_wear_read.xml b/res/drawable/ic_wear_read.xml
@@ -43,16 +43,6 @@ index 0f7231b6..328d1504 100644
      <string name="start_chat">开始聊天</string>
 +    <string name="notification_mark_as_read">标记为已读</string>
  </resources>
-diff --git a/res/values-ru/cm_strings.xml b/res/values-ru/cm_strings.xml
-index 21efa7f..0bcfcbc 100644
---- a/res/values-ru/cm_strings.xml
-+++ b/res/values-ru/cm_strings.xml
-@@ -19,4 +19,5 @@
-     <string name="swipe_to_delete_conversation_pref_summary">Свайп вправо для удаления разговора</string>
-     <string name="notification_channel_messages_title">Сообщения</string>
-     <string name="start_chat">Написать</string>
-+    <string name="notification_mark_as_read">Прочитать</string>
- </resources>
 diff --git a/res/values/cm_strings.xml b/res/values/cm_strings.xml
 index e2c26e56..1e29d848 100644
 --- a/res/values/cm_strings.xml
@@ -66,10 +56,10 @@ index e2c26e56..1e29d848 100644
 +    <string name="notification_mark_as_read">Mark as read</string>
  </resources>
 diff --git a/src/com/android/messaging/datamodel/BugleNotifications.java b/src/com/android/messaging/datamodel/BugleNotifications.java
-index 3aae6e1a..3610788a 100644
+index 76b530dc..37030d7f 100644
 --- a/src/com/android/messaging/datamodel/BugleNotifications.java
 +++ b/src/com/android/messaging/datamodel/BugleNotifications.java
-@@ -749,6 +749,7 @@ public class BugleNotifications {
+@@ -738,6 +738,7 @@ public class BugleNotifications {
  
              addDownloadMmsAction(notifBuilder, wearableExtender, notificationState);
              addWearableVoiceReplyAction(notifBuilder, wearableExtender, notificationState);
@@ -77,7 +67,7 @@ index 3aae6e1a..3610788a 100644
          }
  
          // Apply the wearable options and build & post the notification
-@@ -820,6 +821,19 @@ public class BugleNotifications {
+@@ -807,6 +808,19 @@ public class BugleNotifications {
          wearableExtender.addAction(wearActionBuilder.build());
      }
  
@@ -98,10 +88,10 @@ index 3aae6e1a..3610788a 100644
              final WearableExtender wearableExtender, final NotificationState notificationState) {
          if (!(notificationState instanceof MultiMessageNotificationState)) {
 diff --git a/src/com/android/messaging/datamodel/MessageNotificationState.java b/src/com/android/messaging/datamodel/MessageNotificationState.java
-index 575e3166..66d6cf5b 100644
+index cece0721..e96f6058 100644
 --- a/src/com/android/messaging/datamodel/MessageNotificationState.java
 +++ b/src/com/android/messaging/datamodel/MessageNotificationState.java
-@@ -335,6 +335,14 @@ public abstract class MessageNotificationState extends NotificationState {
+@@ -327,6 +327,14 @@ public abstract class MessageNotificationState extends NotificationState {
                      getClearIntentRequestCode());
      }
  
@@ -117,7 +107,7 @@ index 575e3166..66d6cf5b 100644
       * Notification for multiple messages in at least 2 different conversations.
       */
 diff --git a/src/com/android/messaging/datamodel/NotificationState.java b/src/com/android/messaging/datamodel/NotificationState.java
-index b52ffaa4..f425551d 100644
+index 50a2b37c..8a109a88 100644
 --- a/src/com/android/messaging/datamodel/NotificationState.java
 +++ b/src/com/android/messaging/datamodel/NotificationState.java
 @@ -44,7 +44,8 @@ import java.util.HashSet;
@@ -142,7 +132,7 @@ index b52ffaa4..f425551d 100644
      protected Uri getAttachmentUri() {
          return null;
      }
-@@ -116,6 +122,10 @@ public abstract class NotificationState {
+@@ -106,6 +112,10 @@ public abstract class NotificationState {
          return mBaseRequestCode + CLEAR_INTENT_REQUEST_CODE_OFFSET;
      }
  
@@ -154,10 +144,10 @@ index b52ffaa4..f425551d 100644
       * Gets the appropriate icon needed for notifications.
       */
 diff --git a/src/com/android/messaging/receiver/NotificationReceiver.java b/src/com/android/messaging/receiver/NotificationReceiver.java
-index bbb847d5..f87779c1 100644
+index 52866b23..141c0ea1 100644
 --- a/src/com/android/messaging/receiver/NotificationReceiver.java
 +++ b/src/com/android/messaging/receiver/NotificationReceiver.java
-@@ -20,6 +20,7 @@ import android.content.Context;
+@@ -21,6 +21,7 @@ import android.content.Context;
  import android.content.Intent;
  
  import com.android.messaging.datamodel.BugleNotifications;
@@ -165,7 +155,7 @@ index bbb847d5..f87779c1 100644
  import com.android.messaging.datamodel.action.MarkAsSeenAction;
  import com.android.messaging.ui.UIIntents;
  import com.android.messaging.util.ConversationIdSet;
-@@ -52,6 +53,15 @@ public class NotificationReceiver extends BroadcastReceiver {
+@@ -50,6 +51,15 @@ public class NotificationReceiver extends BroadcastReceiver {
                      BugleNotifications.resetLastMessageDing(conversationId);
                  }
              }
@@ -180,9 +170,7 @@ index bbb847d5..f87779c1 100644
 +            }
          }
      }
--}
-\ No newline at end of file
-+}
+ }
 diff --git a/src/com/android/messaging/ui/UIIntents.java b/src/com/android/messaging/ui/UIIntents.java
 index b8a08fd7..f8fe097b 100644
 --- a/src/com/android/messaging/ui/UIIntents.java
@@ -213,7 +201,7 @@ index b8a08fd7..f8fe097b 100644
       * Get a PendingIntent for showing a new message to a secondary user.
       */
 diff --git a/src/com/android/messaging/ui/UIIntentsImpl.java b/src/com/android/messaging/ui/UIIntentsImpl.java
-index f2683a26..55b0be6d 100644
+index bfa0c704..fff2836a 100644
 --- a/src/com/android/messaging/ui/UIIntentsImpl.java
 +++ b/src/com/android/messaging/ui/UIIntentsImpl.java
 @@ -380,6 +380,20 @@ public class UIIntentsImpl extends UIIntents {
