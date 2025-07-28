@@ -1,7 +1,7 @@
-From b71defabc32df1eb4cfd9052bcb873e1429ffdd7 Mon Sep 17 00:00:00 2001
+From a401b2b0d0a680a2890f911c9553550eda40c9ff Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 14 Dec 2022 17:21:00 -0500
-Subject: [PATCH 30/53] Call Samsung's ISehSysInputDev to report screen state
+Subject: [PATCH 29/56] Call Samsung's ISehSysInputDev to report screen state
  to touchscreen driver
 
 This fixes touchscreen not waking up on Galaxy F23
@@ -25,7 +25,7 @@ index b3d85f8aac48..5dd872f4bc09 100644
      javac_shard_size: 50,
      javacflags: [
 diff --git a/services/core/java/com/android/server/display/LocalDisplayAdapter.java b/services/core/java/com/android/server/display/LocalDisplayAdapter.java
-index 0570b2ab510b..23004c10ad9b 100644
+index d37dd3018fde..980a287dda27 100644
 --- a/services/core/java/com/android/server/display/LocalDisplayAdapter.java
 +++ b/services/core/java/com/android/server/display/LocalDisplayAdapter.java
 @@ -38,6 +38,7 @@ import android.os.Trace;
@@ -54,7 +54,7 @@ index 0570b2ab510b..23004c10ad9b 100644
  
          LocalDisplayDevice(IBinder displayToken, long physicalDisplayId,
                  SurfaceControl.StaticDisplayInfo staticDisplayInfo,
-@@ -876,16 +881,42 @@ final class LocalDisplayAdapter extends DisplayAdapter {
+@@ -916,16 +921,42 @@ final class LocalDisplayAdapter extends DisplayAdapter {
                              }
                          }
  

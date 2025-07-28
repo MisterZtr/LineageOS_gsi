@@ -1,7 +1,7 @@
-From b20f3ed1d6affcec252b4d6e2dc1b546e5e0365b Mon Sep 17 00:00:00 2001
+From 899d3d0a4bfcd5555f042a3cc90aa69db2305852 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 17 Oct 2021 17:17:13 -0400
-Subject: [PATCH 4/9] Don't abort when failing to get real-time priority
+Subject: [PATCH 4/8] Don't abort when failing to get real-time priority
 
 On some devices (like OP6), for unknown reason, trying to go to realtime
 fails with EPERM.
@@ -9,8 +9,14 @@ There is no good reason to actually require real-time, so don't fail
 when we don't get it
 This fixes gabeldorsche on OP6
 Not yet legacy bluetooth stack
-    
-    Change-Id: Id25dac186628e933185bdfd640498004459b375a
+
+Change-Id: Id25dac186628e933185bdfd640498004459b375a
+---
+ system/btif/src/btif_a2dp_sink.cc   |  2 +-
+ system/btif/src/btif_a2dp_source.cc |  2 +-
+ system/osi/src/alarm.cc             | 12 +++++++++++-
+ system/stack/btu/main_thread.cc     |  2 +-
+ 4 files changed, 14 insertions(+), 4 deletions(-)
 
 diff --git a/system/btif/src/btif_a2dp_sink.cc b/system/btif/src/btif_a2dp_sink.cc
 index 2d214b0521..693dc317cc 100644
@@ -74,3 +80,6 @@ index 6223e66716..e748d6116e 100644
  #else
      log::error("unable to enable real time scheduling");
  #endif
+-- 
+2.25.1
+

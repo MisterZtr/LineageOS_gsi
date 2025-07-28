@@ -1,0 +1,33 @@
+From 214bf466bb8d1c9c1efa06d10002cd483afd7276 Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Mon, 6 Jan 2025 16:07:53 -0500
+Subject: [PATCH 12/12] Fix secilc on Moto One Action
+
+This is an extension of I66339857634ebfdba359f12a99dfd0bff709d80b
+"Fix boot on Moto devices using unknown class"
+---
+ libsepol/cil/src/cil_build_ast.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/libsepol/cil/src/cil_build_ast.c b/libsepol/cil/src/cil_build_ast.c
+index 27e1a51a..42f6157c 100644
+--- a/libsepol/cil/src/cil_build_ast.c
++++ b/libsepol/cil/src/cil_build_ast.c
+@@ -250,6 +250,14 @@ int cil_gen_ordered(struct cil_db *db, struct cil_tree_node *parse_current, stru
+ 
+ 	int rc = SEPOL_ERR;
+ 
++        {
++            const char* path = cil_tree_get_cil_path(parse_current);
++            if(strstr(path, "vendor/")) {
++                cil_clear_node(ast_node);
++                return SEPOL_OK;
++            }
++        }
++
+ 	if (db == NULL || parse_current == NULL || ast_node == NULL) {
+ 		goto exit;
+ 	}
+-- 
+2.25.1
+

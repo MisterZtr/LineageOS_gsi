@@ -1,0 +1,44 @@
+From 1500e9fe2afbc93f479058605fd7b5ec7e4fa2f7 Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Thu, 12 Sep 2019 20:37:04 +0200
+Subject: [PATCH 05/12] if service is "rcs", accept conflict. Seen on Moto E5
+
+Change-Id: I0cc2d0fad83f403f2b5d7458039b1564ce5ed9dd
+---
+ libselinux/src/label_backends_android.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/libselinux/src/label_backends_android.c b/libselinux/src/label_backends_android.c
+index 13354cde..a28ac118 100644
+--- a/libselinux/src/label_backends_android.c
++++ b/libselinux/src/label_backends_android.c
+@@ -62,14 +62,24 @@ static int nodups_specs(struct saved_data *data)
+ 					    curr_spec->property_key)) {
+ 				if (strcmp(spec_arr[jj].lr.ctx_raw,
+ 						    curr_spec->lr.ctx_raw)) {
+-					rc = -1;
+-					errno = EINVAL;
+ 					selinux_log
+ 						(SELINUX_ERROR,
+ 						 "Multiple different specifications for %s  (%s and %s).\n",
+ 						 curr_spec->property_key,
+ 						 spec_arr[jj].lr.ctx_raw,
+ 						 curr_spec->lr.ctx_raw);
++					int ignore = 0;
++					/*
++					 * This issue has been found on Moto E5
++					 * E SELinux : Multiple different specifications for rcs  (u:object_r:radio_service:s0 and u:object_r:mot_rcs_service:s0).
++					 */
++					if(!strcmp(curr_spec->property_key, "rcs"))
++						ignore = 1;
++
++					if(!ignore) {
++						rc = -1;
++						errno = EINVAL;
++					}
+ 				} else {
+ 					selinux_log
+ 						(SELINUX_WARNING,
+-- 
+2.25.1
+

@@ -1,0 +1,26 @@
+From 31b39d66664085c7da26c6c5c115abf04e29b7bc Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Mon, 9 Apr 2018 00:19:49 +0200
+Subject: [PATCH 01/12] Increase default log_level to get actual selinux error
+ in kmsg
+
+---
+ secilc/secilc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/secilc/secilc.c b/secilc/secilc.c
+index f3102ca9..29862fd8 100644
+--- a/secilc/secilc.c
++++ b/secilc/secilc.c
+@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
+ 	int opt_index = 0;
+ 	char *fc_buf = NULL;
+ 	size_t fc_size;
+-	enum cil_log_level log_level = CIL_ERR;
++	enum cil_log_level log_level = CIL_WARN;
+ 	static struct option long_opts[] = {
+ 		{"help", no_argument, 0, 'h'},
+ 		{"verbose", no_argument, 0, 'v'},
+-- 
+2.25.1
+

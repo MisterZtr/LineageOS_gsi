@@ -1,0 +1,25 @@
+From 0ea4039c3b8a7fa26e532f9fc95ac3aa15989a5d Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Fri, 6 Oct 2023 08:49:59 -0400
+Subject: [PATCH 10/12] Allow conflict on fuseblk
+
+---
+ libsepol/cil/src/cil_post.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libsepol/cil/src/cil_post.c b/libsepol/cil/src/cil_post.c
+index 29f4559c..9b0a51dc 100644
+--- a/libsepol/cil/src/cil_post.c
++++ b/libsepol/cil/src/cil_post.c
+@@ -518,7 +518,7 @@ static int cil_post_genfscon_context_compare(const void *a, const void *b)
+          */
+ 		if(strcmp(a_genfscon->path_str, "/sys/vm/watermark_scale_factor") == 0)
+ 			bypass = 1;
+-		if(strcmp(a_genfscon->fs_str, "exfat") == 0 || strcmp(a_genfscon->fs_str, "esdfs") == 0) {
++		if(strcmp(a_genfscon->fs_str, "exfat") == 0 || strcmp(a_genfscon->fs_str, "esdfs") == 0 || strcmp(a_genfscon->fs_str, "fuseblk") == 0) {
+             if(strcmp(a_genfscon->path_str, "/") == 0)
+                 bypass = 1;
+         }
+-- 
+2.25.1
+

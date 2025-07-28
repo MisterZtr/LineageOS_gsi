@@ -1,8 +1,14 @@
-From e97f4d1a967f3e6a3bd618f5c00a6afbd2d3da7a Mon Sep 17 00:00:00 2001
+From 3d69126786ce5ca7d74f5297b30b7bbad8789ee1 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 21 Feb 2024 12:50:28 -0500
-Subject: [PATCH 08/10] Initialize Samsung AIDL ISehRadioNetwork. Fixes 5G on
+Subject: [PATCH 08/11] Initialize Samsung AIDL ISehRadioNetwork. Fixes 5G on
  S24
+
+---
+ Android.bp                                    |   1 +
+ .../com/android/internal/telephony/RIL.java   |   2 +-
+ .../internal/telephony/RadioNetworkProxy.java | 143 +++++++++++++++++-
+ 3 files changed, 144 insertions(+), 2 deletions(-)
 
 diff --git a/Android.bp b/Android.bp
 index a6e526c823..047c8e7cbb 100644
@@ -197,3 +203,6 @@ index c4b6f769b3..2b91c8b2a6 100644
          Rlog.d(TAG, "AIDL initialized mHalVersion=" + mHalVersion);
          return mHalVersion;
      }
+-- 
+2.25.1
+

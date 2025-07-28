@@ -1,0 +1,84 @@
+From 09ca78db01b5011f55ea18048f3929feaee9afc1 Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Fri, 25 Oct 2019 13:29:20 +0200
+Subject: [PATCH 07/12] Fix boot on Moto devices using unknown class
+
+vendor sepolicy never contains new class or classorder, and are not
+allowed to.
+Though this is not tested, and it turns out Moto did it anyway.
+This raises an issue, because class need to be ordered, and thus the cil
+contains the ordering. This ordering needs to be merged.
+Android 10 added new classes, so the ordering can no longer be merged,
+and secilc fails on those devices, preventing boot.
+
+Considering vendor are not supposed to declare new class (and thus
+declare classorder), this fix ignores class-es/classorder in vendor
+SELinux policy.
+
+Since the vendor selinux policy has allows rules based on this context,
+those allows will fail since the class doesn't exist.
+Workaround this by ignoring rules with the problematic class
+( keystore_moto_key )
+
+Lucky us, this new class `keystore_moto_key` is used by Moto for
+framework to framework (more accurately priv app to keymaster), since
+our own framework doesn't use this class, simply ignoring it fixes the
+issue.
+
+Change-Id: I66339857634ebfdba359f12a99dfd0bff709d80b
+---
+ libsepol/cil/src/cil_build_ast.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/libsepol/cil/src/cil_build_ast.c b/libsepol/cil/src/cil_build_ast.c
+index 6740b8f1..2e7465a0 100644
+--- a/libsepol/cil/src/cil_build_ast.c
++++ b/libsepol/cil/src/cil_build_ast.c
+@@ -584,6 +584,14 @@ int cil_gen_class(struct cil_db *db, struct cil_tree_node *parse_current, struct
+ 	struct cil_tree_node *perms = NULL;
+ 	int rc = SEPOL_ERR;
+ 
++        {
++            const char* path = cil_tree_get_cil_path(parse_current);
++            if(strstr(path, "vendor/")) {
++                cil_clear_node(ast_node);
++                return SEPOL_OK;
++            }
++        }
++
+ 	rc = __cil_verify_syntax(parse_current, syntax, syntax_len);
+ 	if (rc != SEPOL_OK) {
+ 		goto exit;
+@@ -879,6 +887,14 @@ int cil_gen_classpermission(struct cil_db *db, struct cil_tree_node *parse_curre
+ 	};
+ 	size_t syntax_len = sizeof(syntax)/sizeof(*syntax);
+ 
++        {
++            const char* path = cil_tree_get_cil_path(parse_current);
++            if(strstr(path, "vendor/")) {
++                cil_clear_node(ast_node);
++                return SEPOL_OK;
++            }
++        }
++
+ 	if (db == NULL || parse_current == NULL || ast_node == NULL) {
+ 		goto exit;
+ 	}
+@@ -2109,6 +2125,14 @@ int cil_gen_avrule(struct cil_tree_node *parse_current, struct cil_tree_node *as
+ 	rule->src_str = parse_current->next->data;
+ 	rule->tgt_str = parse_current->next->next->data;
+ 
++        {
++            const char *classname = parse_current->next->next->next->cl_head->data;
++            if(strcmp(classname, "keystore_moto_key") == 0) {
++                cil_clear_node(ast_node);
++                return SEPOL_OK;
++            }
++        }
++
+ 	rc = cil_fill_classperms_list(parse_current->next->next->next, &rule->perms.classperms);
+ 	if (rc != SEPOL_OK) {
+ 		goto exit;
+-- 
+2.25.1
+

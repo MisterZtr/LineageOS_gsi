@@ -1,0 +1,116 @@
+From 1156c00b1b3b6b169969875c579b687907821785 Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Wed, 31 Mar 2021 23:32:37 +0200
+Subject: [PATCH 03/12] Workaround device/phh/treble conflict with SELinux
+ policy
+
+device/phh/treble defines the following three types (hostapd,
+sysfs_usb_supply, rpmb_device)
+However, Qualcomm Samsung Android 11 devices export those symbols as
+typealias.
+Type and typealias are fundamentally not mergeable.
+Luckily, Samsung doesn't do anything with those typealias, so we can
+simply ignore them.
+---
+ libsepol/cil/src/cil_binary.c      |  8 ++++++--
+ libsepol/cil/src/cil_build_ast.c   | 11 +++++++++--
+ libsepol/cil/src/cil_resolve_ast.c | 15 +++++++++++++--
+ 3 files changed, 28 insertions(+), 6 deletions(-)
+
+diff --git a/libsepol/cil/src/cil_binary.c b/libsepol/cil/src/cil_binary.c
+index 3d920182..c1ebb12f 100644
+--- a/libsepol/cil/src/cil_binary.c
++++ b/libsepol/cil/src/cil_binary.c
+@@ -512,13 +512,17 @@ int cil_typealias_to_policydb(policydb_t *pdb, struct cil_alias *cil_alias)
+ 	type_datum_init(sepol_alias);
+ 
+ 	rc = __cil_get_sepol_type_datum(pdb, DATUM(cil_alias->actual), &sepol_type);
+-	if (rc != SEPOL_OK) goto exit;
++	if (rc != SEPOL_OK) {
++        cil_log(CIL_ERR, "Failed at %s:%s:%d\n", __FILE__, __FUNCTION__, __LINE__);
++        goto exit;
++    }
+ 
+ 	sepol_alias->flavor = TYPE_TYPE;
+ 
+ 	key = cil_strdup(cil_alias->datum.fqn);
+ 	rc = symtab_insert(pdb, SYM_TYPES, key, sepol_alias, SCOPE_DECL, 0, NULL);
+ 	if (rc != SEPOL_OK) {
++        cil_log(CIL_ERR, "Failed at %s:%s:%d:%d\n", __FILE__, __FUNCTION__, __LINE__, rc);
+ 		goto exit;
+ 	}
+ 	sepol_alias->s.value = sepol_type->s.value;
+@@ -4103,7 +4107,7 @@ static int __cil_node_to_policydb(struct cil_tree_node *node, void *extra_args)
+ 
+ exit:
+ 	if (rc != SEPOL_OK) {
+-		cil_tree_log(node, CIL_ERR, "Binary policy creation failed");
++		cil_tree_log(node, CIL_ERR, "Binary policy creation failed, for pass = %d, flavor = %d", pass, node->flavor);
+ 	}
+ 	return rc;
+ }
+diff --git a/libsepol/cil/src/cil_build_ast.c b/libsepol/cil/src/cil_build_ast.c
+index 19fbb04e..6740b8f1 100644
+--- a/libsepol/cil/src/cil_build_ast.c
++++ b/libsepol/cil/src/cil_build_ast.c
+@@ -161,7 +161,7 @@ int cil_add_decl_to_symtab(struct cil_db *db, symtab_t *symtab, hashtab_key_t ke
+ 
+ 	rc = cil_symtab_insert(symtab, key, datum, node);
+ 	if (rc == SEPOL_EEXIST) {
+-		struct cil_symtab_datum *prev;
++		struct cil_symtab_datum *prev = NULL;
+ 		rc = cil_symtab_get_datum(symtab, key, &prev);
+ 		if (rc != SEPOL_OK) {
+ 			cil_log(CIL_ERR, "Re-declaration of %s %s, but previous declaration could not be found\n",cil_node_to_string(node), key);
+@@ -174,7 +174,14 @@ int cil_add_decl_to_symtab(struct cil_db *db, symtab_t *symtab, hashtab_key_t ke
+ 				cil_node_to_string(node), key);
+ 			cil_tree_log(node, CIL_ERR, "Previous declaration of %s",
+ 				     cil_node_to_string(n));
+-			return SEPOL_ERR;
++			if(
++				strcmp(key, "sysfs_usb_supply") == 0 ||
++				strcmp(key, "hostapd") == 0 ||
++				strcmp(key, "rpmb_device") == 0) {
++					cil_log(CIL_ERR, "Ignoring...");
++			} else {
++				return SEPOL_ERR;
++			}
+ 		}
+ 		/* multiple_decls is enabled and works for this datum type, add node */
+ 		cil_list_append(prev->nodes, CIL_NODE, node);
+diff --git a/libsepol/cil/src/cil_resolve_ast.c b/libsepol/cil/src/cil_resolve_ast.c
+index 6c5b6338..1e0e58b6 100644
+--- a/libsepol/cil/src/cil_resolve_ast.c
++++ b/libsepol/cil/src/cil_resolve_ast.c
+@@ -519,7 +519,13 @@ static int cil_resolve_aliasactual(struct cil_tree_node *current, struct cil_db
+ 	}
+ 	if (FLAVOR(alias_datum) != alias_flavor) {
+ 		cil_log(CIL_ERR, "%s is not an alias\n",alias_datum->name);
+-		rc = SEPOL_ERR;
++		if(
++			strcmp(alias_datum->name, "hostapd") == 0 ||
++			strcmp(alias_datum->name, "sysfs_usb_supply") == 0 ||
++			strcmp(alias_datum->name, "rpmb_device") == 0)
++				rc = 0;
++			else
++				rc = SEPOL_ERR;
+ 		goto exit;
+ 	}
+ 
+@@ -562,7 +568,12 @@ static int cil_resolve_alias_to_actual(struct cil_tree_node *current, enum cil_f
+ 	int limit = 2;
+ 
+ 	if (alias->actual == NULL) {
+-		cil_tree_log(current, CIL_ERR, "Alias declared but not used");
++		cil_tree_log(current, CIL_ERR, "Alias %s declared but not used", a1->datum.name);
++		if(
++			strcmp(a1->datum.name, "hostapd") == 0 ||
++			strcmp(a1->datum.name, "sysfs_usb_supply") == 0 ||
++			strcmp(a1->datum.name, "rpmb_device") == 0)
++				return SEPOL_OK;
+ 		return SEPOL_ERR;
+ 	}
+ 
+-- 
+2.25.1
+

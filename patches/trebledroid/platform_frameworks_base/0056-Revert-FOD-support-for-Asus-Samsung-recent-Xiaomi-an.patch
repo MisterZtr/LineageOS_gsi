@@ -17,17 +17,17 @@ diff --git a/packages/SystemUI/Android.bp b/packages/SystemUI/Android.bp
 index 0497029b2a3c..3d250fd82473 100644
 --- a/packages/SystemUI/Android.bp
 +++ b/packages/SystemUI/Android.bp
-@@ -696,10 +696,6 @@ android_library {
-         "TraceurCommon",
-         "Traceur-res",
+@@ -513,10 +513,6 @@ android_library {
+         "androidx.compose.animation_animation-graphics",
+         "androidx.lifecycle_lifecycle-viewmodel-compose",
          "vendor.lineage.powershare-V1-java",
 -        "vendor.goodix.hardware.biometrics.fingerprint-V2.1-java",
 -        "vendor.xiaomi.hw.touchfeature-V1.0-java",
 -        "vendor.xiaomi.hardware.fingerprintextension-V1.0-java",
 -        "vendor.nubia.ifaa-V1.0-java",
      ],
- }
- 
+     libs: [
+         "keepanno-annotations",
 diff --git a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
 index 26feaf7a09f0..a9133e45e93f 100644
 --- a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
@@ -158,25 +158,6 @@ index 26feaf7a09f0..a9133e45e93f 100644
              mLatencyTracker.onActionStart(ACTION_UDFPS_ILLUMINATE);
          }
          // Refresh screen timeout and boost process priority if possible.
-@@ -1121,18 +1121,12 @@ public class UdfpsController implements DozeReceiver, Dumpable {
-                 ((UdfpsTouchOverlay) view).configureDisplay(() -> dispatchOnUiReady(requestId));
-             }
-         }
--        if(SystemProperties.get("ro.vendor.build.fingerprint").contains("nubia/NX669")) {
--          processCmd(13, 0, 0, new byte[0], 0);
--        }
- 
-         if (isOptical()) {
-             for (Callback cb : mCallbacks) {
-                 cb.onFingerDown();
-             }
-         }
--        if(SystemProperties.get("ro.vendor.build.fingerprint").contains("nubia/NX669")) {
--          processCmd(14, 0, 0, new byte[0], 0);
--        }
- 
-     }
- 
 @@ -1165,16 +1101,8 @@ public class UdfpsController implements DozeReceiver, Dumpable {
          mActivePointerId = MotionEvent.INVALID_POINTER_ID;
          mAcquiredReceived = false;

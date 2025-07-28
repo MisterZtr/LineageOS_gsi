@@ -26,5 +26,5 @@ index aa6b55166..5e8e458f9 100644
      } else {
          LOG(INFO) << "AVB is not enabled, skip verity setup for '" << begin->mount_point << "'";
 -- 
-2.25.1
+2.43.0
 

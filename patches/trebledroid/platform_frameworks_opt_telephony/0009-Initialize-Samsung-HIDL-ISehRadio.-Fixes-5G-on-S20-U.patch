@@ -1,8 +1,15 @@
-From f9d8719fea0b202d1714e8af6e7786f47299195e Mon Sep 17 00:00:00 2001
+From 140cb7533e4683eb0e08fa7ce2f42120c912f21f Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 21 Feb 2024 16:21:51 -0500
-Subject: [PATCH 09/10] Initialize Samsung HIDL ISehRadio. Fixes 5G on S20
+Subject: [PATCH 09/11] Initialize Samsung HIDL ISehRadio. Fixes 5G on S20
  Ultra
+
+---
+ Android.bp                                    |   1 +
+ .../com/android/internal/telephony/RIL.java   |   3 +-
+ .../internal/telephony/RadioNetworkProxy.java | 122 +++++++++++++++++-
+ .../internal/telephony/RadioServiceProxy.java |   5 +
+ 4 files changed, 127 insertions(+), 4 deletions(-)
 
 diff --git a/Android.bp b/Android.bp
 index 047c8e7cbb..02f130b336 100644
@@ -219,3 +226,6 @@ index 02fc751484..fa02d5202b 100644
 +        mServiceName = serviceName;
 +    }
  }
+-- 
+2.25.1
+

@@ -12,7 +12,7 @@ diff --git a/bpf/loader/NetBpfLoad.cpp b/bpf/loader/NetBpfLoad.cpp
 index 56e4eed355..1c504edace 100644
 --- a/bpf/loader/NetBpfLoad.cpp
 +++ b/bpf/loader/NetBpfLoad.cpp
-@@ -1583,8 +1583,7 @@ static int doLoad(char** argv, char * const envp[]) {
+@@ -1586,8 +1586,7 @@ static int doLoad(char** argv, char * const envp[]) {
          // but we need 0 (enabled)
          // (this writeFile is known to fail on at least 4.19, but always defaults to 0 on
          // pre-5.13, on 5.13+ it depends on CONFIG_BPF_UNPRIV_DEFAULT_OFF)
@@ -22,7 +22,7 @@ index 56e4eed355..1c504edace 100644
      }
  
      if (isAtLeastU) {
-@@ -1599,14 +1598,12 @@ static int doLoad(char** argv, char * const envp[]) {
+@@ -1602,14 +1602,12 @@ static int doLoad(char** argv, char * const envp[]) {
          //  kernel does not have CONFIG_BPF_JIT=y)
          // BPF_JIT is required by R VINTF (which means 4.14/4.19/5.4 kernels),
          // but 4.14/4.19 were released with P & Q, and only 5.4 is new in R+.
@@ -40,5 +40,5 @@ index 56e4eed355..1c504edace 100644
  
      // Create all the pin subdirectories
 -- 
-2.43.0
+2.25.1
 

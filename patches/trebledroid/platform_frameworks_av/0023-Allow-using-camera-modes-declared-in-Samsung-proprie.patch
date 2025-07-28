@@ -1,12 +1,12 @@
-From 2f2c45e2f9d5b6ff7355d5180c701fc214563924 Mon Sep 17 00:00:00 2001
+From b452e55e920848c574c2c6fd94fc3711069ba5e0 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 10 Feb 2024 09:30:19 -0500
 Subject: [PATCH 23/24] Allow using camera modes declared in Samsung
  proprietary values
 
 ---
- .../utils/SessionConfigurationUtils.cpp       | 79 +++++++++++++------
- 1 file changed, 53 insertions(+), 26 deletions(-)
+ .../utils/SessionConfigurationUtils.cpp       | 81 ++++++++++++-------
+ 1 file changed, 54 insertions(+), 27 deletions(-)
 
 diff --git a/services/camera/libcameraservice/utils/SessionConfigurationUtils.cpp b/services/camera/libcameraservice/utils/SessionConfigurationUtils.cpp
 index f41cb852bd..25318dbc10 100644

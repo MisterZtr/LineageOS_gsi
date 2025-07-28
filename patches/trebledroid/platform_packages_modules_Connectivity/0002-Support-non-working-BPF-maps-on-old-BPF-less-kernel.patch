@@ -63,7 +63,7 @@ index 4834b09ab5..56e4eed355 100644
  
      const int first_api_level = GetIntProperty("ro.board.first_api_level", effective_api_level);
  
-@@ -1453,7 +1453,7 @@ static int doLoad(char** argv, char * const envp[]) {
+@@ -1453,23 +1453,26 @@ static int doLoad(char** argv, char * const envp[]) {
  
      if (!isAtLeastT) {
          ALOGE("Impossible - not reachable on Android <T.");
@@ -72,7 +72,29 @@ index 4834b09ab5..56e4eed355 100644
      }
  
      // both S and T require kernel 4.9 (and eBpf support)
-@@ -1488,7 +1488,7 @@ static int doLoad(char** argv, char * const envp[]) {
+     if (isAtLeastT && !isAtLeastKernelVersion(4, 9, 0)) {
+-        ALOGW("Android T requires kernel 4.9.");
++        ALOGE("Android T requires kernel 4.9.");
++        failed = true;
+     }
+ 
+     // U bumps the kernel requirement up to 4.14
+     if (isAtLeastU && !isAtLeastKernelVersion(4, 14, 0)) {
+-        ALOGW("Android U requires kernel 4.14.");
++        ALOGE("Android U requires kernel 4.14.");
++        failed = true;
+     }
+ 
+     // V bumps the kernel requirement up to 4.19
+     // see also: //system/netd/tests/kernel_test.cpp TestKernel419
+     if (isAtLeastV && !isAtLeastKernelVersion(4, 19, 0)) {
+-        ALOGW("Android V requires kernel 4.19.");
++        ALOGE("Android V requires kernel 4.19.");
++        failed = true;
+     }
+ 
+     // Technically already required by U, but only enforce on V+
+@@ -1491,7 +1492,7 @@ static int doLoad(char** argv, char * const envp[]) {
      // Various known ABI layout issues, particularly wrt. bpf and ipsec/xfrm.
      if (isAtLeastV && isKernel32Bit() && isX86()) {
          ALOGE("Android V requires X86 kernel to be 64-bit.");
@@ -406,5 +428,5 @@ index 44868b2db7..8c11e115cc 100644
              final short config = sDataSaverEnabledMap.getValue(DATA_SAVER_ENABLED_KEY).val;
              // Any non-zero value converted from short to boolean is true by convention.
 -- 
-2.43.0
+2.25.1
 

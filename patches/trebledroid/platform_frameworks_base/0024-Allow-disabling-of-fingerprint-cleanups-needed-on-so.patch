@@ -9,7 +9,7 @@ Subject: [PATCH 24/56] Allow disabling of fingerprint cleanups, needed on some
  1 file changed, 2 insertions(+)
 
 diff --git a/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java b/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
-index 1fd07aebd7fb..77e930be4529 100644
+index c18d92530135..27c31205b318 100644
 --- a/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
 +++ b/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
 @@ -679,9 +679,8 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi

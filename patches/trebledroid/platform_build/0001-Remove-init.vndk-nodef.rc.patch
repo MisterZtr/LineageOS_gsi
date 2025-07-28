@@ -1,4 +1,4 @@
-From efdd0dc917852ff779a3102c1a7b79149680702e Mon Sep 17 00:00:00 2001
+From 959699ebbfda37514007893eb2b8945931897e04 Mon Sep 17 00:00:00 2001
 From: Andy CrossGate Yan <GeForce8800Ultra@gmail.com>
 Date: Wed, 8 Dec 2021 07:04:53 +0000
 Subject: [PATCH 1/3] Remove init.vndk-nodef.rc
@@ -9,11 +9,20 @@ Paired with https://github.com/LineageOS/android_system_core/commit/0b265e35ddf4
 Given that GSI+permissive won't ever be a Lineage official scenario, revert this only on our side.
 Thanks @Kethen for the insight!
 
+Change-Id: I7c14fe5229e953f620bb225fa5c981752d0ac5f9
+---
+ target/product/gsi/Android.bp         | 8 --------
+ target/product/gsi/init.gsi.rc        | 2 --
+ target/product/gsi/init.vndk-nodef.rc | 3 ---
+ target/product/gsi_release.mk         | 2 --
+ 4 files changed, 15 deletions(-)
+ delete mode 100644 target/product/gsi/init.vndk-nodef.rc
+
 diff --git a/target/product/gsi/Android.bp b/target/product/gsi/Android.bp
-index 9e8946d6e8..716118273f 100644
+index 9e8946d6e8..b79dea1f0c 100644
 --- a/target/product/gsi/Android.bp
 +++ b/target/product/gsi/Android.bp
-@@ -55,12 +55,6 @@ prebuilt_etc {
+@@ -55,13 +55,6 @@ prebuilt_etc {
      relative_install_path: "init",
  }
  
@@ -23,10 +32,11 @@ index 9e8946d6e8..716118273f 100644
 -    system_ext_specific: true,
 -    relative_install_path: "gsi",
 -}
- 
+-
  gsi_symlinks = [
      {
-@@ -133,7 +127,6 @@ android_system_image {
+         target: "/system/system_ext",
+@@ -133,7 +126,6 @@ android_system_image {
          ///////////////////////////////////////////
          "gsi_skip_mount.cfg",
          "init.gsi.rc",
@@ -54,17 +64,18 @@ index 1b141a05e7..0000000000
 -    # Reboot if BOARD_VNDK_VERSION is not defined
 -    exec - root -- /system/bin/reboot bootloader
 diff --git a/target/product/gsi_release.mk b/target/product/gsi_release.mk
-index f00c38cedf..a4007eead0 100644
+index f00c38cedf..e022941454 100644
 --- a/target/product/gsi_release.mk
 +++ b/target/product/gsi_release.mk
-@@ -48,7 +48,6 @@ PRODUCT_USE_DYNAMIC_PARTITION_SIZE := true
+@@ -48,8 +48,6 @@ PRODUCT_USE_DYNAMIC_PARTITION_SIZE := true
  PRODUCT_PACKAGES += \
      gsi_skip_mount.cfg \
      init.gsi.rc \
 -    init.vndk-nodef.rc \
- 
+-
  
  # Overlay the GSI specific setting for framework and SystemUI
+ ifneq ($(PRODUCT_IS_AUTOMOTIVE),true)
 -- 
 2.25.1
 

@@ -1,7 +1,7 @@
-From 52f8abeab5d7cbbbcd2722116aa5b0d413c340c9 Mon Sep 17 00:00:00 2001
+From 7f42313272671df222c639fdaf0d09c22c954173 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 27 Dec 2021 18:00:43 -0500
-Subject: [PATCH 07/14] powermanager: Add support Samsung miscpower HAL
+Subject: [PATCH 07/19] powermanager: Add support Samsung miscpower HAL
 
 Several various configurations need to be supported:
 - Android Pie vendors have a android.hardware.power HIDL default + "miscpower"
@@ -14,6 +14,17 @@ ISehMiscPower is always in addition to android.hardware.power, not as a
 substituion
 
 Only tested configuration ATM is the latest one
+
+Change-Id: I182a91ccb0a89f9d0d7d41f36eccab218b553bbc
+---
+ include/powermanager/PowerHalLoader.h         |  3 +
+ include/powermanager/PowerHalWrapper.h        | 36 +++++++++-
+ services/powermanager/Android.bp              |  2 +
+ services/powermanager/PowerHalController.cpp  | 13 +++-
+ services/powermanager/PowerHalLoader.cpp      | 17 ++++-
+ services/powermanager/PowerHalWrapper.cpp     | 70 +++++++++++++++++++
+ .../CompositionEngine/Android.bp              |  1 +
+ 7 files changed, 136 insertions(+), 6 deletions(-)
 
 diff --git a/include/powermanager/PowerHalLoader.h b/include/powermanager/PowerHalLoader.h
 index ab66336738..32cc39b76b 100644
@@ -319,3 +330,4 @@ index 82eafd4fa8..581d24effe 100644
          "libguiflags",
 -- 
 2.25.1
+
