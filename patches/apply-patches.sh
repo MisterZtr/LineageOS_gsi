@@ -51,11 +51,6 @@ for path_personal in $(cd $personal; echo *); do
 	pushd $tree
 
 	for patch in $personal/$path_personal/*.patch; do
-		# Check if patch is already applied
-		if patch -f -p1 --dry-run -R < $patch > /dev/null; then
-            printf "### ALREDY APPLIED: $patch \n";
-			continue
-		fi
 
 		if git apply --check $patch; then
 			git am $patch
