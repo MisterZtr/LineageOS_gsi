@@ -1,0 +1,30 @@
+From 422ee042ffcc06176e91d36b88c60d3f5cbfd788 Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Mon, 16 Jun 2025 16:24:19 -0400
+Subject: [PATCH 3/3] Prepare for the future: making bpfloader.rs fails all
+ non-panic
+
+Change-Id: I79d413dc4b7626e2a196317e4e58572f61863a30
+---
+ loader/bpfloader.rs | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/loader/bpfloader.rs b/loader/bpfloader.rs
+index 48f7319..68d9635 100644
+--- a/loader/bpfloader.rs
++++ b/loader/bpfloader.rs
+@@ -267,9 +267,9 @@ fn load_libbpf_progs() {
+     for file_desc in FILE_ARR {
+         if let Err(e) = libbpf_worker(file_desc) {
+             if file_desc.critical {
+-                panic!("Error when loading {0}: {e}", file_desc.filename);
++                error!("'critical' Error when loading {0}: {e}\n", file_desc.filename);
+             } else {
+-                error!("Error when loading {0}: {e}", file_desc.filename);
++                error!("Error when loading {0}: {e}\n", file_desc.filename);
+             }
+         };
+     }
+-- 
+2.25.1
+

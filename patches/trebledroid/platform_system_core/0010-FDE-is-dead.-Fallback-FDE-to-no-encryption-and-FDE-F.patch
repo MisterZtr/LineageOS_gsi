@@ -1,4 +1,4 @@
-From f834858ab4526715c287adac4d609039b34012b1 Mon Sep 17 00:00:00 2001
+From 02548158253758bacebc26fa9d5c6c96b6ff234a Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Thu, 10 Nov 2022 13:30:50 -0500
 Subject: [PATCH 10/28] FDE is dead. Fallback FDE to no encryption, and FDE+FBE
@@ -9,10 +9,10 @@ Subject: [PATCH 10/28] FDE is dead. Fallback FDE to no encryption, and FDE+FBE
  1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/fs_mgr/libfstab/fstab.cpp b/fs_mgr/libfstab/fstab.cpp
-index 70378cf5a..757ec7b63 100644
+index f2e1ad6b8..35f78ec90 100644
 --- a/fs_mgr/libfstab/fstab.cpp
 +++ b/fs_mgr/libfstab/fstab.cpp
-@@ -213,7 +213,7 @@ bool ParseFsMgrFlags(const std::string& flags, FstabEntry* entry) {
+@@ -215,7 +215,7 @@ bool ParseFsMgrFlags(const std::string& flags, FstabEntry* entry) {
  #undef CheckFlag
  
          // Then handle flags that take an argument.
@@ -21,7 +21,7 @@ index 70378cf5a..757ec7b63 100644
              // The "encryptable" flag identifies adoptable storage volumes.  The
              // argument to this flag is ignored, but it should be "userdata".
              //
-@@ -223,9 +223,8 @@ bool ParseFsMgrFlags(const std::string& flags, FstabEntry* entry) {
+@@ -225,9 +225,8 @@ bool ParseFsMgrFlags(const std::string& flags, FstabEntry* entry) {
              // storage volumes.  Today, FDE is no longer supported, leaving only
              // the adoptable storage volume meaning for this flag.
              entry->fs_mgr_flags.crypt = true;

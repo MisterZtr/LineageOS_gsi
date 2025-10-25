@@ -1,7 +1,7 @@
-From e0ad70765594d2d0a6b80e6e0784ec9281175e21 Mon Sep 17 00:00:00 2001
+From ef5fce9c996364103bb6c18022e4308f85286ca4 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 7 Feb 2024 05:06:32 -0500
-Subject: [PATCH 22/24] Include Samsung AIDL camera ids
+Subject: [PATCH 22/25] Include Samsung AIDL camera ids
 
 ---
  services/camera/libcameraservice/Android.bp   |  1 +
@@ -9,7 +9,7 @@ Subject: [PATCH 22/24] Include Samsung AIDL camera ids
  2 files changed, 22 insertions(+)
 
 diff --git a/services/camera/libcameraservice/Android.bp b/services/camera/libcameraservice/Android.bp
-index 09fe3fe924..ecd54db749 100644
+index 53af1a23df..646fa8e6e8 100644
 --- a/services/camera/libcameraservice/Android.bp
 +++ b/services/camera/libcameraservice/Android.bp
 @@ -117,6 +117,7 @@ cc_defaults {
@@ -21,7 +21,7 @@ index 09fe3fe924..ecd54db749 100644
          "libbinderthreadstateutils",
          "libcameraservice_device_independent",
 diff --git a/services/camera/libcameraservice/common/aidl/AidlProviderInfo.cpp b/services/camera/libcameraservice/common/aidl/AidlProviderInfo.cpp
-index 88998c674d..9f8fd37e1d 100644
+index b9e8cddf5a..59789d4e35 100644
 --- a/services/camera/libcameraservice/common/aidl/AidlProviderInfo.cpp
 +++ b/services/camera/libcameraservice/common/aidl/AidlProviderInfo.cpp
 @@ -34,6 +34,8 @@
@@ -33,7 +33,7 @@ index 88998c674d..9f8fd37e1d 100644
  namespace {
  const bool kEnableLazyHal(property_get_bool("ro.camera.enableLazyHal", false));
  } // anonymous namespace
-@@ -173,6 +175,25 @@ status_t AidlProviderInfo::initializeAidlProvider(
+@@ -176,6 +178,25 @@ status_t AidlProviderInfo::initializeAidlProvider(
          return mapToStatusT(status);
      }
  

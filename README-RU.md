@@ -1,5 +1,5 @@
 Русский | [English](README.md)
-### Чтобы приступить к компиляции LineageOS 22.2 GSI,
+### Чтобы приступить к компиляции LineageOS 23.0 GSI,
 Вам нужно будет ознакомиться с [Git and Repo](https://source.android.com/source/using-repo.html), [Как собрать GSI](https://github.com/phhusson/treble_experimentations/wiki/How-to-build-a-GSI%3F), а также с темой на 4pda по [Сборке Android из исходников](https://4pda.to/forum/index.php?showtopic=209610&view=findpost&p=6112304)
 
 
@@ -16,13 +16,13 @@ cd LineageOS
 ### Чтобы инициализировать локальный репозиторий, выполните эту команду:
 
 ```bash
-repo init -u https://github.com/LineageOS/android.git -b lineage-22.2 --git-lfs
+repo init -u https://github.com/LineageOS/android.git -b lineage-23.0 --git-lfs
 ```
 
 
 ### Склонируйте манифест, чтобы добавить необходимые зависимости для gsi:
 
-    git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests  -b 15-los-qpr2
+    git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests -b lineage-23.0
 
 
 ### После этого синхронизируйте исходный код, выполнив эту команду:
@@ -69,7 +69,7 @@ export CCACHE_MAXSIZE=50G # 50 GB
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-lunch treble_arm64_bvN-bp1a-userdebug
+lunch treble_arm64_bvN-bp2a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
@@ -78,7 +78,7 @@ make systemimage -j$(nproc --all)
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-lunch treble_arm64_bgN-bp1a-userdebug
+lunch treble_arm64_bgN-bp2a-userdebug
 make systemimage -j$(nproc --all)
  ```
 

@@ -1,7 +1,7 @@
-From 84d8191722fe75b127e7fa610b52976854344e9e Mon Sep 17 00:00:00 2001
+From d57a2c5696b7cc84ca6f54a3a82ea0bf56ebd8bd Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 12 Aug 2019 23:08:26 +0200
-Subject: [PATCH 10/56] Add support for samsung touch, physical and hover
+Subject: [PATCH 10/57] Add support for samsung touch, physical and hover
  proximity sensor as fallback to real proximity sensor
 
 Change-Id: I7a0f8b4665c802140d19197d850b77b2a7ac1865
@@ -10,10 +10,10 @@ Change-Id: I7a0f8b4665c802140d19197d850b77b2a7ac1865
  1 file changed, 35 insertions(+)
 
 diff --git a/services/core/java/com/android/server/display/DisplayPowerProximityStateController.java b/services/core/java/com/android/server/display/DisplayPowerProximityStateController.java
-index 215932ca19be..28c23121769e 100644
+index 35455c841c7b..70c6511875bb 100644
 --- a/services/core/java/com/android/server/display/DisplayPowerProximityStateController.java
 +++ b/services/core/java/com/android/server/display/DisplayPowerProximityStateController.java
-@@ -80,6 +80,20 @@ public final class DisplayPowerProximityStateController {
+@@ -92,6 +92,20 @@ public final class DisplayPowerProximityStateController {
          public void onSensorChanged(SensorEvent event) {
              if (mProximitySensorEnabled) {
                  final long time = mClock.uptimeMillis();
@@ -34,7 +34,7 @@ index 215932ca19be..28c23121769e 100644
                  final float distance = event.values[0];
                  boolean positive = distance >= 0.0f && distance < mProximityThreshold;
                  handleProximitySensorEvent(time, positive);
-@@ -361,6 +375,27 @@ public final class DisplayPowerProximityStateController {
+@@ -380,6 +394,27 @@ public final class DisplayPowerProximityStateController {
          }
          mProximitySensor = SensorUtils.findSensor(mSensorManager,
                  mDisplayDeviceConfig.getProximitySensor(), Sensor.TYPE_PROXIMITY);

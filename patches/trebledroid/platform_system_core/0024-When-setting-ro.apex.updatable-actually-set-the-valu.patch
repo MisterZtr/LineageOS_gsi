@@ -1,4 +1,4 @@
-From c090de313b0fb391cdc0a983184a535589974f4c Mon Sep 17 00:00:00 2001
+From 03e409be83c08cc8aaaf8c97379019f481bdd86f Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Thu, 25 Jan 2024 15:20:10 -0500
 Subject: [PATCH 24/28] When setting ro.apex.updatable, actually set the value
@@ -15,10 +15,10 @@ This fixes boot on Samsung Galaxy S24
  1 file changed, 9 insertions(+), 4 deletions(-)
 
 diff --git a/init/property_service.cpp b/init/property_service.cpp
-index b18a51269..b414946bb 100644
+index 1a665c8b5..5c3beeb83 100644
 --- a/init/property_service.cpp
 +++ b/init/property_service.cpp
-@@ -818,17 +818,22 @@ static void LoadProperties(char* data, const char* filter, const char* filename,
+@@ -816,17 +816,22 @@ static void LoadProperties(char* data, const char* filter, const char* filename,
              std::string error;
              if (CheckPermissions(key, value, context, cr, &error) == PROP_SUCCESS) {
                  auto it = properties->find(key);

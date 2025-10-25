@@ -1,27 +1,25 @@
-From 91b499ac8cc54c4b4a61efbd6a66632a012aa63d Mon Sep 17 00:00:00 2001
+From fa58020ba6556cf898bde35f8221dab40d3a158e Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Fri, 25 Mar 2022 05:37:56 -0400
-Subject: [PATCH 06/19] MIUI13 devices hide their vibrator HAL behind
+Subject: [PATCH 06/16] MIUI13 devices hide their vibrator HAL behind
  non-default name: "vibratorfeature"
 
 Change-Id: Iafeb6ec9afba350b2b9a7bbbf55318fe607df0a1
 ---
- .../vibratorservice/VibratorHalController.cpp |  10 ++
- .../VibratorHalController.cpp.orig            | 113 ++++++++++++++++++
- 2 files changed, 123 insertions(+)
- create mode 100644 services/vibratorservice/VibratorHalController.cpp.orig
+ services/vibratorservice/VibratorHalController.cpp | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/services/vibratorservice/VibratorHalController.cpp b/services/vibratorservice/VibratorHalController.cpp
-index 283a5f0301..07a545d790 100644
+index 302e3e1299..5ad4aa8729 100644
 --- a/services/vibratorservice/VibratorHalController.cpp
 +++ b/services/vibratorservice/VibratorHalController.cpp
-@@ -63,6 +63,16 @@ std::shared_ptr<HalWrapper> connectHal(std::shared_ptr<CallbackScheduler> schedu
+@@ -56,6 +56,16 @@ std::shared_ptr<HalWrapper> connectHal(std::shared_ptr<CallbackScheduler> schedu
          }
      }
  
-+    serviceName = std::string(Aidl::IVibrator::descriptor) + "/vibratorfeature";
++    serviceName = std::string(IVibrator::descriptor) + "/vibratorfeature";
 +    if (AServiceManager_isDeclared(serviceName.c_str())) {
-+        std::shared_ptr<Aidl::IVibrator> hal = Aidl::IVibrator::fromBinder(
++        std::shared_ptr<IVibrator> hal = IVibrator::fromBinder(
 +                ndk::SpAIBinder(AServiceManager_waitForService(serviceName.c_str())));
 +        if (hal) {
 +            ALOGV("Successfully connected to Xiaomi Vibrator HAL AIDL service.");
@@ -29,128 +27,9 @@ index 283a5f0301..07a545d790 100644
 +        }
 +    }
 +
-     sp<V1_0::IVibrator> halV1_0 = V1_0::IVibrator::getService();
-     if (halV1_0 == nullptr) {
-         ALOGV("Vibrator HAL service not available.");
-diff --git a/services/vibratorservice/VibratorHalController.cpp.orig b/services/vibratorservice/VibratorHalController.cpp.orig
-new file mode 100644
-index 0000000000..283a5f0301
---- /dev/null
-+++ b/services/vibratorservice/VibratorHalController.cpp.orig
-@@ -0,0 +1,113 @@
-+/*
-+ * Copyright (C) 2020 The Android Open Source Project
-+ *
-+ * Licensed under the Apache License, Version 2.0 (the "License");
-+ * you may not use this file except in compliance with the License.
-+ * You may obtain a copy of the License at
-+ *
-+ *      http://www.apache.org/licenses/LICENSE-2.0
-+ *
-+ * Unless required by applicable law or agreed to in writing, software
-+ * distributed under the License is distributed on an "AS IS" BASIS,
-+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-+ * See the License for the specific language governing permissions and
-+ * limitations under the License.
-+ */
-+
-+#define LOG_TAG "VibratorHalController"
-+
-+#include <aidl/android/hardware/vibrator/IVibrator.h>
-+#include <android/binder_manager.h>
-+#include <android/hardware/vibrator/1.3/IVibrator.h>
-+#include <hardware/vibrator.h>
-+
-+#include <utils/Log.h>
-+
-+#include <vibratorservice/VibratorCallbackScheduler.h>
-+#include <vibratorservice/VibratorHalController.h>
-+#include <vibratorservice/VibratorHalWrapper.h>
-+
-+using aidl::android::hardware::vibrator::CompositeEffect;
-+using aidl::android::hardware::vibrator::CompositePrimitive;
-+using aidl::android::hardware::vibrator::Effect;
-+using aidl::android::hardware::vibrator::EffectStrength;
-+
-+using std::chrono::milliseconds;
-+
-+namespace V1_0 = android::hardware::vibrator::V1_0;
-+namespace V1_1 = android::hardware::vibrator::V1_1;
-+namespace V1_2 = android::hardware::vibrator::V1_2;
-+namespace V1_3 = android::hardware::vibrator::V1_3;
-+namespace Aidl = aidl::android::hardware::vibrator;
-+
-+namespace android {
-+
-+namespace vibrator {
-+
-+// -------------------------------------------------------------------------------------------------
-+
-+std::shared_ptr<HalWrapper> connectHal(std::shared_ptr<CallbackScheduler> scheduler) {
-+    static bool gHalExists = true;
-+    if (!gHalExists) {
-+        // We already tried to connect to all of the vibrator HAL versions and none was available.
-+        return nullptr;
-+    }
-+
-+    auto serviceName = std::string(Aidl::IVibrator::descriptor) + "/default";
-+    if (AServiceManager_isDeclared(serviceName.c_str())) {
-+        std::shared_ptr<Aidl::IVibrator> hal = Aidl::IVibrator::fromBinder(
-+                ndk::SpAIBinder(AServiceManager_waitForService(serviceName.c_str())));
-+        if (hal) {
-+            ALOGV("Successfully connected to Vibrator HAL AIDL service.");
-+            return std::make_shared<AidlHalWrapper>(std::move(scheduler), std::move(hal));
-+        }
-+    }
-+
-+    sp<V1_0::IVibrator> halV1_0 = V1_0::IVibrator::getService();
-+    if (halV1_0 == nullptr) {
-+        ALOGV("Vibrator HAL service not available.");
-+        gHalExists = false;
-+        return nullptr;
-+    }
-+
-+    sp<V1_3::IVibrator> halV1_3 = V1_3::IVibrator::castFrom(halV1_0);
-+    if (halV1_3) {
-+        ALOGV("Successfully connected to Vibrator HAL v1.3 service.");
-+        return std::make_shared<HidlHalWrapperV1_3>(std::move(scheduler), halV1_3);
-+    }
-+    sp<V1_2::IVibrator> halV1_2 = V1_2::IVibrator::castFrom(halV1_0);
-+    if (halV1_2) {
-+        ALOGV("Successfully connected to Vibrator HAL v1.2 service.");
-+        return std::make_shared<HidlHalWrapperV1_2>(std::move(scheduler), halV1_2);
-+    }
-+    sp<V1_1::IVibrator> halV1_1 = V1_1::IVibrator::castFrom(halV1_0);
-+    if (halV1_1) {
-+        ALOGV("Successfully connected to Vibrator HAL v1.1 service.");
-+        return std::make_shared<HidlHalWrapperV1_1>(std::move(scheduler), halV1_1);
-+    }
-+    ALOGV("Successfully connected to Vibrator HAL v1.0 service.");
-+    return std::make_shared<HidlHalWrapperV1_0>(std::move(scheduler), halV1_0);
-+}
-+
-+// -------------------------------------------------------------------------------------------------
-+
-+bool HalController::init() {
-+    std::lock_guard<std::mutex> lock(mConnectedHalMutex);
-+    if (mConnectedHal == nullptr) {
-+        mConnectedHal = mConnector(mCallbackScheduler);
-+    }
-+    return mConnectedHal != nullptr;
-+}
-+
-+void HalController::tryReconnect() {
-+    std::lock_guard<std::mutex> lock(mConnectedHalMutex);
-+    if (mConnectedHal == nullptr) {
-+        mConnectedHal = mConnector(mCallbackScheduler);
-+    } else {
-+        mConnectedHal->tryReconnect();
-+    }
-+}
-+
-+}; // namespace vibrator
-+
-+}; // namespace android
+     ALOGV("Vibrator HAL service not available.");
+     gHalExists = false;
+     return nullptr;
 -- 
 2.25.1
 

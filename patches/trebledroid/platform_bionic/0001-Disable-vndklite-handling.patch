@@ -1,4 +1,4 @@
-From 08af73a483205a45c2a0e0146601e6fd1394d5b9 Mon Sep 17 00:00:00 2001
+From c947962aee38262ef048c2dbfbb7f6b31919851f Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 27 Oct 2021 14:39:29 -0400
 Subject: [PATCH 1/2] Disable vndklite handling
@@ -9,7 +9,7 @@ Change-Id: Ic4474cf80fc4b45a9a2760dd51e2ca29c4d961e2
  1 file changed, 5 deletions(-)
 
 diff --git a/linker/linker.cpp b/linker/linker.cpp
-index 8f7891558..a27b983ec 100644
+index 4cf93b9ba..a5d2e05a3 100644
 --- a/linker/linker.cpp
 +++ b/linker/linker.cpp
 @@ -98,7 +98,6 @@ static uint64_t g_module_unload_counter = 0;
@@ -20,7 +20,7 @@ index 8f7891558..a27b983ec 100644
  
  static const char* const kLdGeneratedConfigFilePath = "/linkerconfig/ld.config.txt";
  
-@@ -3558,10 +3557,6 @@ static std::string get_ld_config_file_apex_path(const char* executable_path) {
+@@ -3544,10 +3543,6 @@ static std::string get_ld_config_file_apex_path(const char* executable_path) {
  }
  
  static std::string get_ld_config_file_vndk_path() {

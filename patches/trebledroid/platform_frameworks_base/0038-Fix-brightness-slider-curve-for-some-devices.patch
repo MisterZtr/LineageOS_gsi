@@ -1,7 +1,7 @@
-From b8cf666a672f0c82c8f356a4880e3fb2ab7789e0 Mon Sep 17 00:00:00 2001
+From 2ab898bb8c6e28575823bc5540ca7e299eabb7cb Mon Sep 17 00:00:00 2001
 From: ChonDoit <thphantomblog@gmail.com>
 Date: Thu, 24 Aug 2023 15:58:15 -0300
-Subject: [PATCH 38/56] Fix brightness slider curve for some devices
+Subject: [PATCH 38/57] Fix brightness slider curve for some devices
 
 Some devices report max brightness as 2047 or 4095
 ---
@@ -22,18 +22,18 @@ index 66ed10433459..f6820b4436fc 100644
  /** Utility methods for calculating the display brightness. */
  public class BrightnessUtils {
  
-+    public static final boolean LowGammaBrightness = Boolean.parseBoolean(SystemProperties.get("persist.sys.phh.low_gamma_brightness", "false"));
-+
      public static final boolean sDisableGammaConversion =
              SystemProperties.getBoolean("sys.brightness.disable_gamma_conversion", false);
  
++    public static final boolean LowGammaBrightness = Boolean.parseBoolean(SystemProperties.get("persist.sys.phh.low_gamma_brightness", "false"));
++
      public static final int GAMMA_SPACE_MIN = 0;
 -    public static final int GAMMA_SPACE_MAX = 65535;
 +    public static final int GAMMA_SPACE_MAX = LowGammaBrightness ? 255 : 65535;
  
      // Hybrid Log Gamma constant values
      private static final float R = 0.5f;
-@@ -88,9 +93,8 @@ public class BrightnessUtils {
+@@ -102,9 +106,8 @@ public class BrightnessUtils {
          // it shouldn't be out of bounds.
          final float normalizedRet = MathUtils.constrain(ret, 0, 12);
  
@@ -45,7 +45,7 @@ index 66ed10433459..f6820b4436fc 100644
      }
  
      /**
-@@ -137,6 +141,7 @@ public class BrightnessUtils {
+@@ -156,6 +159,7 @@ public class BrightnessUtils {
              ret = A * MathUtils.log(normalizedVal - B) + C;
          }
  

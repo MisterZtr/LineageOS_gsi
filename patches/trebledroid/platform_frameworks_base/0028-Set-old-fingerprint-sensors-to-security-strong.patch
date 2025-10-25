@@ -1,7 +1,7 @@
-From 03fa38e465fae688931d7b71cb331dc6ea137cc8 Mon Sep 17 00:00:00 2001
+From 9a3192c6723b6bb8d51fa7c39beb49604e538862 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 3 Dec 2022 17:13:24 -0500
-Subject: [PATCH 28/56] Set old fingerprint sensors to security "strong"
+Subject: [PATCH 28/57] Set old fingerprint sensors to security "strong"
 
 This allows removing config_biometric_sensors from overlays, which led
 to Pixels not booting, because they are using AIDL biometric sensor, and
@@ -11,10 +11,10 @@ despite its name, config_biometric_sensors is HIDL-specific
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/services/core/java/com/android/server/biometrics/AuthService.java b/services/core/java/com/android/server/biometrics/AuthService.java
-index 2d802b21cf03..012568837d8b 100644
+index b6768c9c087a..bc9684974fca 100644
 --- a/services/core/java/com/android/server/biometrics/AuthService.java
 +++ b/services/core/java/com/android/server/biometrics/AuthService.java
-@@ -760,7 +760,7 @@ public class AuthService extends SystemService {
+@@ -753,7 +753,7 @@ public class AuthService extends SystemService {
              final int firstApiLevel = SystemProperties.getInt(SYSPROP_FIRST_API_LEVEL, 0);
              final int apiLevel = SystemProperties.getInt(SYSPROP_API_LEVEL, firstApiLevel);
              String[] configStrings = mInjector.getConfiguration(getContext());
@@ -23,7 +23,7 @@ index 2d802b21cf03..012568837d8b 100644
                  // For backwards compatibility with R where biometrics could work without being
                  // configured in config_biometric_sensors. In the absence of a vendor provided
                  // configuration, we assume the weakest biometric strength (i.e. convenience).
-@@ -945,7 +945,7 @@ public class AuthService extends SystemService {
+@@ -938,7 +938,7 @@ public class AuthService extends SystemService {
          if (pm.hasSystemFeature(PackageManager.FEATURE_FACE)) {
              modalities.add(String.valueOf(BiometricAuthenticator.TYPE_FACE));
          }

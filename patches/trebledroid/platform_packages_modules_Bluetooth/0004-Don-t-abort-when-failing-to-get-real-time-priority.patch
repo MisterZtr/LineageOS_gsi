@@ -1,4 +1,4 @@
-From 899d3d0a4bfcd5555f042a3cc90aa69db2305852 Mon Sep 17 00:00:00 2001
+From 6743503fe7b590334a1c3505d7036f604e6549ec Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 17 Oct 2021 17:17:13 -0400
 Subject: [PATCH 4/8] Don't abort when failing to get real-time priority
@@ -19,7 +19,7 @@ Change-Id: Id25dac186628e933185bdfd640498004459b375a
  4 files changed, 14 insertions(+), 4 deletions(-)
 
 diff --git a/system/btif/src/btif_a2dp_sink.cc b/system/btif/src/btif_a2dp_sink.cc
-index 2d214b0521..693dc317cc 100644
+index e2258d35f2..d0a2879c9a 100644
 --- a/system/btif/src/btif_a2dp_sink.cc
 +++ b/system/btif/src/btif_a2dp_sink.cc
 @@ -204,7 +204,7 @@ bool btif_a2dp_sink_init() {
@@ -30,12 +30,12 @@ index 2d214b0521..693dc317cc 100644
 +    log::error("Failed to increase A2DP decoder thread priority");
  #endif
    }
-   btif_a2dp_sink_cb.worker_thread.DoInThread(FROM_HERE,
+   btif_a2dp_sink_cb.worker_thread.DoInThread(base::BindOnce(btif_a2dp_sink_init_delayed));
 diff --git a/system/btif/src/btif_a2dp_source.cc b/system/btif/src/btif_a2dp_source.cc
-index a7ba4fa0dc..0da8a8ad40 100644
+index 5bf2ef0d87..ddd48b4621 100644
 --- a/system/btif/src/btif_a2dp_source.cc
 +++ b/system/btif/src/btif_a2dp_source.cc
-@@ -451,7 +451,7 @@ static void btif_a2dp_source_startup_delayed() {
+@@ -438,7 +438,7 @@ static void btif_a2dp_source_startup_delayed() {
    log::info("state={}", btif_a2dp_source_cb.StateStr());
    if (!btif_a2dp_source_thread.EnableRealTimeScheduling()) {
  #if defined(__ANDROID__)
@@ -43,14 +43,14 @@ index a7ba4fa0dc..0da8a8ad40 100644
 +    log::error("unable to enable real time scheduling");
  #endif
    }
-   if (!bluetooth::audio::a2dp::init(local_thread(), &a2dp_stream_callbacks,
+   if (!bluetooth::audio::a2dp::init(get_main_thread(), &a2dp_stream_callbacks,
 diff --git a/system/osi/src/alarm.cc b/system/osi/src/alarm.cc
-index c1a1b6da10..90bd938c64 100644
+index 6aaf4354ae..17712d557d 100644
 --- a/system/osi/src/alarm.cc
 +++ b/system/osi/src/alarm.cc
-@@ -680,7 +680,17 @@ static bool timer_create_internal(const clockid_t clock_id, timer_t* timer) {
+@@ -679,7 +679,17 @@ static bool timer_create_internal(const clockid_t clock_id, timer_t* timer) {
    sigevent.sigev_notify = SIGEV_THREAD;
-   sigevent.sigev_notify_function = (void (*)(union sigval))timer_callback;
+   sigevent.sigev_notify_function = timer_callback;
    sigevent.sigev_notify_attributes = &thread_attr;
 -  if (timer_create(clock_id, &sigevent, timer) == -1) {
 +
@@ -68,7 +68,7 @@ index c1a1b6da10..90bd938c64 100644
      if (clock_id == CLOCK_BOOTTIME_ALARM) {
        log::error(
 diff --git a/system/stack/btu/main_thread.cc b/system/stack/btu/main_thread.cc
-index 6223e66716..e748d6116e 100644
+index 6364f81e8b..bbc7ae1e5f 100644
 --- a/system/stack/btu/main_thread.cc
 +++ b/system/stack/btu/main_thread.cc
 @@ -69,7 +69,7 @@ void main_thread_start_up() {

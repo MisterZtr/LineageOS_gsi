@@ -1,0 +1,49 @@
+From bb860ccc58a1cf028e9977a3b5dfce8011268087 Mon Sep 17 00:00:00 2001
+From: Jonathan Klee <jonathan.klee@e.email>
+Date: Thu, 12 Dec 2024 15:27:57 +0100
+Subject: [PATCH 53/57] Allow spoofing signingInfo for microG
+ Companion/Services
+
+- Spoof PackageInfo signingInfo + signatures so that
+  G suite apps do not complain anymore.
+
+Change-Id: I86f182c9e1d18b0e997803842577a90ef740cfd1
+Signed-off-by: althafvly <althafvly@gmail.com>
+---
+ .../java/com/android/server/pm/ComputerEngine.java  | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/services/core/java/com/android/server/pm/ComputerEngine.java b/services/core/java/com/android/server/pm/ComputerEngine.java
+index e73128ce30a5..14836d6bcc6c 100644
+--- a/services/core/java/com/android/server/pm/ComputerEngine.java
++++ b/services/core/java/com/android/server/pm/ComputerEngine.java
+@@ -170,6 +170,7 @@ import java.io.FileOutputStream;
+ import java.io.IOException;
+ import java.io.PrintWriter;
+ import java.nio.charset.StandardCharsets;
++import java.security.cert.CertificateException;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Collection;
+@@ -1583,6 +1584,18 @@ public class ComputerEngine implements Computer {
+ 
+             generateFakeSignature(p).ifPresent(fakeSignature -> {
+                 packageInfo.signatures = new Signature[]{fakeSignature};
++                try {
++                    packageInfo.signingInfo = new SigningInfo(
++                            new SigningDetails(
++                                    packageInfo.signatures,
++                                    SigningDetails.SignatureSchemeVersion.SIGNING_BLOCK_V3,
++                                    SigningDetails.toSigningKeys(packageInfo.signatures),
++                                    null
++                            )
++                    );
++                } catch (CertificateException e) {
++                    Slog.e(TAG, "Caught an exception when creating signing keys: ", e);
++                }
+             });
+ 
+             return packageInfo;
+-- 
+2.25.1
+

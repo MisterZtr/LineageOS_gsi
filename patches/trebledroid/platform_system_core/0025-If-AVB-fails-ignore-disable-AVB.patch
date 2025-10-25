@@ -1,4 +1,4 @@
-From d2d0b7bd784225a1cd4374d75efadbdd711b4c2c Mon Sep 17 00:00:00 2001
+From b12504708c8177ded23b22580cdaa5777deaee61 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 31 Mar 2024 17:18:05 -0400
 Subject: [PATCH 25/28] If AVB fails, ignore/disable AVB
@@ -30,10 +30,10 @@ index e06a64593..960b3389c 100644
  
          if (!fsm->DoFirstStageMount()) {
 diff --git a/init/first_stage_mount.cpp b/init/first_stage_mount.cpp
-index 5e8e458f9..a51dece11 100644
+index 5a7a78e3d..dc7f6b45e 100644
 --- a/init/first_stage_mount.cpp
 +++ b/init/first_stage_mount.cpp
-@@ -239,6 +239,12 @@ Result<std::unique_ptr<FirstStageMount>> FirstStageMount::Create(const std::stri
+@@ -233,6 +233,12 @@ Result<std::unique_ptr<FirstStageMount>> FirstStageMount::Create(const std::stri
      } else {
          fstab = ReadFirstStageFstabAndroid();
      }
@@ -46,7 +46,7 @@ index 5e8e458f9..a51dece11 100644
      if (!fstab.ok()) {
          return fstab.error();
      }
-@@ -277,7 +283,9 @@ bool FirstStageMountVBootV2::DoFirstStageMount() {
+@@ -269,7 +275,9 @@ bool FirstStageMountVBootV2::DoFirstStageMount() {
          return true;
      }
  

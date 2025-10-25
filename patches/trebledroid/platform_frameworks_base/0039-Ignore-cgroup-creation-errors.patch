@@ -1,7 +1,7 @@
-From 25f531f56162beac95880adcdb282c0b254308c8 Mon Sep 17 00:00:00 2001
+From da3573458982a32020bac0f2e64867a235ce07e8 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 18 Oct 2023 16:53:40 -0400
-Subject: [PATCH 39/56] Ignore cgroup creation errors
+Subject: [PATCH 39/57] Ignore cgroup creation errors
 
 For old kernels who don't have those modern cgroups
 ---
@@ -10,10 +10,10 @@ For old kernels who don't have those modern cgroups
  2 files changed, 2 insertions(+), 5 deletions(-)
 
 diff --git a/core/jni/com_android_internal_os_Zygote.cpp b/core/jni/com_android_internal_os_Zygote.cpp
-index aeaeeca3e845..ecc4fa7197e4 100644
+index 42f444419765..c7f1d2d7fb72 100644
 --- a/core/jni/com_android_internal_os_Zygote.cpp
 +++ b/core/jni/com_android_internal_os_Zygote.cpp
-@@ -1961,10 +1961,12 @@ static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids,
+@@ -1971,10 +1971,12 @@ static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids,
      if (getuid() == 0) {
          const int rc = createProcessGroup(uid, getpid());
          if (rc != 0) {
@@ -27,10 +27,10 @@ index aeaeeca3e845..ecc4fa7197e4 100644
      }
  
 diff --git a/services/core/java/com/android/server/am/ProcessList.java b/services/core/java/com/android/server/am/ProcessList.java
-index 70febcd63455..f04aee67253a 100644
+index ad47e67b9332..66083024af87 100644
 --- a/services/core/java/com/android/server/am/ProcessList.java
 +++ b/services/core/java/com/android/server/am/ProcessList.java
-@@ -2593,14 +2593,9 @@ public final class ProcessList {
+@@ -2589,14 +2589,9 @@ public final class ProcessList {
                          // If we're not told to skip the process group creation, go create it.
                          final int res = Process.createProcessGroup(uid, startResult.pid);
                          if (res < 0) {

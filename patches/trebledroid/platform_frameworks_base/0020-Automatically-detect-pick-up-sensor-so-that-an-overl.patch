@@ -1,7 +1,7 @@
-From 3a6699b049666b5d000bfb3e303ad674a5f4dd8a Mon Sep 17 00:00:00 2001
+From 029c63575ff808f36a9729168cb4515e6373bf3e Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 20 Mar 2021 14:31:01 +0100
-Subject: [PATCH 20/56] Automatically detect pick up sensor, so that an overlay
+Subject: [PATCH 20/57] Automatically detect pick up sensor, so that an overlay
  is required for the sole purpose of enabling pulse doze on pick up sensor
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 20/56] Automatically detect pick up sensor, so that an overlay
  1 file changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/core/java/android/hardware/display/AmbientDisplayConfiguration.java b/core/java/android/hardware/display/AmbientDisplayConfiguration.java
-index 7361d4f6b882..1f0a7b7cb611 100644
+index 063f5545dd71..79e72f48f7f2 100644
 --- a/core/java/android/hardware/display/AmbientDisplayConfiguration.java
 +++ b/core/java/android/hardware/display/AmbientDisplayConfiguration.java
 @@ -28,6 +28,9 @@ import android.text.TextUtils;

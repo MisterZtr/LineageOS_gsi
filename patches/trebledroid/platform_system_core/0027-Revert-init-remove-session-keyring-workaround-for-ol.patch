@@ -1,4 +1,4 @@
-From bae92a3ade68e6c026ed434769f5a1c427cd9ea6 Mon Sep 17 00:00:00 2001
+From fbf58325db024cae18cbbc1d50f6fec3c669c495 Mon Sep 17 00:00:00 2001
 From: Alberto Ponces <ponces26@gmail.com>
 Date: Sun, 20 Oct 2024 21:15:08 +0100
 Subject: [PATCH 27/28] Revert "init: remove session keyring workaround for old
@@ -15,10 +15,10 @@ This reverts commit 5d7c35ce205f1b4afadd6a1725c0b5e03962a97c.
  6 files changed, 28 insertions(+)
 
 diff --git a/init/Android.bp b/init/Android.bp
-index ed19b4b86..dd3c2e120 100644
+index ed8123e38..f1836db57 100644
 --- a/init/Android.bp
 +++ b/init/Android.bp
-@@ -185,6 +185,7 @@ libinit_cc_defaults {
+@@ -188,6 +188,7 @@ libinit_cc_defaults {
          "libext4_utils",
          "libfs_mgr",
          "libgsi",
@@ -97,7 +97,7 @@ index 8cfd597d9..cb3700a7f 100644
          "libprocessgroup",
          "libselinux",
 diff --git a/init/init.cpp b/init/init.cpp
-index 5b0b0ddee..6eceed8e9 100644
+index f6b294136..de80807e0 100644
 --- a/init/init.cpp
 +++ b/init/init.cpp
 @@ -52,6 +52,7 @@
@@ -108,7 +108,7 @@ index 5b0b0ddee..6eceed8e9 100644
  #include <libavb/libavb.h>
  #include <libgsi/libgsi.h>
  #include <libsnapshot/snapshot.h>
-@@ -962,6 +963,11 @@ int SecondStageMain(int argc, char** argv) {
+@@ -1000,6 +1001,11 @@ int SecondStageMain(int argc, char** argv) {
                     << " to /proc/1/oom_score_adj: " << result.error();
      }
  

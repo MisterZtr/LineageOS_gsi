@@ -1,4 +1,4 @@
-From 9595a5615d85528cfe65c29013af45ca4ff1a783 Mon Sep 17 00:00:00 2001
+From 18eb220aa727e3a010b1f63240074cbadb40bf28 Mon Sep 17 00:00:00 2001
 From: Isaac Chen <tingyi364@gmail.com>
 Date: Wed, 23 Jun 2021 13:07:30 +0800
 Subject: [PATCH 03/28] init: Do not start console service when debuggable
@@ -13,10 +13,10 @@ Change-Id: I34cfd6b42d3b9aee4b3e63181480cfb8b1255f29
  1 file changed, 3 deletions(-)
 
 diff --git a/rootdir/init.rc b/rootdir/init.rc
-index ae6a6588b..372157cb9 100644
+index 471059bc8..0019c38d6 100644
 --- a/rootdir/init.rc
 +++ b/rootdir/init.rc
-@@ -1314,9 +1314,6 @@ on property:ro.debuggable=1
+@@ -1315,9 +1315,6 @@ on property:ro.debuggable=1
      # Give reads to anyone for the accessibility trace folder on debug builds.
      chmod 0775 /data/misc/a11ytrace
  

@@ -1,5 +1,5 @@
 English | [Русский](README-RU.md)
-### To get started with building LineageOS 22.2 GSI,
+### To get started with building LineageOS 23.0 GSI,
 You'll need to get familiar with [Git and Repo](https://source.android.com/source/using-repo.html) as well as [How to build a GSI](https://github.com/phhusson/treble_experimentations/wiki/How-to-build-a-GSI%3F).
 
 
@@ -16,13 +16,13 @@ cd LineageOS
 ### To initialize your local repository, run this command:
 
 ```bash
-repo init -u https://github.com/LineageOS/android.git -b lineage-22.2 --git-lfs
+repo init -u https://github.com/LineageOS/android.git -b lineage-23.0 --git-lfs
 ```
  
 
 ### Clone the Manifest to add necessary dependencies for gsi:
  
-    git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests  -b 15-los-qpr2
+    git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests -b lineage-23.0
   
 
 
@@ -70,7 +70,7 @@ In ROM folder, for vanilla version:
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-lunch treble_arm64_bvN-bp1a-userdebug
+lunch treble_arm64_bvN-bp2a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
@@ -79,7 +79,7 @@ For version with google services:
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-lunch treble_arm64_bgN-bp1a-userdebug
+lunch treble_arm64_bgN-bp2a-userdebug
 make systemimage -j$(nproc --all)
  ```
 

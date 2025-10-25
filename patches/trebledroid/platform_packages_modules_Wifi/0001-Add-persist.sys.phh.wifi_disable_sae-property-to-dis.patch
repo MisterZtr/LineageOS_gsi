@@ -1,4 +1,4 @@
-From b15804e01fb39716fee5c800695b61b114f7be15 Mon Sep 17 00:00:00 2001
+From d16bd1eb2ec335b29ebc56b6b0ca2320a9eb123d Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 21 Feb 2024 17:26:07 -0500
 Subject: [PATCH] Add persist.sys.phh.wifi_disable_sae property to disable
@@ -10,10 +10,10 @@ Change-Id: I72a0133e986f2c745af3c915ed65d7b540d2119b
  1 file changed, 2 insertions(+)
 
 diff --git a/service/java/com/android/server/wifi/WifiGlobals.java b/service/java/com/android/server/wifi/WifiGlobals.java
-index bc778dada4..6624aa6195 100644
+index 1c4e549cf1..193b317541 100644
 --- a/service/java/com/android/server/wifi/WifiGlobals.java
 +++ b/service/java/com/android/server/wifi/WifiGlobals.java
-@@ -344,6 +344,8 @@ public class WifiGlobals {
+@@ -348,6 +348,8 @@ public class WifiGlobals {
       * @return boolean true if auto-upgrade is enabled, false otherwise.
       */
      public boolean isWpa3SaeUpgradeEnabled() {

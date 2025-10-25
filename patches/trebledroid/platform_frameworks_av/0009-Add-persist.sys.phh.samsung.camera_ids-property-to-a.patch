@@ -1,7 +1,7 @@
-From 3ac6f3144c918f41793d5bacdb4a694e47f34ce0 Mon Sep 17 00:00:00 2001
+From 5b6ae66d13d38f1448e1fb380bde681bc67b9138 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Thu, 14 May 2020 19:54:55 +0200
-Subject: [PATCH 09/24] Add persist.sys.phh.samsung.camera_ids property to
+Subject: [PATCH 09/25] Add persist.sys.phh.samsung.camera_ids property to
  access hidden Samsung cameras
 
 Change-Id: I2c7bf535272acc28ed2277e96c78ddd28a0b4593
@@ -11,7 +11,7 @@ Change-Id: I2c7bf535272acc28ed2277e96c78ddd28a0b4593
  2 files changed, 13 insertions(+), 2 deletions(-)
 
 diff --git a/services/camera/libcameraservice/Android.bp b/services/camera/libcameraservice/Android.bp
-index b44f94923c..c96cd93ee6 100644
+index 0606d7414a..391b8a766a 100644
 --- a/services/camera/libcameraservice/Android.bp
 +++ b/services/camera/libcameraservice/Android.bp
 @@ -113,6 +113,7 @@ cc_defaults {

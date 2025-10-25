@@ -1,4 +1,4 @@
-From 9ebdb38cc4e7c8c49b4989e5a32411a30ab8e87c Mon Sep 17 00:00:00 2001
+From 9a9d06e878c34564ba8280a0fb0f171c267eac0a Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Fri, 6 Oct 2023 08:25:11 -0400
 Subject: [PATCH 1/2] Revert "Remove 28.0 compat support"
@@ -707,11 +707,11 @@ Change-Id: I2b0c61ced1f9651f74da85d1228d7260cc782c80
  create mode 100644 private/compat/28.0/28.0.ignore.cil
 
 diff --git a/Android.bp b/Android.bp
-index 558810cb8..82a597c45 100644
+index 15d15961b..b91d9e08a 100644
 --- a/Android.bp
 +++ b/Android.bp
-@@ -105,6 +105,8 @@ phony {
-         "plat_sepolicy_genfs_202504.cil",
+@@ -106,6 +106,8 @@ phony {
+         "plat_sepolicy_genfs_202604.cil",
          "plat_service_contexts",
          "secilc",
 +        "plat_28.0.cil",
@@ -719,7 +719,7 @@ index 558810cb8..82a597c45 100644
          "plat_29.0.cil",
          "29.0.compat.cil",
          "plat_30.0.cil",
-@@ -987,6 +989,7 @@ phony {
+@@ -1025,6 +1027,7 @@ phony {
          "system_ext_sepolicy.cil",
      ] + [
          //"ifdef HAS_SYSTEM_EXT_SEPOLICY" check included in .cil
@@ -727,7 +727,7 @@ index 558810cb8..82a597c45 100644
          "system_ext_29.0.cil",
          "system_ext_30.0.cil",
          "system_ext_31.0.cil",
-@@ -1016,6 +1019,7 @@ phony {
+@@ -1061,6 +1064,7 @@ phony {
          "system_ext_mac_permissions.xml",
          "system_ext_bug_map",
          // $(addprefix system_ext_,$(addsuffix .compat.cil,$(PLATFORM_SEPOLICY_COMPAT_VERSIONS))) \
@@ -735,7 +735,7 @@ index 558810cb8..82a597c45 100644
          "system_ext_29.0.compat.cil",
          "system_ext_30.0.compat.cil",
          "system_ext_31.0.compat.cil",
-@@ -1040,6 +1044,7 @@ phony {
+@@ -1092,6 +1096,7 @@ phony {
          "product_mapping_file",
          "product_sepolicy.cil",
          // "ifdef HAS_PRODUCT_PUBLIC_SEPOLICY" check included in .cil
@@ -743,7 +743,7 @@ index 558810cb8..82a597c45 100644
          "product_29.0.cil",
          "product_30.0.cil",
          "product_31.0.cil",
-@@ -1142,6 +1147,7 @@ phony {
+@@ -1201,6 +1206,7 @@ phony {
  phony {
      name: "selinux_policy_system",
      required: [
@@ -751,7 +751,7 @@ index 558810cb8..82a597c45 100644
          "29.0.compat.cil",
          "30.0.compat.cil",
          "31.0.compat.cil",
-@@ -1150,6 +1156,7 @@ phony {
+@@ -1209,6 +1215,7 @@ phony {
          "34.0.compat.cil",
          "build_sepolicy",
          "fuzzer_bindings_test",
@@ -759,7 +759,7 @@ index 558810cb8..82a597c45 100644
          "plat_29.0.cil",
          "plat_30.0.cil",
          "plat_31.0.cil",
-@@ -1193,6 +1200,7 @@ phony {
+@@ -1261,6 +1268,7 @@ phony {
              "sepolicy_compat_test",
              "sepolicy_test",
              "sepolicy_dev_type_test",
@@ -768,7 +768,7 @@ index 558810cb8..82a597c45 100644
              "treble_sepolicy_tests_30.0",
              "treble_sepolicy_tests_31.0",
 diff --git a/compat/Android.bp b/compat/Android.bp
-index 28936dd53..0b201a586 100644
+index be895d9b0..4a144de4b 100644
 --- a/compat/Android.bp
 +++ b/compat/Android.bp
 @@ -23,6 +23,13 @@ package {
@@ -34613,7 +34613,7 @@ index 000000000..7213f9542
 +    vrflinger_vsync_service
 +    watchdogd_tmpfs))
 diff --git a/treble_sepolicy_tests_for_release/Android.bp b/treble_sepolicy_tests_for_release/Android.bp
-index 7756cbb82..ffa0f8740 100644
+index 2d19a427d..58a204a7b 100644
 --- a/treble_sepolicy_tests_for_release/Android.bp
 +++ b/treble_sepolicy_tests_for_release/Android.bp
 @@ -23,6 +23,32 @@ package {

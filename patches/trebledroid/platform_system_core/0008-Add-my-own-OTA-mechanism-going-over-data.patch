@@ -1,4 +1,4 @@
-From 4b3a487e68b5c66c6926f53b4201e675857a5302 Mon Sep 17 00:00:00 2001
+From bde4234a4250fd15338635f4fcfdd708db90bc92 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 22 Jan 2022 14:34:45 -0500
 Subject: [PATCH 08/28] Add my own OTA mechanism going over /data
@@ -10,7 +10,7 @@ Change-Id: I9cacff2d761affa0376b4bb8ca63353a9d95b5de
  2 files changed, 65 insertions(+), 1 deletion(-)
 
 diff --git a/fs_mgr/libfiemap/image_manager.cpp b/fs_mgr/libfiemap/image_manager.cpp
-index a5da6e342..85f4ed62d 100644
+index bc61d15bc..83766adbf 100644
 --- a/fs_mgr/libfiemap/image_manager.cpp
 +++ b/fs_mgr/libfiemap/image_manager.cpp
 @@ -156,7 +156,7 @@ bool ImageManager::MetadataDirIsTest() const {
@@ -23,11 +23,11 @@ index a5da6e342..85f4ed62d 100644
  
  FiemapStatus ImageManager::CreateBackingImage(
 diff --git a/init/selinux.cpp b/init/selinux.cpp
-index 6316b4deb..12e04d843 100644
+index 03fd2d2bf..668c857af 100644
 --- a/init/selinux.cpp
 +++ b/init/selinux.cpp
-@@ -58,6 +58,9 @@
- #include <stdlib.h>
+@@ -59,6 +59,9 @@
+ #include <sys/mount.h>
  #include <sys/wait.h>
  #include <unistd.h>
 +#include <fcntl.h>
@@ -36,7 +36,7 @@ index 6316b4deb..12e04d843 100644
  
  #include <android-base/chrono_utils.h>
  #include <android-base/file.h>
-@@ -73,12 +76,16 @@
+@@ -75,6 +78,9 @@
  #include <libgsi/libgsi.h>
  #include <libsnapshot/snapshot.h>
  #include <selinux/android.h>
@@ -46,14 +46,15 @@ index 6316b4deb..12e04d843 100644
  
  #include "block_dev_initializer.h"
  #include "debug_ramdisk.h"
- #include "reboot_utils.h"
+@@ -82,6 +88,7 @@
+ #include "second_stage_resources.h"
  #include "snapuserd_transition.h"
  #include "util.h"
 +#include "switch_root.h"
  
  using namespace std::string_literals;
  
-@@ -87,6 +94,7 @@ using android::base::Timer;
+@@ -90,6 +97,7 @@ using android::base::Timer;
  using android::base::unique_fd;
  using android::fs_mgr::AvbHandle;
  using android::snapshot::SnapshotManager;
@@ -61,7 +62,7 @@ index 6316b4deb..12e04d843 100644
  
  namespace android {
  namespace init {
-@@ -658,6 +666,60 @@ void LoadSelinuxPolicyMicrodroid() {
+@@ -661,6 +669,60 @@ void LoadSelinuxPolicyMicrodroid() {
      LoadSelinuxPolicy(policy);
  }
  
@@ -122,7 +123,7 @@ index 6316b4deb..12e04d843 100644
  // The SELinux setup process is carefully orchestrated around snapuserd. Policy
  // must be loaded off dynamic partitions, and during an OTA, those partitions
  // cannot be read without snapuserd. But, with kernel-privileged snapuserd
-@@ -674,6 +736,8 @@ void LoadSelinuxPolicyMicrodroid() {
+@@ -677,6 +739,8 @@ void LoadSelinuxPolicyMicrodroid() {
  //
  // After this sequence, it is safe to enable enforcing mode and continue booting.
  void LoadSelinuxPolicyAndroid() {

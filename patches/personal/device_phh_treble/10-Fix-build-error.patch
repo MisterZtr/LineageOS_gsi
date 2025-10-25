@@ -1,0 +1,19 @@
+From a0917e0a4413ead6eef7b8bb0d4f61cd4e14b9f1 Mon Sep 17 00:00:00 2001
+From: MisterZtr <andey2004586@gmail.com>
+Date: Wed Oct 22 21:43:32 2025 +0300
+Subject: Fix build error
+
+diff --git a/base.mk b/base.mk
+index 553d5a5..d916095 100644
+--- a/base.mk
++++ b/base.mk
+@@ -195,9 +195,7 @@ PRODUCT_PACKAGES += \
+     android.hardware.biometrics.fingerprint@2.1-service.oplus.compat \
+ 
+ PRODUCT_PACKAGES += \
+-    vr_hwc \
+     curl \
+-    healthd \
+ 
+ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+     debug.fdsan=warn_once \

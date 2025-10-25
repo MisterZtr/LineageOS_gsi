@@ -1,7 +1,7 @@
-From 377797ce5e93e7219ac74b0fd02c69a888a34567 Mon Sep 17 00:00:00 2001
+From fcfbe31b01e5bc0107b4d485698c7cdf6844c4c8 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Thu, 22 Oct 2020 23:22:46 +0200
-Subject: [PATCH 02/19] Matching an input with a display uses uniqueId
+Subject: [PATCH 02/16] Matching an input with a display uses uniqueId
 
 Not all devices have a `location`, notably bluetooth devices.
 However, we might still want to associate them with a screen,
@@ -15,10 +15,10 @@ Change-Id: Ifcbc8329d54386f58e013270d9888316c0f516b6
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/services/inputflinger/reader/InputDevice.cpp b/services/inputflinger/reader/InputDevice.cpp
-index 5e42d57f06..e0717f258c 100644
+index 594dcba144..810e90e018 100644
 --- a/services/inputflinger/reader/InputDevice.cpp
 +++ b/services/inputflinger/reader/InputDevice.cpp
-@@ -304,7 +304,10 @@ std::list<NotifyArgs> InputDevice::configureInternal(nsecs_t when,
+@@ -310,7 +310,10 @@ std::list<NotifyArgs> InputDevice::configureInternal(nsecs_t when,
                  }
              }
              // Find the display port that corresponds to the current input port.

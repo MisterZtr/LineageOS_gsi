@@ -1,7 +1,7 @@
-From 7485c9ccd486057ba0bb6260ec7257b8fc6a122b Mon Sep 17 00:00:00 2001
+From e134d845a8da9ec74e3ed26d2e07c1aa39b12eb4 Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Sun, 16 Mar 2025 13:25:10 -0400
-Subject: [PATCH 19/19] Revert "Remove dead code from LayerFE"
+Subject: [PATCH 16/16] Revert "Remove dead code from LayerFE"
 
 This reverts commit 330571240ff3d44fdbecbe513309d73ba82404e6.
 
@@ -14,10 +14,10 @@ Change-Id: If3af99ec76a8c595dcd1ea22965f2d126d74a315
  4 files changed, 15 insertions(+)
 
 diff --git a/services/surfaceflinger/CompositionEngine/include/compositionengine/LayerFE.h b/services/surfaceflinger/CompositionEngine/include/compositionengine/LayerFE.h
-index cda4edc216..8199c929e5 100644
+index e2ea0f1397..41d4afe207 100644
 --- a/services/surfaceflinger/CompositionEngine/include/compositionengine/LayerFE.h
 +++ b/services/surfaceflinger/CompositionEngine/include/compositionengine/LayerFE.h
-@@ -148,6 +148,9 @@ public:
+@@ -154,6 +154,9 @@ public:
      virtual std::optional<LayerSettings> prepareClientComposition(
              ClientCompositionTargetSettings&) const = 0;
  
@@ -28,7 +28,7 @@ index cda4edc216..8199c929e5 100644
      // fence. This should only be called when a promise has not yet been created, or
      // after the previous promise has already been fulfilled. Attempting to call this
 diff --git a/services/surfaceflinger/CompositionEngine/include/compositionengine/mock/LayerFE.h b/services/surfaceflinger/CompositionEngine/include/compositionengine/mock/LayerFE.h
-index 272fa3eef7..a236ebf180 100644
+index f65a9083c5..4733939ce2 100644
 --- a/services/surfaceflinger/CompositionEngine/include/compositionengine/mock/LayerFE.h
 +++ b/services/surfaceflinger/CompositionEngine/include/compositionengine/mock/LayerFE.h
 @@ -50,6 +50,9 @@ public:
@@ -40,20 +40,20 @@ index 272fa3eef7..a236ebf180 100644
 +
      MOCK_METHOD0(createReleaseFenceFuture, ftl::Future<FenceResult>());
      MOCK_METHOD1(setReleaseFence, void(const FenceResult&));
-     MOCK_METHOD0(getReleaseFencePromiseStatus, LayerFE::ReleaseFencePromiseStatus());
+     MOCK_METHOD1(setReleasedBuffer, void(sp<GraphicBuffer>));
 diff --git a/services/surfaceflinger/LayerFE.cpp b/services/surfaceflinger/LayerFE.cpp
-index de64b271f5..012aa32c30 100644
+index 3cd432cd2b..d56e8bb1a7 100644
 --- a/services/surfaceflinger/LayerFE.cpp
 +++ b/services/surfaceflinger/LayerFE.cpp
-@@ -28,6 +28,7 @@
+@@ -27,6 +27,7 @@
+ #include "LayerFE.h"
  #include "SurfaceFlinger.h"
- #include "common/FlagManager.h"
  #include "ui/FenceResult.h"
 +#include "ui/LayerStack.h"
  
  namespace android {
  
-@@ -355,6 +356,11 @@ CompositionResult LayerFE::stealCompositionResult() {
+@@ -358,6 +359,11 @@ CompositionResult LayerFE::stealCompositionResult() {
      return result;
  }
  
@@ -66,10 +66,10 @@ index de64b271f5..012aa32c30 100644
      return mName.c_str();
  }
 diff --git a/services/surfaceflinger/LayerFE.h b/services/surfaceflinger/LayerFE.h
-index 9483aebafa..ce6d27a91a 100644
+index b897a90687..fad77e92a9 100644
 --- a/services/surfaceflinger/LayerFE.h
 +++ b/services/surfaceflinger/LayerFE.h
-@@ -25,12 +25,14 @@
+@@ -26,12 +26,14 @@
  #include "compositionengine/LayerFE.h"
  #include "compositionengine/LayerFECompositionState.h"
  #include "renderengine/LayerSettings.h"
@@ -84,7 +84,7 @@ index 9483aebafa..ce6d27a91a 100644
      sp<Fence> lastClientCompositionFence = nullptr;
      bool wasPictureProfileCommitted = false;
      // TODO(b/337330263): Why does LayerFE coming from SF have a null composition state?
-@@ -46,6 +48,7 @@ public:
+@@ -47,6 +49,7 @@ public:
      // compositionengine::LayerFE overrides
      const compositionengine::LayerFECompositionState* getCompositionState() const override;
      bool onPreComposition(bool updatingOutputGeometryThisFrame) override;

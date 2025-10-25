@@ -1,4 +1,4 @@
-From 3b0b2365b216f0147df00e822c231fb09c75f68f Mon Sep 17 00:00:00 2001
+From 8e6a2ca279b41b105d14d870492491dca0f10415 Mon Sep 17 00:00:00 2001
 From: Alberto Ponces <ponces26@gmail.com>
 Date: Tue, 1 Feb 2022 13:48:35 +0000
 Subject: [PATCH 07/28] Revert "Set /system/xbin permissions to 750."
@@ -11,18 +11,18 @@ Change-Id: I277def5153616d6f00bc877e6170b7fed7cd799d
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/libcutils/fs_config.cpp b/libcutils/fs_config.cpp
-index 2e4b9b475..9da8b58c3 100644
+index 0d1b7fe12..4cd5aae27 100644
 --- a/libcutils/fs_config.cpp
 +++ b/libcutils/fs_config.cpp
-@@ -79,7 +79,7 @@ static const struct fs_path_config android_dirs[] = {
+@@ -77,7 +77,7 @@ static const struct fs_path_config android_dirs[] = {
      { 00751, AID_ROOT,         AID_SHELL,        0, "system/bin" },
      { 00755, AID_ROOT,         AID_ROOT,         0, "system/etc/ppp" },
      { 00755, AID_ROOT,         AID_SHELL,        0, "system/vendor" },
 -    { 00750, AID_ROOT,         AID_SHELL,        0, "system/xbin" },
 +    { 00751, AID_ROOT,         AID_SHELL,        0, "system/xbin" },
-     { 00751, AID_ROOT,         AID_SHELL,        0, "system/apex/*/bin" },
-     { 00750, AID_ROOT,         AID_SYSTEM,       0, "system_ext/apex/com.android.tethering/bin/for-system" },
      { 00751, AID_ROOT,         AID_SHELL,        0, "system_ext/bin" },
+     { 00751, AID_ROOT,         AID_SHELL,        0, "vendor/bin" },
+     { 00755, AID_ROOT,         AID_SHELL,        0, "vendor" },
 -- 
 2.25.1
 

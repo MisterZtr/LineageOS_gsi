@@ -1,0 +1,43 @@
+From 8b10b585a99d5ae17e285490c6675c2e99e810db Mon Sep 17 00:00:00 2001
+From: Alberto Ponces <ponces26@gmail.com>
+Date: Wed, 2 Apr 2025 15:33:22 +0100
+Subject: [PATCH 54/57] Revert "Don't crash system_server if we fail to parse
+ dynamic udfps position"
+
+This reverts commit 36f445b88587f3ae259e10f2f0a0011e5f75082e.
+---
+ .../fingerprint/aidl/FingerprintProvider.java  | 18 +++++++-----------
+ 1 file changed, 7 insertions(+), 11 deletions(-)
+
+diff --git a/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java b/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
+index b13beef51177..5fc5a57bd1ef 100644
+--- a/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
++++ b/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
+@@ -278,17 +278,13 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+             android.util.Log.e("PHH-Enroll", " - " + loc.sensorLocationX + ", " + loc.sensorLocationY + ", " +loc.sensorRadius + ", disp =" + loc.display + ", shape " + loc.sensorShape);
+         }
+         if (prop.sensorLocations.length == 1 && prop.sensorLocations[0].sensorLocationX == 0) {
+-            try {
+-                int[] otherValues = com.android.server.biometrics.AuthService.dynamicUdfpsProps(mContext);
+-                if (otherValues.length > 0) {
+-                    SensorLocation loc = new SensorLocation();
+-                    loc.sensorLocationX = otherValues[0];
+-                    loc.sensorLocationY = otherValues[1];
+-                    loc.sensorRadius = otherValues[2];
+-                    prop.sensorLocations[0] = loc;
+-                }
+-            } catch(Throwable t) {
+-                android.util.Log.e("PHH-Enroll", "FingerprintProvider dynamicUdfpsProps", t);
++            int[] otherValues = com.android.server.biometrics.AuthService.dynamicUdfpsProps(mContext);
++            if (otherValues.length > 0) {
++                SensorLocation loc = new SensorLocation();
++                loc.sensorLocationX = otherValues[0];
++                loc.sensorLocationY = otherValues[1];
++                loc.sensorRadius = otherValues[2];
++                prop.sensorLocations[0] = loc;
+             }
+         }
+ 
+-- 
+2.25.1
+

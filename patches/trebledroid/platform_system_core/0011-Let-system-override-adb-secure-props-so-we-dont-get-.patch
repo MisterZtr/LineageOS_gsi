@@ -1,4 +1,4 @@
-From 3f63f97d5668030ef115bdb8905e0d7ee502f2c6 Mon Sep 17 00:00:00 2001
+From 26ebccecc0696996892f515cc2781cbe9ea9554d Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Fri, 9 Dec 2022 13:57:10 -0500
 Subject: [PATCH 11/28] Let system override adb/secure props, so we dont get
@@ -9,10 +9,10 @@ Subject: [PATCH 11/28] Let system override adb/secure props, so we dont get
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/init/property_service.cpp b/init/property_service.cpp
-index ff7a62688..7b3861534 100644
+index 180fe7b7b..26d1579e7 100644
 --- a/init/property_service.cpp
 +++ b/init/property_service.cpp
-@@ -802,7 +802,7 @@ static void LoadProperties(char* data, const char* filter, const char* filename,
+@@ -800,7 +800,7 @@ static void LoadProperties(char* data, const char* filter, const char* filename,
                  } else if (it->second != value) {
                      LOG(WARNING) << "Overriding previous property '" << key << "':'" << it->second
                                   << "' with new value '" << value << "'";

@@ -1,0 +1,27 @@
+From 46d8a14c3ce9a313455d8e3083969a1fe81464cd Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Mon, 16 Jun 2025 16:24:02 -0400
+Subject: [PATCH 2/3] Additional bpf-less handling
+
+Change-Id: I889334a28d8d484cef9d9e8a8e0ea0aa2c0b47ac
+---
+ loader/Loader.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/loader/Loader.cpp b/loader/Loader.cpp
+index 883202b..464e490 100644
+--- a/loader/Loader.cpp
++++ b/loader/Loader.cpp
+@@ -977,7 +977,8 @@ void initLogging() {
+ void createBpfFsSubDirectories() {
+     for (const auto& location : android::bpf::locations) {
+         if (android::bpf::createSysFsBpfSubDir(location.prefix)) {
+-            exit(120);
++            ALOGE("=== CRITICIL FAILURE creating BPF subdir %s", location.prefix);
++            //exit(120);
+         }
+     }
+ }
+-- 
+2.25.1
+

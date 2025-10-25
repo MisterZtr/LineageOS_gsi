@@ -1,4 +1,4 @@
-From bc5c27431e126a66f93c275e8838590d61dbb1ac Mon Sep 17 00:00:00 2001
+From 29c3936e919eee53d108347eb9d08797c2c9402b Mon Sep 17 00:00:00 2001
 From: Alberto Ponces <ponces26@gmail.com>
 Date: Thu, 2 Nov 2023 10:23:56 +0000
 Subject: [PATCH 4/4] Revert "[Wi-Fi] Check if domain field is not empty when
@@ -11,10 +11,10 @@ Change-Id: I52ede9eb6b5164e147578e2dc2756cc722fe36ef
  2 files changed, 12 insertions(+), 10 deletions(-)
 
 diff --git a/src/com/android/settings/wifi/WifiConfigController.java b/src/com/android/settings/wifi/WifiConfigController.java
-index 7a565d8480d..2a828e71a0e 100644
+index 669157d78b8..8c698bc5bbc 100644
 --- a/src/com/android/settings/wifi/WifiConfigController.java
 +++ b/src/com/android/settings/wifi/WifiConfigController.java
-@@ -569,11 +569,11 @@ public class WifiConfigController implements TextWatcher,
+@@ -544,11 +544,11 @@ public class WifiConfigController implements TextWatcher,
                  // Disallow submit if the user has not selected a CA certificate for an EAP network
                  // configuration.
                  enabled = false;
@@ -28,7 +28,7 @@ index 7a565d8480d..2a828e71a0e 100644
                  // validation, but does not provide a domain.
                  enabled = false;
              }
-@@ -610,12 +610,13 @@ public class WifiConfigController implements TextWatcher,
+@@ -582,12 +582,13 @@ public class WifiConfigController implements TextWatcher,
                  // Display warning if user chooses not to validate the EAP server with a
                  // user-supplied CA certificate in an EAP network configuration.
                  mView.findViewById(R.id.no_ca_cert_warning).setVisibility(View.VISIBLE);
@@ -46,10 +46,10 @@ index 7a565d8480d..2a828e71a0e 100644
              }
          }
 diff --git a/src/com/android/settings/wifi/WifiConfigController2.java b/src/com/android/settings/wifi/WifiConfigController2.java
-index 347e943f45e..ddd5610fe3e 100644
+index 31e6f0c1a52..d1b2e90c6f1 100644
 --- a/src/com/android/settings/wifi/WifiConfigController2.java
 +++ b/src/com/android/settings/wifi/WifiConfigController2.java
-@@ -568,11 +568,11 @@ public class WifiConfigController2 implements TextWatcher,
+@@ -543,11 +543,11 @@ public class WifiConfigController2 implements TextWatcher,
                  // Disallow submit if the user has not selected a CA certificate for an EAP network
                  // configuration.
                  enabled = false;
@@ -63,7 +63,7 @@ index 347e943f45e..ddd5610fe3e 100644
                  // validation, but does not provide a domain.
                  enabled = false;
              }
-@@ -609,12 +609,13 @@ public class WifiConfigController2 implements TextWatcher,
+@@ -581,12 +581,13 @@ public class WifiConfigController2 implements TextWatcher,
                  // Display warning if user chooses not to validate the EAP server with a
                  // user-supplied CA certificate in an EAP network configuration.
                  mView.findViewById(R.id.no_ca_cert_warning).setVisibility(View.VISIBLE);

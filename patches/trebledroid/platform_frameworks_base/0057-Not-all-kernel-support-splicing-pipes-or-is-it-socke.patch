@@ -1,0 +1,28 @@
+From 343a9a549c01d2b34b9c467933e56f64b4fbe6e8 Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Mon, 16 Jun 2025 17:19:47 -0400
+Subject: [PATCH 57/57] Not all kernel support splicing pipes (or is it
+ sockets?), so gracefully fallback to dumb userspace copy when splice() fails
+
+Fixes adb install on Pixel 1
+
+Change-Id: I835bac3496900fe02348a5aed3f1ecb9ff16cd20
+---
+ core/java/android/os/FileUtils.java | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/core/java/android/os/FileUtils.java b/core/java/android/os/FileUtils.java
+index 14005b31903a..31f0ff0d42ea 100644
+--- a/core/java/android/os/FileUtils.java
++++ b/core/java/android/os/FileUtils.java
+@@ -479,7 +479,6 @@ public final class FileUtils {
+                     return copyInternalSpliceSocket(in, out, count, signal, executor, listener);
+                 }
+             } catch (ErrnoException e) {
+-                throw e.rethrowAsIOException();
+             }
+         }
+ 
+-- 
+2.25.1
+

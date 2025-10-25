@@ -1,4 +1,4 @@
-From f9a2517ad679ba5df2ce45aa0e71b8a33162f20f Mon Sep 17 00:00:00 2001
+From 4f14ccdfa5065c517130504403b40cf7aefadad0 Mon Sep 17 00:00:00 2001
 From: ChonDoit <thphantomblog@gmail.com>
 Date: Fri, 7 Oct 2022 02:43:21 +0000
 Subject: [PATCH 3/4] Support no-bpf usecase
@@ -9,10 +9,10 @@ Change-Id: Ic759e2cfaf11705169a4a6b677b0e5aca26907b3
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/server/Controllers.cpp b/server/Controllers.cpp
-index ea348973..1f982cf3 100644
+index 48d0c509..13538dd2 100644
 --- a/server/Controllers.cpp
 +++ b/server/Controllers.cpp
-@@ -325,7 +325,7 @@ void Controllers::init() {
+@@ -326,7 +326,7 @@ void Controllers::init() {
          // As such simply exit netd.  This may crash loop the system, but by failing
          // to bootup we will trigger rollback and thus this offers us protection against
          // a mainline update breaking things.

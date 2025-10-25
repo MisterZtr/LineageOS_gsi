@@ -1,7 +1,7 @@
-From 978f8b79130512d7f4c3b29e50f7cd3cbbaf0dcc Mon Sep 17 00:00:00 2001
+From 690d0a92059aca887b40b77c5c92e1656ad2be16 Mon Sep 17 00:00:00 2001
 From: Andy CrossGate Yan <GeForce8800Ultra@gmail.com>
 Date: Sat, 12 Aug 2023 20:11:17 +0800
-Subject: [PATCH 34/56] Add runWithCleanCallingIdentity variant with both
+Subject: [PATCH 34/57] Add runWithCleanCallingIdentity variant with both
  executor and return value
 
 This complements the fixup to ImsPhoneCallTracker (in fw/o/t) for U

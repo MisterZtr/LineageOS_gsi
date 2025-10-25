@@ -1,32 +1,12 @@
 From b17794fad1b8a780edaae954b6dc5686a9e2564e Mon Sep 17 00:00:00 2001
 From: MisterZtr <andey2004586@gmail.com>
 Date: Mon Dec 9 19:09:44 2024 +0300
-Subject: lineage: FaceUnlock,adb,privapp
+Subject: lineage: FaceUnlock,privapp
 
 diff --git a/config/common.mk b/config/common.mk
 index 3f9b5205..bcb95170 100644
 --- a/config/common.mk
 +++ b/config/common.mk
-@@ -19,19 +19,6 @@ else
- PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
-     ro.oem.key1=$(PRODUCT_ATV_CLIENTID_BASE)
- endif
--endif
--
--ifeq ($(TARGET_BUILD_VARIANT),eng)
--# Disable ADB authentication
--PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=0
--else
--ifdef WITH_ADB_INSECURE
--# Forcebly disable ADB authentication
--PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=0
--else
--# Enable ADB authentication
--PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=1
--endif
- 
- # Disable extra StrictMode features on all non-engineering builds
- PRODUCT_SYSTEM_DEFAULT_PROPERTIES += persist.sys.strictmode.disable=true
 @@ -87,10 +75,6 @@ PRODUCT_PACKAGES += \
  PRODUCT_COPY_FILES += \
      vendor/lineage/config/permissions/org.lineageos.android.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/permissions/org.lineageos.android.xml

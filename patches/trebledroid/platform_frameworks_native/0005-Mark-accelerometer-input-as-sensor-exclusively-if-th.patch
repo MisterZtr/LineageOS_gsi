@@ -1,7 +1,7 @@
-From 57469f5a11d1480ab4fe848179a5f41db09bcc73 Mon Sep 17 00:00:00 2001
+From cb56d3fbbea3ce5508b9be4de8b3bb7bab7162df Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 12 Dec 2021 08:45:36 -0500
-Subject: [PATCH 05/19] Mark accelerometer input as sensor exclusively if there
+Subject: [PATCH 05/16] Mark accelerometer input as sensor exclusively if there
  are ABS axis
 
 The reason this is needed is that on -fucked up- Xiami Mi A2 Lite and
@@ -15,10 +15,10 @@ Change-Id: I491ab89724c908ef09a23a6427d24a8889bf806a
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/services/inputflinger/reader/EventHub.cpp b/services/inputflinger/reader/EventHub.cpp
-index 013ef862ad..552b512fb4 100644
+index 559bc0aa7a..c45497229c 100644
 --- a/services/inputflinger/reader/EventHub.cpp
 +++ b/services/inputflinger/reader/EventHub.cpp
-@@ -2434,7 +2434,13 @@ void EventHub::openDeviceLocked(const std::string& devicePath) {
+@@ -2490,7 +2490,13 @@ void EventHub::openDeviceLocked(const std::string& devicePath) {
  
      // Check whether this device is an accelerometer.
      if (device->propBitmask.test(INPUT_PROP_ACCELEROMETER)) {

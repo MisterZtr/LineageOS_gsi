@@ -1,7 +1,7 @@
-From 850ca0b2ccb9d52ec56b934cb48c72950adfe399 Mon Sep 17 00:00:00 2001
+From 4dc533432f082e77200655e5cb3f5bc629cf421f Mon Sep 17 00:00:00 2001
 From: Andy CrossGate Yan <GeForce8800Ultra@gmail.com>
 Date: Sun, 7 Jul 2024 21:55:42 +0800
-Subject: [PATCH 51/56] Allow APKs of a certain signature to install/work like
+Subject: [PATCH 51/57] Allow APKs of a certain signature to install/work like
  platform-signed
 
 Intended usecase - one authoritative set of signed IMS APKs for any GSI, regardless of their signature
@@ -14,7 +14,7 @@ Change-Id: Ia1a13edec8eb8ecf0ea25fffaee4aeff9c75a5e1
  3 files changed, 20 insertions(+), 1 deletion(-)
 
 diff --git a/services/core/java/com/android/server/pm/PackageManagerServiceUtils.java b/services/core/java/com/android/server/pm/PackageManagerServiceUtils.java
-index 7af39f74d0d6..d7d6d89d9d9d 100644
+index 2ecdb0b1a02a..2714a7963b63 100644
 --- a/services/core/java/com/android/server/pm/PackageManagerServiceUtils.java
 +++ b/services/core/java/com/android/server/pm/PackageManagerServiceUtils.java
 @@ -190,6 +190,8 @@ public class PackageManagerServiceUtils {
@@ -38,7 +38,7 @@ index 7af39f74d0d6..d7d6d89d9d9d 100644
      private static File getSettingsProblemFile() {
          File dataDir = Environment.getDataDirectory();
          File systemDir = new File(dataDir, "system");
-@@ -548,6 +555,10 @@ public class PackageManagerServiceUtils {
+@@ -532,6 +539,10 @@ public class PackageManagerServiceUtils {
              boolean compareCompat, boolean compareRecover, boolean isRollback)
              throws PackageManagerException {
          final String packageName = pkgSetting.getPackageName();

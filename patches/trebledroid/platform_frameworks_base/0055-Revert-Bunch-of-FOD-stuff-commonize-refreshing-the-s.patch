@@ -1,0 +1,226 @@
+From 38af5b3b3eb2930f64daf1b6816a14042dd7b48a Mon Sep 17 00:00:00 2001
+From: Alberto Ponces <ponces26@gmail.com>
+Date: Wed, 2 Apr 2025 15:33:30 +0100
+Subject: [PATCH 55/57] Revert "Bunch of FOD stuff -- commonize refreshing the
+ services, start supporting AIDL Samsung"
+
+This reverts commit 10817dd6c8d805c86e31a409c8f8e58d68b1fa75.
+---
+ .../server/biometrics/AuthService.java        | 151 ++----------------
+ 1 file changed, 17 insertions(+), 134 deletions(-)
+
+diff --git a/services/core/java/com/android/server/biometrics/AuthService.java b/services/core/java/com/android/server/biometrics/AuthService.java
+index bba3664df1bb..aaf31edc7806 100644
+--- a/services/core/java/com/android/server/biometrics/AuthService.java
++++ b/services/core/java/com/android/server/biometrics/AuthService.java
+@@ -42,7 +42,6 @@ import android.hardware.biometrics.IAuthService;
+ import android.hardware.biometrics.IBiometricEnabledOnKeyguardCallback;
+ import android.hardware.biometrics.IBiometricService;
+ import android.hardware.biometrics.IBiometricServiceReceiver;
+-import android.hardware.biometrics.fingerprint.IFingerprint;
+ import android.hardware.biometrics.IInvalidationCallback;
+ import android.hardware.biometrics.ITestSession;
+ import android.hardware.biometrics.ITestSessionCallback;
+@@ -96,7 +95,6 @@ import android.os.Build;
+ import vendor.samsung.hardware.biometrics.fingerprint.V3_0.ISehBiometricsFingerprint;
+ import vendor.goodix.hardware.biometrics.fingerprint.V2_1.IGoodixFingerprintDaemon;
+ import vendor.samsung.hardware.sysinput.V1_0.ISehSysInputDev;
+-import vendor.samsung.hardware.biometrics.fingerprint.ISehFingerprint;
+ 
+ import vendor.xiaomi.hardware.fingerprintextension.V1_0.IXiaomiFingerprint;
+ 
+@@ -120,8 +118,6 @@ public class AuthService extends SystemService {
+ 
+     private FileObserver fodFileObserver = null;
+     private ISehBiometricsFingerprint mSamsungFingerprint = null;
+-    private ISehFingerprint mSamsungFingerprintAidl = null;
+-    private vendor.samsung.hardware.sysinput.ISehSysInputDev mSamsungSysinputAidl = null;
+ 
+     private IXiaomiFingerprint mXiaomiFingerprint = null;
+ 
+@@ -772,101 +768,6 @@ public class AuthService extends SystemService {
+      *                 └── for (s : p.sensors)
+      *                     └── BiometricService.registerAuthenticator(s)
+      */
+-
+-    private static void samsungSysinputCommand(String arg) {
+-        try {
+-            android.util.Log.e("PHH-Enroll", "SysinputCommand " + arg);
+-            var name = "default";
+-            var fqName = vendor.samsung.hardware.sysinput.ISehSysInputDev.DESCRIPTOR + "/" + name;
+-            var b = android.os.Binder.allowBlocking(android.os.ServiceManager.waitForDeclaredService(fqName));
+-            var samsungSysinputAidl = vendor.samsung.hardware.sysinput.ISehSysInputDev.Stub.asInterface(b);
+-            Thread.sleep(100);
+-            samsungSysinputAidl.setProperty(1 /*DEFAULT_TSP*/, 18, arg);
+-            android.util.Log.e("PHH-Enroll", "Done SysinputCommand");
+-        } catch(Throwable t) {
+-            android.util.Log.e("PHH-Enroll", "SysinputCommand", t);
+-        }
+-    }
+-
+-    private void refreshVendorServices() {
+-        try {
+-            mSamsungFingerprint = ISehBiometricsFingerprint.getService();
+-            android.util.Log.e("PHH", "Got samsung fingerprint HAL");
+-        } catch(Exception e) {
+-            if (e instanceof java.util.NoSuchElementException) {
+-                android.util.Log.e("PHH", "Failed getting Samsung fingerprint HAL, doesn't exist");
+-            } else {
+-                android.util.Log.e("PHH", "Failed getting Samsung fingerprint HAL", e);
+-            }
+-        }
+-
+-        try {
+-            final String name = "default";
+-            final String fqName = IFingerprint.DESCRIPTOR + "/" + name;
+-            final IBinder fpBinder = Binder.allowBlocking(ServiceManager.waitForDeclaredService(fqName));
+-            //final IFingerprint fp = IFingerprint.Stub.asInterface(fpBinder);
+-            mSamsungFingerprintAidl = ISehFingerprint.Stub.asInterface(fpBinder.getExtension());
+-        } catch(Exception e) {
+-            android.util.Log.e("PHH", "Failed getting Samsung fingerprint AIDL HAL", e);
+-        }
+-
+-        try {
+-            final String name = "default";
+-            final String fqName = vendor.samsung.hardware.sysinput.ISehSysInputDev.DESCRIPTOR + "/" + name;
+-            final IBinder b = Binder.allowBlocking(ServiceManager.waitForDeclaredService(fqName));
+-            mSamsungSysinputAidl = vendor.samsung.hardware.sysinput.ISehSysInputDev.Stub.asInterface(b);
+-            mSamsungSysinputAidl.registerCallback(new vendor.samsung.hardware.sysinput.ISehSysInputCallback.Stub() {
+-                @Override
+-                public void onReportInformation(int type, String data) {
+-                    android.util.Log.e("PHH", "Received Sysinput Report Information " +type + ", " + data);
+-                }
+-                @Override
+-                public void onReportRawData(int type, int count, int[] data) {
+-                    android.util.Log.e("PHH", "Received Sysinput Report RawData " + type + ", " + count);
+-                }
+-
+-                @Override
+-                public int getInterfaceVersion() {
+-                    return this.VERSION;
+-                }
+-
+-                @Override
+-                public String getInterfaceHash() {
+-                    return this.HASH;
+-                }
+-            });
+-            String res;
+-            res = mSamsungSysinputAidl.getProperty(1, 1);
+-            Thread.sleep(100);
+-            android.util.Log.e("PHH", "Got Samsung sysinput aidl feature " + res);
+-            res = mSamsungSysinputAidl.getProperty(1, 2);
+-            Thread.sleep(100);
+-            android.util.Log.e("PHH", "Got Samsung sysinput aidl cmd_list " + res);
+-            res = mSamsungSysinputAidl.getProperty(1, 3);
+-            Thread.sleep(100);
+-            android.util.Log.e("PHH", "Got Samsung sysinput aidl scrub_pos " + res);
+-            res = mSamsungSysinputAidl.getProperty(1, 4);
+-            Thread.sleep(100);
+-            android.util.Log.e("PHH", "Got Samsung sysinput aidl fod_info " + res);
+-            res = mSamsungSysinputAidl.getProperty(1, 5);
+-            Thread.sleep(100);
+-            android.util.Log.e("PHH", "Got Samsung sysinput aidl fod_pos " + res);
+-        } catch(Exception e) {
+-            android.util.Log.e("PHH", "Failed getting Samsung fingerprint AIDL HAL", e);
+-        }
+-
+-        try {
+-            mXiaomiFingerprint = IXiaomiFingerprint.getService();
+-            android.util.Log.e("PHH", "Got xiaomi fingerprint HAL");
+-        } catch(Exception e) {
+-            if (e instanceof java.util.NoSuchElementException) {
+-                android.util.Log.e("PHH", "Failed getting xiaomi fingerprint HAL, doesn't exist");
+-            } else {
+-                android.util.Log.e("PHH", "Failed getting xiaomi fingerprint HAL", e);
+-            }
+-        }
+-    }
+-
+     @Override
+     public void onStart() {
+         mBiometricService = mInjector.getBiometricService();
+@@ -893,9 +794,19 @@ public class AuthService extends SystemService {
+ 
+         registerAuthenticators();
+         mInjector.publishBinderService(this, mImpl);
+-        refreshVendorServices();
+-        //samsungSysinputCommand("fod_icon_visible,1");
+-        if(samsungHasCmd("fod_enable") && (mSamsungFingerprint != null || mSamsungFingerprintAidl != null)) {
++        try {
++            mSamsungFingerprint = ISehBiometricsFingerprint.getService();
++            android.util.Log.e("PHH", "Got samsung fingerprint HAL");
++        } catch(Exception e) {
++            android.util.Log.e("PHH", "Failed getting Samsung fingerprint HAL", e);
++        }
++        try {
++            mXiaomiFingerprint = IXiaomiFingerprint.getService();
++            android.util.Log.e("PHH", "Got xiaomi fingerprint HAL");
++        } catch(Exception e) {
++            android.util.Log.e("PHH", "Failed getting xiaomi fingerprint HAL", e);
++        }
++        if(samsungHasCmd("fod_enable") && mSamsungFingerprint != null) {
+             samsungCmd("fod_enable,1,1,0");
+             String actualMaskBrightnessPath = "/sys/class/lcd/panel/actual_mask_brightness";
+             android.util.Log.e("PHH-Enroll", "Reading actual brightness file gives " + readFile(actualMaskBrightnessPath));
+@@ -903,7 +814,9 @@ public class AuthService extends SystemService {
+                 @Override
+                 public void onEvent(int event, String path) {
+                     String actualMask = readFile(actualMaskBrightnessPath);
+-                    refreshVendorServices();
++                    try {
++                        mSamsungFingerprint = ISehBiometricsFingerprint.getService();
++                    } catch(Exception e) {}
+                     Slog.d("PHH-Enroll", "New actual mask brightness is " + actualMask);
+                     try {
+                         int eventReq = 0;
+@@ -1230,8 +1143,8 @@ public class AuthService extends SystemService {
+             udfpsProps[1] = (int)mY;
+             udfpsProps[2] = (int)mW;
+ 
++            ISehBiometricsFingerprint samsungFingerprint = null;
+             try {
+-                ISehBiometricsFingerprint samsungFingerprint = null;
+                 samsungFingerprint = ISehBiometricsFingerprint.getService();
+                 Slog.d("PHH-Enroll", "Samsung ask for sensor status");
+                 samsungFingerprint.sehRequest(6, 0, new java.util.ArrayList(), (int retval, java.util.ArrayList<Byte> out) -> {
+@@ -1248,36 +1161,6 @@ public class AuthService extends SystemService {
+                     }
+                 } );
+ 
+-            } catch(Exception e) {
+-                if (e instanceof java.util.NoSuchElementException) {
+-                    Slog.d("PHH-Enroll", "Failed setting samsung3.0 fingerprint recognition, doesn't exist");
+-                } else {
+-                    Slog.d("PHH-Enroll", "Failed setting samsung3.0 fingerprint recognition", e);
+-                }
+-            }
+-
+-            try {
+-                final String name = "default";
+-                final String fqName = IFingerprint.DESCRIPTOR + "/" + name;
+-                final IBinder fpBinder = Binder.allowBlocking(ServiceManager.waitForDeclaredService(fqName));
+-                final IFingerprint fp = IFingerprint.Stub.asInterface(fpBinder);
+-                final ISehFingerprint fpaidl = ISehFingerprint.Stub.asInterface(fpBinder.getExtension());
+-
+-                Slog.d("PHH-Enroll", "Samsung ask for sensor status");
+-                vendor.samsung.hardware.biometrics.fingerprint.SehResult sehres = fpaidl.sehRequest(0, 6, 0, new byte[0]);
+-
+-                Slog.d("PHH-Enroll", "Result is " + sehres.retValue);
+-                for(int i=0; i<sehres.data.length; i++) {
+-                    Slog.d("PHH-Enroll", "\t" + i + ":" + sehres.data[i]);
+-                }
+-
+-                Slog.d("PHH-Enroll", "Samsung ask for sensor brightness value");
+-                sehres = fpaidl.sehRequest(0, 32, 0, new byte[0]);
+-
+-                Slog.d("PHH-Enroll", "Result is " + sehres.retValue);
+-                for(int i=0; i<sehres.data.length; i++) {
+-                    Slog.d("PHH-Enroll", "\t" + i + ":" + sehres.data[i]);
+-                }
+             } catch(Exception e) {
+                 Slog.d("PHH-Enroll", "Failed setting samsung3.0 fingerprint recognition", e);
+             }
+-- 
+2.25.1
+

@@ -1,7 +1,7 @@
-From 65f1007b368c029c4515e27e85a84e45c7a738da Mon Sep 17 00:00:00 2001
+From ac7797b5cc4f93710218a1fc80149ba12b612be1 Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Sat, 21 Dec 2024 11:04:35 -0500
-Subject: [PATCH 52/56] Add support for treating virtual biometric sensors as
+Subject: [PATCH 52/57] Add support for treating virtual biometric sensors as
  real ones
 
 This happens on Unihertz Jelly Max. They forgot to change their sensor
@@ -13,7 +13,7 @@ Change-Id: I106d41cd078e6b1e354c72ec35fa240a44397c5e
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/core/java/android/hardware/fingerprint/FingerprintSensorConfigurations.java b/core/java/android/hardware/fingerprint/FingerprintSensorConfigurations.java
-index 48c5887d80d0..bec56d9a69b0 100644
+index 586830c8d189..d7fcfdb6df2b 100644
 --- a/core/java/android/hardware/fingerprint/FingerprintSensorConfigurations.java
 +++ b/core/java/android/hardware/fingerprint/FingerprintSensorConfigurations.java
 @@ -29,6 +29,7 @@ import android.os.Parcel;

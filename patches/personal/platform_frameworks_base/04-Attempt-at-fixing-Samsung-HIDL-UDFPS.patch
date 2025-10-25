@@ -1,0 +1,160 @@
+From a51a19898bb364c86ff445e152e798273f2d0ccd Mon Sep 17 00:00:00 2001
+From: mytja <mitja@severkar.eu>
+Date: Fri, 20 Dec 2024 22:14:35 +0100
+Subject: [PATCH 06/11] Attempt at fixing Samsung HIDL UDFPS
+
+Now it's at least getting detected & getting placed in the right position.
+---
+ .../server/biometrics/AuthService.java        | 18 ++++-
+ .../fingerprint/aidl/FingerprintProvider.java | 65 ++++++++++++++++++-
+ 2 files changed, 81 insertions(+), 2 deletions(-)
+
+diff --git a/services/core/java/com/android/server/biometrics/AuthService.java b/services/core/java/com/android/server/biometrics/AuthService.java
+index 37d3dcc13..dd6436e0d 100644
+--- a/services/core/java/com/android/server/biometrics/AuthService.java
++++ b/services/core/java/com/android/server/biometrics/AuthService.java
+@@ -983,8 +983,24 @@ public class AuthService extends SystemService {
+     private void registerAuthenticators() {
+         BiometricHandlerProvider handlerProvider = mInjector.getBiometricHandlerProvider();
+ 
++        String[] configStrings = mInjector.getFingerprintConfiguration(getContext());
++        if (configStrings == null || configStrings.length == 0) {
++            Slog.i("PHH", "Attempting to generate config_biometric_sensors for fingerprint");
++            final int firstApiLevel = SystemProperties.getInt(SYSPROP_FIRST_API_LEVEL, 0);
++            final int apiLevel = SystemProperties.getInt(SYSPROP_API_LEVEL, firstApiLevel);
++            configStrings = mInjector.getConfiguration(getContext());
++            if (configStrings.length == 0) {
++                // For backwards compatibility with R where biometrics could work without being
++                // configured in config_biometric_sensors. In the absence of a vendor provided
++                // configuration, we assume the weakest biometric strength (i.e. convenience).
++                Slog.w(TAG, "Found vendor partition without config_biometric_sensors");
++                configStrings = generateRSdkCompatibleConfiguration();
++            }
++        }
++        Slog.i("PHH", "config_biometric_sensors for fingerprint " + configStrings);
++
+         registerFingerprintSensors(mInjector.getFingerprintAidlInstances(),
+-                mInjector.getFingerprintConfiguration(getContext()), getContext(),
++                configStrings, getContext(),
+                 mInjector.getFingerprintService(), handlerProvider);
+         registerFaceSensors(mInjector.getFaceAidlInstances(),
+                 mInjector.getFaceConfiguration(getContext()), getContext(),
+diff --git a/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java b/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
+index c31c43d20..b3898abf4 100644
+--- a/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
++++ b/services/core/java/com/android/server/biometrics/sensors/fingerprint/aidl/FingerprintProvider.java
+@@ -58,6 +58,7 @@ import android.os.UserManager;
+ import android.util.Slog;
+ import android.util.proto.ProtoOutputStream;
+ 
++import com.android.internal.util.ArrayUtils;
+ import com.android.internal.annotations.VisibleForTesting;
+ import com.android.server.biometrics.AuthenticationStatsBroadcastReceiver;
+ import com.android.server.biometrics.AuthenticationStatsCollector;
+@@ -65,6 +66,7 @@ import com.android.server.biometrics.BiometricDanglingReceiver;
+ import com.android.server.biometrics.BiometricHandlerProvider;
+ import com.android.server.biometrics.Flags;
+ import com.android.server.biometrics.Utils;
++import android.hardware.biometrics.fingerprint.FingerprintSensorType;
+ import com.android.server.biometrics.log.BiometricContext;
+ import com.android.server.biometrics.log.BiometricLogger;
+ import com.android.server.biometrics.sensors.AuthSessionCoordinator;
+@@ -255,6 +257,49 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+             @NonNull GestureAvailabilityDispatcher gestureAvailabilityDispatcher,
+             boolean resetLockoutRequiresHardwareAuthToken) {
+         final int sensorId = prop.commonProps.sensorId;
++        final boolean forceUdfps = android.os.SystemProperties.getBoolean("persist.sys.phh.fingerprint.forceudfps", false);
++
++        int[] udfpsProps = mContext.getResources().getIntArray(
++                com.android.internal.R.array.config_udfps_sensor_props);
++        boolean isUdfps = !ArrayUtils.isEmpty(udfpsProps);
++        if (isUdfps) {
++            SensorLocation loc = new SensorLocation();
++            loc.sensorLocationX = udfpsProps[0];
++            loc.sensorLocationY = udfpsProps[1];
++            loc.sensorRadius = udfpsProps[2];
++            prop.sensorLocations[0] = loc;
++            Slog.d("PHH-Enroll", "Got udfps infos " + udfpsProps[0] + ", " + udfpsProps[1] + ", " + udfpsProps[2] + ", " + isUdfps);
++        }
++
++        android.util.Log.e("PHH-Enroll", "Got fp props -- pre");
++        for(SensorLocation loc: prop.sensorLocations) {
++            android.util.Log.e("PHH-Enroll", " - " + loc.sensorLocationX + ", " + loc.sensorLocationY + ", " +loc.sensorRadius + ", disp =" + loc.display + ", shape " + loc.sensorShape);
++        }
++        if (forceUdfps || (prop.sensorLocations.length == 1 && prop.sensorLocations[0].sensorLocationX == 0)) {
++            try {
++                int[] otherValues = com.android.server.biometrics.AuthService.dynamicUdfpsProps(mContext);
++                if (otherValues.length > 0) {
++                    SensorLocation loc = new SensorLocation();
++                    loc.sensorLocationX = otherValues[0];
++                    loc.sensorLocationY = otherValues[1];
++                    loc.sensorRadius = otherValues[2];
++                    prop.sensorLocations[0] = loc;
++                    isUdfps = true;
++                }
++            } catch(Throwable t) {
++                android.util.Log.e("PHH-Enroll", "FingerprintProvider dynamicUdfpsProps", t);
++            }
++        }
++        if (forceUdfps || isUdfps) {
++            prop.sensorType = FingerprintSensorType.UNDER_DISPLAY_OPTICAL;
++        }
++
++        android.util.Log.e("PHH-Enroll", "Got fp props -- post");
++        for(SensorLocation loc: prop.sensorLocations) {
++            android.util.Log.e("PHH-Enroll", " - " + loc.sensorLocationX + ", " + loc.sensorLocationY + ", " +loc.sensorRadius + ", disp =" + loc.display + ", shape " + loc.sensorShape);
++        }
++        android.util.Log.e("PHH-Enroll", "UDFPS props FingerprintProvider isUdfps=" + isUdfps);
++
+         final Sensor sensor = new HidlToAidlSensorAdapter(this, mContext, mHandler, prop,
+                 mLockoutResetDispatcher, mBiometricContext, resetLockoutRequiresHardwareAuthToken,
+                 () -> scheduleInternalCleanup(sensorId, ActivityManager.getCurrentUser(),
+@@ -277,12 +277,25 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+             @NonNull List<SensorLocationInternal> workaroundLocations,
+             boolean resetLockoutRequiresHardwareAuthToken) {
+         final int sensorId = prop.commonProps.sensorId;
++        final boolean forceUdfps = android.os.SystemProperties.getBoolean("persist.sys.phh.fingerprint.forceudfps", false);
++
++        int[] udfpsProps = mContext.getResources().getIntArray(
++                com.android.internal.R.array.config_udfps_sensor_props);
++        boolean isUdfps = !ArrayUtils.isEmpty(udfpsProps);
++        if (isUdfps) {
++            SensorLocation loc = new SensorLocation();
++            loc.sensorLocationX = udfpsProps[0];
++            loc.sensorLocationY = udfpsProps[1];
++            loc.sensorRadius = udfpsProps[2];
++            prop.sensorLocations[0] = loc;
++            Slog.d("PHH-Enroll", "Got udfps infos " + udfpsProps[0] + ", " + udfpsProps[1] + ", " + udfpsProps[2] + ", " + isUdfps);
++        }
+ 
+         android.util.Log.e("PHH-Enroll", "Got fp props -- pre");
+         for(SensorLocation loc: prop.sensorLocations) {
+             android.util.Log.e("PHH-Enroll", " - " + loc.sensorLocationX + ", " + loc.sensorLocationY + ", " +loc.sensorRadius + ", disp =" + loc.display + ", shape " + loc.sensorShape);
+         }
+-        if (prop.sensorLocations.length == 1 && prop.sensorLocations[0].sensorLocationX == 0) {
++        if (forceUdfps || (prop.sensorLocations.length == 1 && prop.sensorLocations[0].sensorLocationX == 0)) {
+             int[] otherValues = com.android.server.biometrics.AuthService.dynamicUdfpsProps(mContext);
+             if (otherValues.length > 0) {
+                 SensorLocation loc = new SensorLocation();
+@@ -290,13 +290,18 @@ public class FingerprintProvider implements IBinder.DeathRecipient, ServiceProvi
+                 loc.sensorLocationY = otherValues[1];
+                 loc.sensorRadius = otherValues[2];
+                 prop.sensorLocations[0] = loc;
++                isUdfps = true;
+             }
+         }
++        if (forceUdfps || isUdfps) {
++            prop.sensorType = FingerprintSensorType.UNDER_DISPLAY_OPTICAL;
++        }
+ 
+         android.util.Log.e("PHH-Enroll", "Got fp props -- post");
+         for(SensorLocation loc: prop.sensorLocations) {
+             android.util.Log.e("PHH-Enroll", " - " + loc.sensorLocationX + ", " + loc.sensorLocationY + ", " +loc.sensorRadius + ", disp =" + loc.display + ", shape " + loc.sensorShape);
+         }
++        android.util.Log.e("PHH-Enroll", "UDFPS props FingerprintProvider isUdfps=" + isUdfps);
+ 
+         final Sensor sensor = new Sensor(this, mContext, mHandler, prop, mBiometricContext,
+                 workaroundLocations, resetLockoutRequiresHardwareAuthToken);
+-- 
+2.34.1
+

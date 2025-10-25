@@ -1,4 +1,4 @@
-From 5d7cf3bbe2a746bc026632d1c3be932486463113 Mon Sep 17 00:00:00 2001
+From e995d88776dcc5bcdbf974d45bdce94aa0753ffc Mon Sep 17 00:00:00 2001
 From: danielzhang130 <37479705+danielzhang130@users.noreply.github.com>
 Date: Fri, 12 Apr 2024 13:01:08 -0400
 Subject: [PATCH 2/2] Fix sepolicy for kernel < 5.10 that doesn't support bpf
@@ -12,10 +12,10 @@ Signed-off-by: Daniel Zhang <danielzhang130@gmail.com>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/private/network_stack.te b/private/network_stack.te
-index 4450e02ba..d7dda3aed 100644
+index 8a072453d..a6ddb2060 100644
 --- a/private/network_stack.te
 +++ b/private/network_stack.te
-@@ -62,8 +62,8 @@ hal_client_domain(network_stack, hal_tetheroffload)
+@@ -66,8 +66,8 @@ hal_client_domain(network_stack, hal_tetheroffload)
  allow network_stack self:netlink_netfilter_socket create_socket_perms_no_ioctl;
  allow network_stack network_stack_service:service_manager find;
  # allow Tethering(network_stack process) to run/update/read the eBPF maps to offload tethering traffic by eBPF.

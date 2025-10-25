@@ -1,7 +1,7 @@
-From df1d682da7567d648e7e8c238b163ff6d27d7686 Mon Sep 17 00:00:00 2001
+From 3dbf0c65fba434477d13decda887e952358e2d3a Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 29 Jan 2024 17:15:38 -0500
-Subject: [PATCH 44/56] Bunch of FOD stuff -- commonize refreshing the
+Subject: [PATCH 44/57] Bunch of FOD stuff -- commonize refreshing the
  services, start supporting AIDL Samsung
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH 44/56] Bunch of FOD stuff -- commonize refreshing the
  1 file changed, 137 insertions(+), 19 deletions(-)
 
 diff --git a/services/core/java/com/android/server/biometrics/AuthService.java b/services/core/java/com/android/server/biometrics/AuthService.java
-index 5694a5a73747..7383afb19244 100644
+index 0d8856945a33..bba3664df1bb 100644
 --- a/services/core/java/com/android/server/biometrics/AuthService.java
 +++ b/services/core/java/com/android/server/biometrics/AuthService.java
-@@ -43,6 +43,7 @@ import android.hardware.biometrics.IAuthService;
+@@ -42,6 +42,7 @@ import android.hardware.biometrics.IAuthService;
  import android.hardware.biometrics.IBiometricEnabledOnKeyguardCallback;
  import android.hardware.biometrics.IBiometricService;
  import android.hardware.biometrics.IBiometricServiceReceiver;
@@ -20,7 +20,7 @@ index 5694a5a73747..7383afb19244 100644
  import android.hardware.biometrics.IInvalidationCallback;
  import android.hardware.biometrics.ITestSession;
  import android.hardware.biometrics.ITestSessionCallback;
-@@ -96,6 +97,7 @@ import android.os.Build;
+@@ -95,6 +96,7 @@ import android.os.Build;
  import vendor.samsung.hardware.biometrics.fingerprint.V3_0.ISehBiometricsFingerprint;
  import vendor.goodix.hardware.biometrics.fingerprint.V2_1.IGoodixFingerprintDaemon;
  import vendor.samsung.hardware.sysinput.V1_0.ISehSysInputDev;
@@ -28,7 +28,7 @@ index 5694a5a73747..7383afb19244 100644
  
  import vendor.xiaomi.hardware.fingerprintextension.V1_0.IXiaomiFingerprint;
  
-@@ -119,6 +121,8 @@ public class AuthService extends SystemService {
+@@ -118,6 +120,8 @@ public class AuthService extends SystemService {
  
      private FileObserver fodFileObserver = null;
      private ISehBiometricsFingerprint mSamsungFingerprint = null;
@@ -37,7 +37,7 @@ index 5694a5a73747..7383afb19244 100644
  
      private IXiaomiFingerprint mXiaomiFingerprint = null;
  
-@@ -775,6 +779,101 @@ public class AuthService extends SystemService {
+@@ -768,6 +772,101 @@ public class AuthService extends SystemService {
       *                 └── for (s : p.sensors)
       *                     └── BiometricService.registerAuthenticator(s)
       */
@@ -139,7 +139,7 @@ index 5694a5a73747..7383afb19244 100644
      @Override
      public void onStart() {
          mBiometricService = mInjector.getBiometricService();
-@@ -801,19 +900,9 @@ public class AuthService extends SystemService {
+@@ -794,19 +893,9 @@ public class AuthService extends SystemService {
  
          registerAuthenticators();
          mInjector.publishBinderService(this, mImpl);
@@ -162,7 +162,7 @@ index 5694a5a73747..7383afb19244 100644
              samsungCmd("fod_enable,1,1,0");
              String actualMaskBrightnessPath = "/sys/class/lcd/panel/actual_mask_brightness";
              android.util.Log.e("PHH-Enroll", "Reading actual brightness file gives " + readFile(actualMaskBrightnessPath));
-@@ -821,9 +910,7 @@ public class AuthService extends SystemService {
+@@ -814,9 +903,7 @@ public class AuthService extends SystemService {
                  @Override
                  public void onEvent(int event, String path) {
                      String actualMask = readFile(actualMaskBrightnessPath);
@@ -173,7 +173,7 @@ index 5694a5a73747..7383afb19244 100644
                      Slog.d("PHH-Enroll", "New actual mask brightness is " + actualMask);
                      try {
                          int eventReq = 0;
-@@ -1151,22 +1238,53 @@ public class AuthService extends SystemService {
+@@ -1144,22 +1231,53 @@ public class AuthService extends SystemService {
              udfpsProps[2] = (int)mW;
  
              try {

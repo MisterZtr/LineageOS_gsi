@@ -1,7 +1,7 @@
-From 0e58860c4e817df267a61ce7ce1eb071c049f6fe Mon Sep 17 00:00:00 2001
+From 43543d4589072d0ef346525a7c0d55400850fb5a Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Thu, 18 Aug 2022 15:44:46 -0400
-Subject: [PATCH 01/24] APM: Restore S, R and Q behavior respectively for
+Subject: [PATCH 01/25] APM: Restore S, R and Q behavior respectively for
  telephony audio
 
 This conditionally reverts part of b2e5cb (T), 51c9cc (S) and afd4ce (R)
@@ -36,10 +36,10 @@ Change-Id: I56d36d2aef4319935cb88a3e4771b23c6d5b2145
  2 files changed, 147 insertions(+), 62 deletions(-)
 
 diff --git a/services/audiopolicy/managerdefault/AudioPolicyManager.cpp b/services/audiopolicy/managerdefault/AudioPolicyManager.cpp
-index 73b574ccfa..71cb830cb7 100644
+index ac8062e5c6..4e540ff84d 100644
 --- a/services/audiopolicy/managerdefault/AudioPolicyManager.cpp
 +++ b/services/audiopolicy/managerdefault/AudioPolicyManager.cpp
-@@ -746,6 +746,17 @@ status_t AudioPolicyManager::updateCallRoutingInternal(
+@@ -754,6 +754,17 @@ status_t AudioPolicyManager::updateCallRoutingInternal(
      ALOGV("%s device rxDevice %s txDevice %s", __func__,
            rxDevices.itemAt(0)->toString().c_str(), txSourceDevice->toString().c_str());
  
@@ -57,7 +57,7 @@ index 73b574ccfa..71cb830cb7 100644
      auto telephonyRxModule =
          mHwModules.getModuleForDeviceType(AUDIO_DEVICE_IN_TELEPHONY_RX, AUDIO_FORMAT_DEFAULT);
      auto telephonyTxModule =
-@@ -768,9 +779,20 @@ status_t AudioPolicyManager::updateCallRoutingInternal(
+@@ -776,9 +787,20 @@ status_t AudioPolicyManager::updateCallRoutingInternal(
              ALOGE("%s() no telephony Tx and/or RX device", __func__);
              return INVALID_OPERATION;
          }
@@ -81,7 +81,7 @@ index 73b574ccfa..71cb830cb7 100644
      } else {
          // If the RX device is on the primary HW module, then use legacy routing method for
          // voice calls via setOutputDevice() on primary output.
-@@ -794,7 +816,14 @@ status_t AudioPolicyManager::updateCallRoutingInternal(
+@@ -802,7 +824,14 @@ status_t AudioPolicyManager::updateCallRoutingInternal(
          }
          muteWaitMs = setOutputDevices(__func__, mPrimaryOutput, rxDevices, true, delayMs);
      } else { // create RX path audio patch
@@ -97,7 +97,7 @@ index 73b574ccfa..71cb830cb7 100644
          // If the TX device is on the primary HW module but RX device is
          // on other HW module, SinkMetaData of telephony input should handle it
          // assuming the device uses audio HAL V5.0 and above
-@@ -809,7 +838,12 @@ status_t AudioPolicyManager::updateCallRoutingInternal(
+@@ -817,7 +846,12 @@ status_t AudioPolicyManager::updateCallRoutingInternal(
                  closeActiveClients(activeDesc);
              }
          }
@@ -111,7 +111,7 @@ index 73b574ccfa..71cb830cb7 100644
      } else if (fix_call_audio_patch()) {
          disconnectTelephonyAudioSource(mCallTxSourceClient);
      }
-@@ -819,6 +853,36 @@ status_t AudioPolicyManager::updateCallRoutingInternal(
+@@ -827,6 +861,36 @@ status_t AudioPolicyManager::updateCallRoutingInternal(
      return NO_ERROR;
  }
  
@@ -148,7 +148,7 @@ index 73b574ccfa..71cb830cb7 100644
  bool AudioPolicyManager::isDeviceOfModule(
          const sp<DeviceDescriptor>& devDesc, const char *moduleId) const {
      sp<HwModule> module = mHwModules.getModuleFromName(moduleId);
-@@ -5636,83 +5700,101 @@ status_t AudioPolicyManager::createAudioPatchInternal(const struct audio_patch *
+@@ -5689,83 +5753,101 @@ status_t AudioPolicyManager::createAudioPatchInternal(const struct audio_patch *
                  // in config XML to reach the sink so that is can be declared as available.
                  audio_io_handle_t output = AUDIO_IO_HANDLE_NONE;
                  sp<SwAudioOutputDescriptor> outputDesc;
@@ -308,10 +308,10 @@ index 73b574ccfa..71cb830cb7 100644
                                      AUDIO_STREAM_PATCH;
                          patchBuilder.addSource(srcMixPortConfig);
 diff --git a/services/audiopolicy/managerdefault/AudioPolicyManager.h b/services/audiopolicy/managerdefault/AudioPolicyManager.h
-index 44863eedc2..e8024942fd 100644
+index da60c06344..6b0f1c817f 100644
 --- a/services/audiopolicy/managerdefault/AudioPolicyManager.h
 +++ b/services/audiopolicy/managerdefault/AudioPolicyManager.h
-@@ -1017,6 +1017,9 @@ protected:
+@@ -1018,6 +1018,9 @@ protected:
  
          SoundTriggerSessionCollection mSoundTriggerSessions;
  

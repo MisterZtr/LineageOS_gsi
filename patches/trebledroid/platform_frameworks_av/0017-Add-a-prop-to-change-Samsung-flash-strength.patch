@@ -1,7 +1,7 @@
-From 40718ace462730729734ca84ae1e6d16b5fe1798 Mon Sep 17 00:00:00 2001
+From c8bc416d338be8ab43be66504b679b12957ee8c8 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 16 Apr 2022 14:30:14 -0400
-Subject: [PATCH 17/24] Add a prop to change Samsung flash strength
+Subject: [PATCH 17/25] Add a prop to change Samsung flash strength
 
 ---
  services/camera/libcameraservice/Android.bp   |  2 ++
@@ -9,7 +9,7 @@ Subject: [PATCH 17/24] Add a prop to change Samsung flash strength
  2 files changed, 21 insertions(+), 1 deletion(-)
 
 diff --git a/services/camera/libcameraservice/Android.bp b/services/camera/libcameraservice/Android.bp
-index 7176678cb9..09fe3fe924 100644
+index 8243293b4d..53af1a23df 100644
 --- a/services/camera/libcameraservice/Android.bp
 +++ b/services/camera/libcameraservice/Android.bp
 @@ -86,6 +86,8 @@ cc_defaults {

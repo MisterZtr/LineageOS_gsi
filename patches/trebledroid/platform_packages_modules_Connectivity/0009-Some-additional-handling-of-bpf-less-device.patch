@@ -1,0 +1,42 @@
+From a8d0d7ea2698e5b147aa526b0a8adbcf19d2bf1f Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Mon, 16 Jun 2025 16:21:55 -0400
+Subject: [PATCH 9/9] Some additional handling of bpf-less device
+
+Change-Id: I7360ef049fd57d0f27a4579719b7ec05bba971b0
+---
+ service/src/com/android/server/BpfNetMaps.java | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/service/src/com/android/server/BpfNetMaps.java b/service/src/com/android/server/BpfNetMaps.java
+index e13c2dc67b..d8a8c05d7b 100644
+--- a/service/src/com/android/server/BpfNetMaps.java
++++ b/service/src/com/android/server/BpfNetMaps.java
+@@ -934,6 +934,7 @@ public class BpfNetMaps {
+             final InetAddress address, final int protocol, final int remotePort,
+             final boolean isAllowed) {
+         throwIfPre25Q2("addLocalNetAccess is not available on pre-B devices");
++        if (sLocalNetAccessMap == null) return;
+         if (iface == null) {
+             Log.e(TAG, "Null iface, skip addLocalNetAccess for " + address);
+             return;
+@@ -971,6 +972,7 @@ public class BpfNetMaps {
+     public void removeLocalNetAccess(final int lpmBitlen, @Nullable final String iface,
+             final InetAddress address, final int protocol, final int remotePort) {
+         throwIfPre25Q2("removeLocalNetAccess is not available on pre-B devices");
++        if (sLocalNetAccessMap == null) return;
+         final int ifIndex;
+         if (iface == null) {
+             ifIndex = 0;
+@@ -1086,7 +1088,7 @@ public class BpfNetMaps {
+     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+     public int getNetPermForUid(final int uid) {
+         final int appId = UserHandle.getAppId(uid);
+-        if (sUidPermissionMap == null) return PERMISSION_INTERNET;
++        if (sUidPermissionMap == null) return TRAFFIC_PERMISSION_INTERNET;
+         try {
+             // Key of uid permission map is appId
+             // TODO: Rename map name
+-- 
+2.25.1
+

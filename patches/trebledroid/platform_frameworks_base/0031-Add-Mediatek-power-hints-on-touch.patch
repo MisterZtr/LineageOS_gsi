@@ -1,7 +1,7 @@
-From 7348e26bac94d974a635a5334da081ea6a4b6a47 Mon Sep 17 00:00:00 2001
+From 3374963d1df6dca018bf2b48252e36844ee4360c Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 17 Jun 2023 08:31:55 -0400
-Subject: [PATCH 31/56] Add Mediatek power hints on touch
+Subject: [PATCH 31/57] Add Mediatek power hints on touch
 
 Mediatek has multiple HALs (which existed concurrently), so it is a bit
 of a mess.
@@ -27,13 +27,13 @@ Change-Id: I9f1eac5a20b98920a5d0c8204fe4d165ba069f5a
  2 files changed, 52 insertions(+), 1 deletion(-)
 
 diff --git a/services/core/Android.bp b/services/core/Android.bp
-index 5dd872f4bc09..950882bb5c9c 100644
+index 2e421683181e..a7d9b4ba57c3 100644
 --- a/services/core/Android.bp
 +++ b/services/core/Android.bp
-@@ -247,7 +247,9 @@ java_library_static {
-         "profiling_flags_lib",
+@@ -264,7 +264,9 @@ java_library_static {
          "android.adpf.sessionmanager_aidl-java",
          "uprobestats_flags_java_lib",
+         "clipboard_flags_lib",
 -        "vendor.samsung.hardware.sysinput-V1.2-java", // HIDL
 +        // HIDL
 +        "vendor.mediatek.hardware.mtkpower-V1.1-java",
@@ -42,10 +42,10 @@ index 5dd872f4bc09..950882bb5c9c 100644
      javac_shard_size: 50,
      javacflags: [
 diff --git a/services/core/java/com/android/server/wm/DisplayPolicy.java b/services/core/java/com/android/server/wm/DisplayPolicy.java
-index 659bb6784c89..c890bb984f3c 100644
+index dbae9c4b3a0f..7394786e3548 100644
 --- a/services/core/java/com/android/server/wm/DisplayPolicy.java
 +++ b/services/core/java/com/android/server/wm/DisplayPolicy.java
-@@ -213,6 +213,9 @@ public class DisplayPolicy {
+@@ -214,6 +214,9 @@ public class DisplayPolicy {
       */
      private boolean mRemoteInsetsControllerControlsSystemBars;
  
@@ -55,7 +55,7 @@ index 659bb6784c89..c890bb984f3c 100644
      StatusBarManagerInternal getStatusBarManagerInternal() {
          synchronized (mServiceAcquireLock) {
              if (mStatusBarManagerInternal == null) {
-@@ -421,6 +424,19 @@ public class DisplayPolicy {
+@@ -422,6 +425,19 @@ public class DisplayPolicy {
              mScreenOnEarly = true;
              mScreenOnFully = true;
          }
@@ -75,7 +75,7 @@ index 659bb6784c89..c890bb984f3c 100644
  
          final Looper looper = UiThread.getHandler().getLooper();
          mHandler = new PolicyHandler(looper);
-@@ -505,6 +521,17 @@ public class DisplayPolicy {
+@@ -506,6 +522,17 @@ public class DisplayPolicy {
                          mService.mPowerManagerInternal.setPowerBoost(
                                  Boost.INTERACTION, duration);
                      }
@@ -93,7 +93,7 @@ index 659bb6784c89..c890bb984f3c 100644
                  }
  
                  @Override
-@@ -523,6 +550,28 @@ public class DisplayPolicy {
+@@ -524,6 +551,28 @@ public class DisplayPolicy {
                      if (listener != null) {
                          listener.onTouchStart();
                      }

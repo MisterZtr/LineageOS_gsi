@@ -1,4 +1,4 @@
-From df71eae13c5c59bcd920592b9751cf19677ed394 Mon Sep 17 00:00:00 2001
+From 90a8bf2afba04853e144520292c20f6b98f42790 Mon Sep 17 00:00:00 2001
 From: Huy Hoang <38396158+boydaihungst@users.noreply.github.com>
 Date: Thu, 19 Oct 2023 07:06:55 +0700
 Subject: [PATCH 20/28] fix: Nubia 6 series custom rc action prop validation
