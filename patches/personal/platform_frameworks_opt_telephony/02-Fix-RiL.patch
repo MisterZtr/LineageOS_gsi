@@ -1,0 +1,29 @@
+From 802ec8ef0077db3db20e11d467af7aeb128c5aa4 Mon Sep 17 00:00:00 2001
+From: doze-off <doze@off>
+Date: Thu, 7 Aug 2025 20:17:10 +0200
+Subject: Fix RiL
+
+---
+ .../com/android/internal/telephony/uicc/UiccController.java | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/java/com/android/internal/telephony/uicc/UiccController.java b/src/java/com/android/internal/telephony/uicc/UiccController.java
+index c242a1b29d..45c2a518ea 100644
+--- a/src/java/com/android/internal/telephony/uicc/UiccController.java
++++ b/src/java/com/android/internal/telephony/uicc/UiccController.java
+@@ -279,6 +279,12 @@ public class UiccController extends Handler {
+             logWithLocalLog("config_num_physical_slots = " + numPhysicalSlots);
+         }
+ 
++        // Minimum number of physical slot count should be equals to or greater than phone count,
++        // if it is less than phone count use phone count as physical slot count.
++        if (numPhysicalSlots < mCis.length) {
++            numPhysicalSlots = mCis.length;
++        }
++
+         mTelephonyManager = mContext.getSystemService(TelephonyManager.class);
+ 
+         mUiccSlots = new UiccSlot[numPhysicalSlots];
+-- 
+2.34.1
+
