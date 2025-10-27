@@ -114,3 +114,4 @@ cd out/target/product/tdgsi_arm64_ab
 - [Ahnet](https://github.com/ahnet-69)
 - [mytja](https://github.com/mytja)
 - [cawilliamson](https://github.com/cawilliamson)
+- [Doze-off](https://github.com/Doze-off)

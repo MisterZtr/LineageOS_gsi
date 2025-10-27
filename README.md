@@ -115,3 +115,4 @@ These people have helped this project in some way or another, so they should be 
 - [Ahnet](https://github.com/ahnet-69)
 - [mytja](https://github.com/mytja)
 - [cawilliamson](https://github.com/cawilliamson)
+- [Doze-off](https://github.com/Doze-off)
