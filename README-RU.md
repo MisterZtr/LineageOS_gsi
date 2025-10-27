@@ -69,7 +69,7 @@ export CCACHE_MAXSIZE=50G # 50 GB
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-lunch treble_arm64_bvN-bp2a-userdebug
+breakfast treble_arm64_bvN-bp2a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
@@ -78,7 +78,7 @@ make systemimage -j$(nproc --all)
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-lunch treble_arm64_bgN-bp2a-userdebug
+breakfast treble_arm64_bgN-bp2a-userdebug
 make systemimage -j$(nproc --all)
  ```
 
