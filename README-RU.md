@@ -2,7 +2,6 @@
 ### Чтобы приступить к компиляции LineageOS 22.2 GSI,
 Вам нужно будет ознакомиться с [Git and Repo](https://source.android.com/source/using-repo.html), [Как собрать GSI](https://github.com/phhusson/treble_experimentations/wiki/How-to-build-a-GSI%3F), а также с темой на 4pda по [Сборке Android из исходников](https://4pda.to/forum/index.php?showtopic=209610&view=findpost&p=6112304)
 
-
 ### Создайте директорию
 
 В качестве первого шага вам нужно создать и войти папку с соответствующим именем
@@ -19,11 +18,9 @@ cd LineageOS
 repo init -u https://github.com/LineageOS/android.git -b lineage-22.2 --git-lfs
 ```
 
-
 ### Склонируйте манифест, чтобы добавить необходимые зависимости для gsi:
 
-    git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests  -b 15-los-qpr2
-
+    git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests  -b lineage-22.2
 
 ### После этого синхронизируйте исходный код, выполнив эту команду:
 
@@ -31,27 +28,12 @@ repo init -u https://github.com/LineageOS/android.git -b lineage-22.2 --git-lfs
 repo sync --force-sync --optimized-fetch --no-tags --no-clone-bundle --prune -j4
 ```
 
-
 ### После синхронизации исходного кода, примените патчи:
 
-Скопируйте папку patches в папку c прошивкой, а далее
-
 ```
-bash patches/apply-patches.sh .
+bash LineageOS_gsi/patches/apply-patches.sh .
 ```
 
-## Создания Makefile для сборки
-
- Клонируйте этот репозиторий, а затем в папке device/phh/treble, выполните следующие команды:,
-
- ```
-cd device/phh/treble
-bash generate.sh lineage
- ```
-
-А так же, скопируйте в эту папку файлы treble_arm64_bgN.mk и treble_arm64_bvN.mk
- 
- 
 ### Используйте ccache, чтобы ускорить повторные сборки
 
 Вы можете добавив эти строки в файл ~/.bashrc или ~/.zshrc, чтобы не вводить их снова:
@@ -64,24 +46,41 @@ export CCACHE_MAXSIZE=50G # 50 GB
 
 ## Компиляция
 
-В папке с исходниками, для ванильной версии:
+Версия VANILLA с erofs:
 
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-lunch treble_arm64_bvN-bp1a-userdebug
+breakfast lineage_arm64_bvNE-bp1a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
-Для версии с гугл сервисами:
+Версия VANILLA с ext4:
 
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-lunch treble_arm64_bgN-bp1a-userdebug
+breakfast lineage_arm64_bvN4-bp1a-userdebug
 make systemimage -j$(nproc --all)
  ```
+ 
+Версия GAPPS с erofs:
 
+ ```
+. build/envsetup.sh
+ccache -M 50G -F 0
+breakfast lineage_arm64_bgNE-bp1a-userdebug
+make systemimage -j$(nproc --all)
+ ```
+ 
+Версия GAPPS с ext4:
+
+ ```
+. build/envsetup.sh
+ccache -M 50G -F 0
+breakfast lineage_arm64_bgN4-bp1a-userdebug
+make systemimage -j$(nproc --all)
+ ```
 
 ## Сжатие
 
@@ -94,12 +93,9 @@ cd out/target/product/tdgsi_arm64_ab
 7zz a system.img.xz "system.img"
    ```
 
-
 ## Устранение неполадок
 
 Если у вас присутсвуют проблемы при применении патчей, примините эти патчи самостоятельно
-
-
 
 ## Благодарности
 Эти люди так или иначе помогали проекту, поэтому именно они должны получить все почести:
@@ -114,3 +110,4 @@ cd out/target/product/tdgsi_arm64_ab
 - [Ahnet](https://github.com/ahnet-69)
 - [mytja](https://github.com/mytja)
 - [cawilliamson](https://github.com/cawilliamson)
+- [Doze-off](https://github.com/Doze-off)
