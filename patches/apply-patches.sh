@@ -2,7 +2,7 @@
 
 set -e
 
-source="$(pwd)"
+source="$(pwd)/LineageOS_gsi"
 trebledroid="$source/patches/trebledroid"
 personal="$source/patches/personal"
 
