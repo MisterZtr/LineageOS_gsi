@@ -2,7 +2,6 @@ English | [Русский](README-RU.md)
 ### To get started with building LineageOS 23.0 GSI,
 You'll need to get familiar with [Git and Repo](https://source.android.com/source/using-repo.html) as well as [How to build a GSI](https://github.com/phhusson/treble_experimentations/wiki/How-to-build-a-GSI%3F).
 
-
 ### Create the directories
 
 As a first step, you'll have to create and enter a folder with the appropriate name
@@ -18,40 +17,23 @@ cd LineageOS
 ```bash
 repo init -u https://github.com/LineageOS/android.git -b lineage-23.0 --git-lfs
 ```
- 
 
 ### Clone the Manifest to add necessary dependencies for gsi:
  
     git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests -b lineage-23.0
   
-
-
 ### Afterwards, sync the source by running this command:
 
 ```bash
 repo sync --force-sync --optimized-fetch --no-tags --no-clone-bundle --prune -j4
 ```
 
-
 ### Next, apply patches:
 
-Copy the patches folder to rom folder and in rom folder
 
 ```
-bash patches/apply-patches.sh .
+bash LineageOS_gsi/patches/apply-patches.sh .
 ```
-
-## Generating Rom Makefile
-
- Clone this repository, and then in device/phh/treble folder, run following commands:,
- 
- ```
-cd device/phh/treble
-bash generate.sh lineage
- ```
- 
-Also, copy the files treble_arm64_bgN.mk and treble_arm64_bvN.mk to this folder
-
 
 ### Turn on caching to speed up build
 
@@ -63,28 +45,45 @@ export CCACHE_COMPRESS=1
 export CCACHE_MAXSIZE=50G # 50 GB
 ``` 
 
-## Compilation 
+### Compilation 
 
-In ROM folder, for vanilla version:
+VANILLA version with erofs:
 
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-breakfast treble_arm64_bvN-bp2a-userdebug
+breakfast lineage_arm64_bvNE-bp2a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
-For version with google services:
+VANILLA version with ext4:
 
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-breakfast treble_arm64_bgN-bp2a-userdebug
+breakfast lineage_arm64_bvN4-bp2a-userdebug
 make systemimage -j$(nproc --all)
  ```
+ 
+GAPPS version with erofs:
 
+ ```
+. build/envsetup.sh
+ccache -M 50G -F 0
+breakfast lineage_arm64_bgNE-bp2a-userdebug
+make systemimage -j$(nproc --all)
+ ```
+ 
+GAPPS version with ext4:
 
-## Compress
+ ```
+. build/envsetup.sh
+ccache -M 50G -F 0
+breakfast lineage_arm64_bgN4-bp2a-userdebug
+make systemimage -j$(nproc --all)
+ ```
+ 
+### Compress
 
 After compilation,
 If you want to compress the build, i recommend use [7-zip](https://aur.archlinux.org/packages/7-zip), for a fast and safe way
@@ -95,14 +94,11 @@ cd out/target/product/tdgsi_arm64_ab
 7zz a system.img.xz "system.img"
    ```
 
-
-## Troubleshoot
+### Troubleshoot
  
 If you face any conflicts while applying patches, apply the patch manually
 
-
-
-## Credits
+### Credits
 These people have helped this project in some way or another, so they should be the ones who receive all the credit:
 - [LineageOS Team](https://github.com/LineageOS)
 - [Phhusson](https://github.com/phhusson)

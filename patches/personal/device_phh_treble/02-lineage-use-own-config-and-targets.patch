@@ -1,0 +1,165 @@
+From 4f2df120b37db31f0bb9d735051c5ca1b08dba6d Mon Sep 17 00:00:00 2001
+From: MisterZtr <andey2004586@gmail.com>
+Date: Mon Jun 05 10:00:00 2026 +0300
+Subject: lineage: use own config and targets
+
+diff --git a/AndroidProducts.mk b/AndroidProducts.mk
+new file mode 100644
+index 0000000..0a439c3
+--- /dev/null
++++ b/AndroidProducts.mk
+@@ -0,0 +1,11 @@
++#
++# Copyright (C) 2025 The LineageOS Project
++#
++# SPDX-License-Identifier: Apache-2.0
++#
++
++PRODUCT_MAKEFILES += \
++    $(LOCAL_DIR)/lineage_arm64_bgN4.mk \
++    $(LOCAL_DIR)/lineage_arm64_bgNE.mk \
++    $(LOCAL_DIR)/lineage_arm64_bvN4.mk \
++    $(LOCAL_DIR)/lineage_arm64_bvNE.mk
+diff --git a/lineage_arm64_bgN4.mk b/lineage_arm64_bgN4.mk
+new file mode 100644
+index 0000000..d529777
+--- /dev/null
++++ b/lineage_arm64_bgN4.mk
+@@ -0,0 +1,22 @@
++TARGET_GAPPS_ARCH := arm64
++include build/make/target/product/aosp_arm64.mk
++$(call inherit-product, device/phh/treble/base.mk)
++
++$(call inherit-product-if-exists, vendor/gapps/arm64/arm64-vendor.mk)
++$(call inherit-product, device/phh/treble/lineage.mk)
++
++PRODUCT_NAME := lineage_arm64_bgN4
++PRODUCT_DEVICE := tdgsi_arm64_ab
++PRODUCT_BRAND := google
++PRODUCT_SYSTEM_BRAND := google
++PRODUCT_MODEL := TrebleDroid
++
++# Overwrite the inherited "emulator" characteristics
++PRODUCT_CHARACTERISTICS := device
++
++LINEAGE_BUILDTYPE := GAPPS
++LINEAGE_BUILD := GSI
++
++#EXT4
++LINEAGE_EXTRAVERSION := -EXT4
++PRODUCT_EXTRA_VNDK_VERSIONS += 28 29
+diff --git a/lineage_arm64_bgNE.mk b/lineage_arm64_bgNE.mk
+new file mode 100644
+index 0000000..241eb39
+--- /dev/null
++++ b/lineage_arm64_bgNE.mk
+@@ -0,0 +1,24 @@
++TARGET_GAPPS_ARCH := arm64
++include build/make/target/product/aosp_arm64.mk
++$(call inherit-product, device/phh/treble/base.mk)
++
++$(call inherit-product-if-exists, vendor/gapps/arm64/arm64-vendor.mk)
++$(call inherit-product, device/phh/treble/lineage.mk)
++
++PRODUCT_NAME := lineage_arm64_bgNE
++PRODUCT_DEVICE := tdgsi_arm64_ab
++PRODUCT_BRAND := google
++PRODUCT_SYSTEM_BRAND := google
++PRODUCT_MODEL := TrebleDroid
++
++# Overwrite the inherited "emulator" characteristics
++PRODUCT_CHARACTERISTICS := device
++
++LINEAGE_BUILDTYPE := GAPPS
++LINEAGE_BUILD := GSI
++
++#EROFS
++LINEAGE_EXTRAVERSION := -EROFS
++GSI_FILE_SYSTEM_TYPE := erofs
++BOARD_EROFS_COMPRESSOR := lz4hc,9
++TARGET_PRODUCT_PROP += device/phh/treble/product.prop
+diff --git a/lineage_arm64_bvN4.mk b/lineage_arm64_bvN4.mk
+new file mode 100644
+index 0000000..99f5d9c
+--- /dev/null
++++ b/lineage_arm64_bvN4.mk
+@@ -0,0 +1,22 @@
++TARGET_GAPPS_ARCH := arm64
++include build/make/target/product/aosp_arm64.mk
++$(call inherit-product, device/phh/treble/base.mk)
++
++
++$(call inherit-product, device/phh/treble/lineage.mk)
++
++PRODUCT_NAME := lineage_arm64_bvN4
++PRODUCT_DEVICE := tdgsi_arm64_ab
++PRODUCT_BRAND := google
++PRODUCT_SYSTEM_BRAND := google
++PRODUCT_MODEL := TrebleDroid
++
++# Overwrite the inherited "emulator" characteristics
++PRODUCT_CHARACTERISTICS := device
++
++LINEAGE_BUILDTYPE := VANILLA
++LINEAGE_BUILD := GSI
++
++#EXT4
++LINEAGE_EXTRAVERSION := -EXT4
++PRODUCT_EXTRA_VNDK_VERSIONS += 28 29
+diff --git a/lineage_arm64_bvNE.mk b/lineage_arm64_bvNE.mk
+new file mode 100644
+index 0000000..249d37c
+--- /dev/null
++++ b/lineage_arm64_bvNE.mk
+@@ -0,0 +1,24 @@
++TARGET_GAPPS_ARCH := arm64
++include build/make/target/product/aosp_arm64.mk
++$(call inherit-product, device/phh/treble/base.mk)
++
++
++$(call inherit-product, device/phh/treble/lineage.mk)
++
++PRODUCT_NAME := lineage_arm64_bvNE
++PRODUCT_DEVICE := tdgsi_arm64_ab
++PRODUCT_BRAND := google
++PRODUCT_SYSTEM_BRAND := google
++PRODUCT_MODEL := TrebleDroid
++
++# Overwrite the inherited "emulator" characteristics
++PRODUCT_CHARACTERISTICS := device
++
++LINEAGE_BUILDTYPE := VANILLA
++LINEAGE_BUILD := GSI
++
++#EROFS
++LINEAGE_EXTRAVERSION := -EROFS
++GSI_FILE_SYSTEM_TYPE := erofs
++BOARD_EROFS_COMPRESSOR := lz4hc,9
++TARGET_PRODUCT_PROP += device/phh/treble/product.prop
+diff --git a/lineage.mk b/lineage.mk
+index 172bb01..deb95c7 100644
+--- a/lineage.mk
++++ b/lineage.mk
+@@ -1,3 +1,21 @@
+ $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
++$(call inherit-product, vendor/lineage/config/BoardConfigSoong.mk)
++$(call inherit-product, vendor/lineage/config/BoardConfigLineage.mk)
++$(call inherit-product, device/lineage/sepolicy/common/sepolicy.mk)
+ -include vendor/lineage/build/core/config.mk
+--include vendor/lineage/build/core/apicheck.mk
++
++# Disable adb secure
++WITH_ADB_INSECURE := true
++
++# Bootanimation
++TARGET_BOOT_ANIMATION_RES := 1080
++
++# Face unlock
++TARGET_FACE_UNLOCK_SUPPORTED := true
++PRODUCT_PACKAGES += FaceUnlock
++
++# APN
++PRODUCT_PACKAGES += apns-conf.xml
++
++#Oplus fingerprint
++$(call soong_config_set,surfaceflinger,udfps_lib,//hardware/oplus:libudfps_extension.oplus)
