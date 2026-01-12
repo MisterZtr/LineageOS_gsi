@@ -91,7 +91,7 @@ In rom folder,
 
    ```
 cd out/target/product/tdgsi_arm64_ab
-7zz a system.img.xz "system.img"
+7z a system.img.xz "system.img"
    ```
 
 ### Troubleshoot
