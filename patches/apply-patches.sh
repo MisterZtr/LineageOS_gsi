@@ -2,7 +2,7 @@
 
 set -e
 
-source="$(readlink -f -- $1)"
+source="$(pwd)/LineageOS_gsi"
 trebledroid="$source/patches/trebledroid"
 personal="$source/patches/personal"
 
