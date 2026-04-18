@@ -1,5 +1,5 @@
 Русский | [English](README.md)
-### Чтобы приступить к компиляции LineageOS 23.2 GSI,
+### Чтобы приступить к компиляции неофициальной LineageOS 23.2 GSI вместе с патчами,
 Вам нужно будет ознакомиться с [Git and Repo](https://source.android.com/source/using-repo.html), [Как собрать GSI](https://github.com/phhusson/treble_experimentations/wiki/How-to-build-a-GSI%3F), а также с темой на 4pda по [Сборке Android из исходников](https://4pda.to/forum/index.php?showtopic=209610&view=findpost&p=6112304)
 
 ### Создайте директорию
@@ -44,7 +44,7 @@ treble_app теперь используется из скомпилирован
 bash treble_app/build.sh
 ```
 
-### Используйте ccache, чтобы ускорить повторные сборки
+### Используйте ccache, чтобы ускорить повторные сборки Android
 
 Вы можете добавив эти строки в файл ~/.bashrc или ~/.zshrc, чтобы не вводить их снова:
 
@@ -53,6 +53,8 @@ export USE_CCACHE=1
 export CCACHE_COMPRESS=1
 export CCACHE_MAXSIZE=50G # 50 GB
 ```
+
+### Сборка Android
 
 Версия VANILLA с erofs:
 

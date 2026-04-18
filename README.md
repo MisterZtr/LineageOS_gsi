@@ -1,5 +1,5 @@
 English | [Русский](README-RU.md)
-### To get started with building LineageOS 23.2 GSI,
+### To get started with building the unofficial LineageOS 23.2 GSI together with the patches,
 You'll need to get familiar with [Git and Repo](https://source.android.com/source/using-repo.html) as well as [How to build a GSI](https://github.com/phhusson/treble_experimentations/wiki/How-to-build-a-GSI%3F).
 
 ### Create the directories
@@ -41,9 +41,9 @@ treble_app is now used from your compiled version.
 First, make sure that Java 17 is set as your default. How to do this on [Arch Linux](https://wiki.archlinux.org/title/Java#List_compatible_Java_environments_installed)  
 The compilation itself,
 
-### Turn on caching to speed up build
+### Use ccache to speed up Android rebuilds
 
-You can speed up subsequent builds by adding these lines to your ~/.bashrc OR ~/.zshrc file:
+You can add these lines to the ~/.bashrc or ~/.zshrc file to avoid typing them again:
 
 ```
 export USE_CCACHE=1
@@ -51,7 +51,7 @@ export CCACHE_COMPRESS=1
 export CCACHE_MAXSIZE=50G # 50 GB
 ``` 
 
-### Compilation 
+### Building Android 
 
 VANILLA version with erofs:
 
