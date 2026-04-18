@@ -4,66 +4,55 @@ set -e
 
 source="$(pwd)/LineageOS_gsi"
 trebledroid="$source/patches/trebledroid"
+trebledroid_staging="$source/patches/trebledroid-staging"
 personal="$source/patches/personal"
 
-printf "\n ### APPLYING TREBLEDROID PATCHES ###\n";
-sleep 1.0;
-for path in $(cd $trebledroid; echo *); do
-	tree="$(tr _ / <<<$path | sed -e 's;platform/;;g')"
-	printf "\n| $path ###\n";
-	[ "$tree" == build ] && tree=build/make
-    [ "$tree" == vendor/hardware/overlay ] && tree=vendor/hardware_overlay
-    [ "$tree" == treble/app ] && tree=treble_app
-	pushd $tree
+apply_patch_dir() {
+    local patch_dir=$1
+    local patch_name=$2
 
-	for patch in $trebledroid/$path/*.patch; do
-		# Check if patch is already applied
-		if patch -f -p1 --dry-run -R < $patch > /dev/null; then
-            printf "### ALREDY APPLIED: $patch \n";
-			continue
-		fi
+    printf "\n ### APPLYING %s PATCHES ###\n" "$patch_name"
+    sleep 1.0
 
-		if git apply --check $patch; then
-			git am $patch
-		elif patch -f -p1 --dry-run < $patch > /dev/null; then
-			#This will fail
-			git am $patch || true
-			patch -f -p1 < $patch
-			git add -u
-			git am --continue
-		else
-			printf "### FAILED APPLYING: $patch \n"
-		fi
-	done
+    if [ ! -d "$patch_dir" ]; then
+        printf "Directory %s not found, skipping...\n" "$patch_dir"
+        return 0
+    fi
 
-	popd
-done
+    for path in $(cd "$patch_dir"; echo *); do
+        tree="$(tr _ / <<<"$path" | sed -e 's;platform/;;g')"
+        printf "\n| %s ###\n" "$path"
 
-printf "\n### APPLYING PERSONAL PATCHES ###\n";
-sleep 1.0;
-for path_personal in $(cd $personal; echo *); do
-	tree="$(tr _ / <<<$path_personal | sed -e 's;platform/;;g')"
-	printf "\n| $path_personal ###\n";
-	[ "$tree" == build ] && tree=build/make
-    [ "$tree" == vendor/hardware/overlay ] && tree=vendor/hardware_overlay
-    [ "$tree" == treble/app ] && tree=treble_app
-    [ "$tree" == vendor/partner/gms ] && tree=vendor/partner_gms
-	pushd $tree
+        [ "$tree" == build ] && tree=build/make
+        [ "$tree" == testing ] && tree=platform_testing
+        [ "$tree" == vendor/hardware/overlay ] && tree=vendor/hardware_overlay
+        [ "$tree" == treble/app ] && tree=treble_app
+        [ "$tree" == vendor/partner/gms ] && tree=vendor/partner_gms
 
-	for patch in $personal/$path_personal/*.patch; do
+        pushd "$tree" > /dev/null
 
-		if git apply --check $patch; then
-			git am $patch
-		elif patch -f -p1 --dry-run < $patch > /dev/null; then
-			#This will fail
-			git am $patch || true
-			patch -f -p1 < $patch
-			git add -u
-			git am --continue
-		else
-			printf "### FAILED APPLYING: $patch \n"
-		fi
-	done
+        for patch in "$patch_dir"/"$path"/*.patch; do
+            if patch -f -p1 --dry-run -R < "$patch" > /dev/null; then
+                printf "### ALREADY APPLIED: %s \n" "$patch"
+                continue
+            fi
 
-	popd
-done
+            if git apply --check "$patch"; then
+                git am "$patch"
+            elif patch -f -p1 --dry-run < "$patch" > /dev/null; then
+                git am "$patch" || true
+                patch -f -p1 < "$patch"
+                git add -u
+                git am --continue
+            else
+                printf "### FAILED APPLYING: %s \n" "$patch"
+            fi
+        done
+
+        popd > /dev/null
+    done
+}
+
+apply_patch_dir "$trebledroid" "TREBLEDROID"
+apply_patch_dir "$trebledroid_staging" "TREBLEDROID STAGING"
+apply_patch_dir "$personal" "PERSONAL"
