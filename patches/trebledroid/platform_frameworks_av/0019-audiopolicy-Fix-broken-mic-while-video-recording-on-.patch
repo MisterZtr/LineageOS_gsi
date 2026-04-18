@@ -1,4 +1,4 @@
-From 2ce2995909d3ea1bdfc6c99d1fc1086988fec61c Mon Sep 17 00:00:00 2001
+From 3de045d8d5509f7d9eb7ab15bad949fafb637008 Mon Sep 17 00:00:00 2001
 From: Alberto Ponces <ponces26@gmail.com>
 Date: Sun, 30 Apr 2023 23:29:04 +0100
 Subject: [PATCH 19/25] audiopolicy: Fix broken mic while video recording on
@@ -17,7 +17,7 @@ index b9f71cc42b..77a96b47a4 100644
 @@ -662,6 +662,9 @@ std::variant<status_t, RouteTraits::Element> PolicySerializer::deserialize<Route
      }
      route->setSink(sink);
- 
+
 +    // This fixes broken mic while video record on some Exynos devices
 +    bool disableBackMic = property_get_bool("persist.sys.phh.disable_back_mic", false);
 +
@@ -36,5 +36,5 @@ index b9f71cc42b..77a96b47a4 100644
                  if (false && !mIgnoreVendorExtensions) {
                      ALOGE("%s: no source found with name \"%s\"", __func__, devTag);
 -- 
-2.25.1
+2.52.0
 

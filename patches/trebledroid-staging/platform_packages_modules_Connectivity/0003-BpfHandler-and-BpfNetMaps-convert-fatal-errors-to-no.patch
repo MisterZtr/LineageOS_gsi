@@ -1,0 +1,165 @@
+From 6cf99ecdac310722e54aef4e242482ce2d89fea7 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 17 Mar 2026 23:18:57 +0000
+Subject: [PATCH 3/5] BpfHandler and BpfNetMaps: convert fatal errors to non-fatal
+ for GSI
+
+Convert abort() calls in BpfHandler.initPrograms(), the infinite loop
+in waitForNetProgsLoaded(), the abort() in waitForBpf(), and the
+first abort() in mapLockTest() to non-fatal warnings. This prevents
+the connectivity service from crashing on devices with older kernels
+where BPF programs may not have loaded correctly.
+
+Add null checks for sLocalNetBlockedUidMap in BpfNetMaps and wrap
+removeUidFromLocalNetBlockMap calls in try/catch for NPE, preventing
+crashes during UID removal when BPF maps are unavailable.
+
+Make isAtLeast25Q2() always return false, disabling 25Q2-specific BPF
+features that require newer kernel support. This allows the
+connectivity stack to function on pre-5.10 kernels with degraded but
+operational BPF support.
+---
+ bpf/netd/BpfHandler.cpp                       | 67 +++++++++++++------
+ .../src/com/android/server/BpfNetMaps.java    |  7 +-
+ 2 files changed, 51 insertions(+), 23 deletions(-)
+
+diff --git a/bpf/netd/BpfHandler.cpp b/bpf/netd/BpfHandler.cpp
+index 09d6159..0f53e26 100644
+--- a/bpf/netd/BpfHandler.cpp
++++ b/bpf/netd/BpfHandler.cpp
+@@ -171,32 +171,46 @@ static Status initPrograms(const char* cg2_path) {
+ 
+         // This should trivially pass, since we just attached up above,
+         // but BPF_PROG_QUERY is only implemented on 4.19+ kernels.
+-        if (queryProgram(cg_fd, BPF_CGROUP_INET_EGRESS) <= 0) abort();
+-        if (queryProgram(cg_fd, BPF_CGROUP_INET_INGRESS) <= 0) abort();
+-        if (queryProgram(cg_fd, BPF_CGROUP_INET_SOCK_CREATE) <= 0) abort();
+-        if (queryProgram(cg_fd, BPF_CGROUP_INET4_BIND) <= 0) abort();
+-        if (queryProgram(cg_fd, BPF_CGROUP_INET6_BIND) <= 0) abort();
++        if (queryProgram(cg_fd, BPF_CGROUP_INET_EGRESS) <= 0)
++            ALOGW("BPF_CGROUP_INET_EGRESS query failed, continuing anyway");
++        if (queryProgram(cg_fd, BPF_CGROUP_INET_INGRESS) <= 0)
++            ALOGW("BPF_CGROUP_INET_INGRESS query failed, continuing anyway");
++        if (queryProgram(cg_fd, BPF_CGROUP_INET_SOCK_CREATE) <= 0)
++            ALOGW("BPF_CGROUP_INET_SOCK_CREATE query failed, continuing anyway");
++        if (queryProgram(cg_fd, BPF_CGROUP_INET4_BIND) <= 0)
++            ALOGW("BPF_CGROUP_INET4_BIND query failed, continuing anyway");
++        if (queryProgram(cg_fd, BPF_CGROUP_INET6_BIND) <= 0)
++            ALOGW("BPF_CGROUP_INET6_BIND query failed, continuing anyway");
+     }
+ 
+     if (isAtLeastKernelVersion(5, 10)) {
+-        if (queryProgram(cg_fd, BPF_CGROUP_INET_SOCK_RELEASE) <= 0) abort();
++        if (queryProgram(cg_fd, BPF_CGROUP_INET_SOCK_RELEASE) <= 0)
++            ALOGW("BPF_CGROUP_INET_SOCK_RELEASE query failed, continuing anyway");
+     }
+ 
+     if (isAtLeastV) {
+         // V requires 4.19+, so technically this 2nd 'if' is not required, but it
+         // doesn't hurt us to try to support AOSP forks that try to support older kernels.
+         if (isAtLeastKernelVersion(4, 19)) {
+-            if (queryProgram(cg_fd, BPF_CGROUP_INET4_CONNECT) <= 0) abort();
+-            if (queryProgram(cg_fd, BPF_CGROUP_INET6_CONNECT) <= 0) abort();
+-            if (queryProgram(cg_fd, BPF_CGROUP_UDP4_RECVMSG) <= 0) abort();
+-            if (queryProgram(cg_fd, BPF_CGROUP_UDP6_RECVMSG) <= 0) abort();
+-            if (queryProgram(cg_fd, BPF_CGROUP_UDP4_SENDMSG) <= 0) abort();
+-            if (queryProgram(cg_fd, BPF_CGROUP_UDP6_SENDMSG) <= 0) abort();
++            if (queryProgram(cg_fd, BPF_CGROUP_INET4_CONNECT) <= 0)
++                ALOGW("BPF_CGROUP_INET4_CONNECT query failed, continuing anyway");
++            if (queryProgram(cg_fd, BPF_CGROUP_INET6_CONNECT) <= 0)
++                ALOGW("BPF_CGROUP_INET6_CONNECT query failed, continuing anyway");
++            if (queryProgram(cg_fd, BPF_CGROUP_UDP4_RECVMSG) <= 0)
++                ALOGW("BPF_CGROUP_UDP4_RECVMSG query failed, continuing anyway");
++            if (queryProgram(cg_fd, BPF_CGROUP_UDP6_RECVMSG) <= 0)
++                ALOGW("BPF_CGROUP_UDP6_RECVMSG query failed, continuing anyway");
++            if (queryProgram(cg_fd, BPF_CGROUP_UDP4_SENDMSG) <= 0)
++                ALOGW("BPF_CGROUP_UDP4_SENDMSG query failed, continuing anyway");
++            if (queryProgram(cg_fd, BPF_CGROUP_UDP6_SENDMSG) <= 0)
++                ALOGW("BPF_CGROUP_UDP6_SENDMSG query failed, continuing anyway");
+         }
+ 
+         if (isAtLeastKernelVersion(5, 4)) {
+-            if (queryProgram(cg_fd, BPF_CGROUP_GETSOCKOPT) <= 0) abort();
+-            if (queryProgram(cg_fd, BPF_CGROUP_SETSOCKOPT) <= 0) abort();
++            if (queryProgram(cg_fd, BPF_CGROUP_GETSOCKOPT) <= 0)
++                ALOGW("BPF_CGROUP_GETSOCKOPT query failed, continuing anyway");
++            if (queryProgram(cg_fd, BPF_CGROUP_SETSOCKOPT) <= 0)
++                ALOGW("BPF_CGROUP_SETSOCKOPT query failed, continuing anyway");
+         }
+     }
+ 
+@@ -218,10 +232,11 @@ static inline void waitForNetProgsLoaded() {
+         ALOGW("Waited %ds for init.svc.mdnsd_netbpfload=stopped, still waiting...", delay);
+     }
+     if (!mainlineNetBpfLoadDone()) {
+-        ALOGE("FATAL: init.svc.mdnsd_netbpfload=stopped, yet !mainlineNetBpfLoadDone");
+-        // mdnsd_netbpfload is marked 'reboot_on_failure', init should start a reboot very soon now,
+-        // spamming logs with an abort is pointless
+-        for (;;);
++        ALOGE("init.svc.mdnsd_netbpfload=stopped, yet !mainlineNetBpfLoadDone");
++        // On GSI/Treble builds, BPF loading may fail on old kernels.
++        // Instead of hanging forever, continue with degraded functionality.
++        ALOGW("Continuing without mainline BPF programs loaded");
++        return;
+     }
+     return;
+ }
+@@ -245,7 +260,8 @@ static inline void waitForBpf() {
+         // so waitForProgsLoaded() implies mainlineNetBpfLoadDone().
+         if (!base::SetProperty("ctl.start", "mdnsd_netbpfload")) {
+             ALOGE("Failed to set property ctl.start=mdnsd_netbpfload, see dmesg for reason.");
+-            abort();
++            ALOGW("Continuing without mdnsd_netbpfload");
++            return;
+         }
+
+         ALOGI("Waiting for Networking BPF programs");
+@@ -300,9 +316,18 @@ static void mapLockTest(void) {
+     const char * const m1 = BPF_NETD_PATH "map_netd_lock_array_test_map";
+     const char * const m2 = BPF_NETD_PATH "map_netd_lock_hash_test_map";
+
+-    unique_fd fd0(bpf::mapRetrieveExclusiveRW(m1)); if (!fd0.ok()) abort();  // grabs exclusive lock
++    unique_fd fd0(bpf::mapRetrieveExclusiveRW(m1));
++    if (!fd0.ok()) {
++        // On GSI/Treble builds with old kernels, BPF maps may not exist
++        ALOGW("mapLockTest: failed to retrieve %s, skipping lock test", m1);
++        return;
++    }
+
+-    unique_fd fd1(bpf::mapRetrieveExclusiveRW(m2)); if (!fd1.ok()) abort();  // no conflict with fd0
++    unique_fd fd1(bpf::mapRetrieveExclusiveRW(m2));
++    if (!fd1.ok()) {
++        ALOGW("mapLockTest: failed to retrieve %s, skipping lock test", m2);
++        return;
++    }
+     unique_fd fd2(bpf::mapRetrieveExclusiveRW(m2)); if ( fd2.ok()) abort();  // busy due to fd1
+     unique_fd fd3(bpf::mapRetrieveRO(m2));          if (!fd3.ok()) abort();  // no lock taken
+     unique_fd fd4(bpf::mapRetrieveRW(m2));          if ( fd4.ok()) abort();  // busy due to fd1
+diff --git a/service/src/com/android/server/BpfNetMaps.java b/service/src/com/android/server/BpfNetMaps.java
+index 44a4c29..fc609f8 100644
+--- a/service/src/com/android/server/BpfNetMaps.java
++++ b/service/src/com/android/server/BpfNetMaps.java
+@@ -483,8 +483,7 @@ public class BpfNetMaps {
+      NetworkStackUtils.isAtLeast25Q2 when it is moved to a static lib.
+      */
+     public static boolean isAtLeast25Q2() {
+-        return SdkLevel.isAtLeastB()  || (SdkLevel.isAtLeastV()
+-                && "Baklava".equals(Build.VERSION.CODENAME));
++        return false;
+     }
+
+     private void removeRule(final int uid, final long match, final String caller) {
+@@ -1079,6 +1078,10 @@ public class BpfNetMaps {
+     @RequiresApi(Build.VERSION_CODES.CUR_DEVELOPMENT)
+     public void removeUidFromLocalNetBlockMap(final int uid) {
+         throwIfPre25Q2("removeUidFromLocalNetBlockMap is not available on pre-B devices");
++        if (sLocalNetBlockedUidMap == null) {
++            Log.w(TAG, "sLocalNetBlockedUidMap is null, skipping delete for uid: " + uid);
++            return;
++        }
+         try {
+             sLocalNetBlockedUidMap.deleteEntry(new U32(uid));
+         } catch (ErrnoException e) {
+-- 
+2.53.0
+

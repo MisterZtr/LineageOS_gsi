@@ -13,7 +13,7 @@ index 64441784..e2c47136 100644
 --- a/fs/Exfat.cpp
 +++ b/fs/Exfat.cpp
 @@ -35,7 +35,9 @@ static const char* kFsckPath = "/system/bin/fsck.exfat";
- 
+
  bool IsSupported() {
      return access(kMkfsPath, X_OK) == 0 && access(kFsckPath, X_OK) == 0 &&
 -           IsFilesystemSupported("exfat");
@@ -21,12 +21,12 @@ index 64441784..e2c47136 100644
 +            IsFilesystemSupported("texfat") ||
 +            IsFilesystemSupported("sdfat"));
  }
- 
+
  status_t Check(const std::string& source) {
 @@ -64,13 +66,16 @@ status_t DoMount(const std::string& source, const std::string& target, int owner
      auto mountData = android::base::StringPrintf("uid=%d,gid=%d,fmask=%o,dmask=%o", ownerUid,
                                                   ownerGid, permMask, permMask);
- 
+
 -    if (mount(source.c_str(), target.c_str(), "exfat", mountFlags, mountData.c_str()) == 0) {
 +    const char* fs = "exfat";
 +    if (IsFilesystemSupported("sdfat")) fs = "sdfat";
@@ -34,14 +34,14 @@ index 64441784..e2c47136 100644
 +    if (mount(source.c_str(), target.c_str(), fs, mountFlags, mountData.c_str()) == 0) {
          return 0;
      }
- 
+
      PLOG(ERROR) << "Mount failed; attempting read-only";
      mountFlags |= MS_RDONLY;
 -    if (mount(source.c_str(), target.c_str(), "exfat", mountFlags, mountData.c_str()) == 0) {
 +    if (mount(source.c_str(), target.c_str(), fs, mountFlags, mountData.c_str()) == 0) {
          return 0;
      }
- 
+
 -- 
-2.25.1
+2.52.0
 

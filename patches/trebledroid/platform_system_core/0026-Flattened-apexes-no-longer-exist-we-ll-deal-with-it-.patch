@@ -15,7 +15,7 @@ index 5c3beeb83..6be46436a 100644
 @@ -704,26 +704,6 @@ uint32_t InitPropertySet(const std::string& name, const std::string& value) {
  static Result<void> load_properties_from_file(const char*, const char*,
                                                std::map<std::string, std::string>*);
- 
+
 -static bool kernel_supports_capex() {
 -    //Put a threshold at >= 5.0
 -    struct utsname buf;
@@ -41,7 +41,7 @@ index 5c3beeb83..6be46436a 100644
   * "ro.foo.*" is a prefix match, and "ro.foo.bar" is an exact match.
 @@ -819,7 +799,7 @@ static void LoadProperties(char* data, const char* filter, const char* filename,
                  const char *new_value = value;
- 
+
                  if(strcmp("ro.apex.updatable", key) == 0) {
 -                    new_value = kernel_supports_capex() ? "true" : "false";
 +                    new_value = "true";
@@ -49,5 +49,5 @@ index 5c3beeb83..6be46436a 100644
                  if (it == properties->end()) {
                      (*properties)[key] = new_value;
 -- 
-2.25.1
+2.52.0
 

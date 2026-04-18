@@ -12,27 +12,27 @@ This fixes traffic indicator on BPF-less kernel.
 Change-Id: I65c626c1c5832d81805c45c53b021236fe09030b
 Signed-off-by: koron393 <koron393@gmail.com>
 ---
- ...android_server_net_NetworkStatsService.cpp | 84 ++++++++++++++++++-
- 1 file changed, 81 insertions(+), 3 deletions(-)
+ ...android_server_net_NetworkStatsService.cpp | 99 +++++++++++++++++--
+ 1 file changed, 93 insertions(+), 6 deletions(-)
 
 diff --git a/service-t/jni/com_android_server_net_NetworkStatsService.cpp b/service-t/jni/com_android_server_net_NetworkStatsService.cpp
-index c99939864d..741f13c7ed 100644
+index a724f3f..2d4566e 100644
 --- a/service-t/jni/com_android_server_net_NetworkStatsService.cpp
 +++ b/service-t/jni/com_android_server_net_NetworkStatsService.cpp
-@@ -39,6 +39,9 @@ using android::bpf::NetworkTraceHandler;
- 
+@@ -40,6 +40,9 @@ using android::bpf::NetworkTraceHandler;
+
  namespace android {
- 
+
 +static const char* QTAGUID_IFACE_STATS = "/proc/net/xt_qtaguid/iface_stat_fmt";
 +static const char* QTAGUID_UID_STATS = "/proc/net/xt_qtaguid/stats";
 +
- static void nativeRegisterIface(JNIEnv* env, jclass clazz, jstring iface) {
-     ScopedUtfChars iface8(env, iface);
-     if (iface8.c_str() == nullptr) return;
-@@ -73,13 +76,80 @@ static jobject statsValueToEntry(JNIEnv* env, StatsValue* stats) {
+ static struct {
+     jclass theClass;
+     jmethodID constructor;
+@@ -69,10 +72,80 @@ static jobject statsValueToEntry(JNIEnv* env, StatsValue* stats) {
      return result;
  }
- 
+
 +static int parseIfaceStats(const char* iface, StatsValue* stats) {
 +    FILE *fp = fopen(QTAGUID_IFACE_STATS, "r");
 +    if (fp == NULL) {
@@ -98,45 +98,53 @@ index c99939864d..741f13c7ed 100644
 +
  static jobject nativeGetTotalStat(JNIEnv* env, jclass clazz) {
      StatsValue stats = {};
- 
-     if (bpfGetIfaceStats(nullptr, &stats) == 0) {
-         return statsValueToEntry(env, &stats);
-     } else {
--        return nullptr;
+-    if (bpfGetIfaceStats(nullptr, &stats)) return nullptr;
+-    return statsValueToEntry(env, &stats);
++    if (bpfGetIfaceStats(nullptr, &stats) == 0) {
++        return statsValueToEntry(env, &stats);
++    } else {
 +        if (parseIfaceStats(nullptr, &stats) == 0) {
 +            return statsValueToEntry(env, &stats);
 +        } else {
 +            return nullptr;
 +        }
-     }
++    }
  }
- 
-@@ -94,7 +164,11 @@ static jobject nativeGetIfaceStat(JNIEnv* env, jclass clazz, jstring iface) {
-     if (bpfGetIfaceStats(iface8.c_str(), &stats) == 0) {
-         return statsValueToEntry(env, &stats);
-     } else {
--        return nullptr;
+
+ static jobject nativeGetIfaceStat(JNIEnv* env, jclass clazz, jstring iface) {
+@@ -80,14 +153,28 @@ static jobject nativeGetIfaceStat(JNIEnv* env, jclass clazz, jstring iface) {
+     if (!iface8.c_str()) return nullptr;
+
+     StatsValue stats = {};
+-    if (bpfGetIfaceStats(iface8.c_str(), &stats)) return nullptr;
+-    return statsValueToEntry(env, &stats);
++    if (bpfGetIfaceStats(iface8.c_str(), &stats) == 0) {
++        return statsValueToEntry(env, &stats);
++    } else {
 +        if (parseIfaceStats(iface8.c_str(), &stats) == 0) {
 +            return statsValueToEntry(env, &stats);
 +        } else {
 +            return nullptr;
 +        }
-     }
++    }
  }
- 
-@@ -104,7 +178,11 @@ static jobject nativeGetUidStat(JNIEnv* env, jclass clazz, jint uid) {
-     if (bpfGetUidStats(uid, &stats) == 0) {
-         return statsValueToEntry(env, &stats);
-     } else {
--        return nullptr;
+
+ static jobject nativeGetUidStat(JNIEnv* env, jclass clazz, jint uid) {
+     StatsValue stats = {};
+-    if (bpfGetUidStats(uid, &stats)) return nullptr;
+-    return statsValueToEntry(env, &stats);
++    if (bpfGetUidStats(uid, &stats) == 0) {
++        return statsValueToEntry(env, &stats);
++    } else {
 +        if (parseUidStats(uid, &stats) == 0) {
 +            return statsValueToEntry(env, &stats);
 +        } else {
 +            return nullptr;
 +        }
-     }
++    }
  }
- 
+
+ static void nativeInitNetworkTracing(JNIEnv* env, jclass clazz) {
 -- 
-2.25.1
+2.52.0
 

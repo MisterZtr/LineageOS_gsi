@@ -19,7 +19,7 @@ index 559bc0aa7a..c45497229c 100644
 --- a/services/inputflinger/reader/EventHub.cpp
 +++ b/services/inputflinger/reader/EventHub.cpp
 @@ -2490,7 +2490,13 @@ void EventHub::openDeviceLocked(const std::string& devicePath) {
- 
+
      // Check whether this device is an accelerometer.
      if (device->propBitmask.test(INPUT_PROP_ACCELEROMETER)) {
 -        device->classes |= InputDeviceClass::SENSOR;
@@ -31,8 +31,8 @@ index 559bc0aa7a..c45497229c 100644
 +            device->classes |= InputDeviceClass::SENSOR;
 +        }
      }
- 
+
      // Check whether this device has switches.
 -- 
-2.25.1
+2.52.0
 

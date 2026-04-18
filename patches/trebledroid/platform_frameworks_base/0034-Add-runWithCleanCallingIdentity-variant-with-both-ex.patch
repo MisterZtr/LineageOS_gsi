@@ -1,7 +1,7 @@
 From 690d0a92059aca887b40b77c5c92e1656ad2be16 Mon Sep 17 00:00:00 2001
 From: Andy CrossGate Yan <GeForce8800Ultra@gmail.com>
 Date: Sat, 12 Aug 2023 20:11:17 +0800
-Subject: [PATCH 34/57] Add runWithCleanCallingIdentity variant with both
+Subject: [PATCH 34/55] Add runWithCleanCallingIdentity variant with both
  executor and return value
 
 This complements the fixup to ImsPhoneCallTracker (in fw/o/t) for U
@@ -28,7 +28,7 @@ index 4224338918f4..3bbecf0f2065 100644
 @@ -159,6 +161,34 @@ public final class TelephonyUtils {
          }
      }
- 
+
 +    /**
 +     * Convenience method for running the provided action in the provided
 +     * executor enclosed in
@@ -61,5 +61,5 @@ index 4224338918f4..3bbecf0f2065 100644
       * Filter values in bundle to only basic types.
       */
 -- 
-2.25.1
+2.52.0
 

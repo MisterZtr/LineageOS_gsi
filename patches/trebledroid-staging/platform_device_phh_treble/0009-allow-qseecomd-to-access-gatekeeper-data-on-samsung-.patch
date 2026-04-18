@@ -1,0 +1,46 @@
+From bd5d1e55363ccf65533de8ec5a79e03375e2ff89 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Sat, 28 Mar 2026 22:44:11 +0000
+Subject: [PATCH 9/21] allow qseecomd to access gatekeeper data on samsung devices
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+on samsung devices, the gatekeeper HAL (running in TrustZone via
+qseecomd, u:r:tee:s0) needs to read and write its brute-force
+throttling records in /data/vendor/gatekeeper/.  the GSI system
+policy lacks the vendor-specific allow rule for this, so SELinux
+denies the access in enforcing mode.
+
+without this, every PIN/password verification attempt fails:
+qseecomd gets denied { read search } on gatekeeper_vendor_data_file,
+tz_load() returns FD:-1, and GK_swd_verify() returns error -506.
+the device becomes permanently locked despite correct credentials.
+
+gatekeeper_vendor_data_file is already declared in
+system/sepolicy/private/file.te — only the allow rules are needed.
+---
+ sepolicy/samsung.te | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/sepolicy/samsung.te b/sepolicy/samsung.te
+index 3d0225c..b1575ac 100644
+--- a/sepolicy/samsung.te
++++ b/sepolicy/samsung.te
+@@ -9,6 +9,13 @@ type hal_graphics_composer_default, domain;
+ type hal_sec_inputdev_default, domain;
+ allow hal_sec_inputdev_default system_prop:file { getattr map open read };
+ 
++# allow qseecomd (tee) to access gatekeeper secure storage on /data
++# (without this, PIN/password verification fails with error -506 because
++# the gatekeeper HAL cannot load or save its brute-force throttling records;
++# gatekeeper_vendor_data_file is already declared in system/sepolicy/private/file.te)
++allow tee gatekeeper_vendor_data_file:dir { add_name open read remove_name search write };
++allow tee gatekeeper_vendor_data_file:file { create getattr open read setattr unlink write };
++
+ type sf_hs_mode_prop, property_type;
+ 
+ get_prop(hal_graphics_composer_default, sf_hs_mode_prop);
+-- 
+2.53.0
+

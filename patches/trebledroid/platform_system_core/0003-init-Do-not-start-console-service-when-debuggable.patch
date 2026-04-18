@@ -19,7 +19,7 @@ index 471059bc8..0019c38d6 100644
 @@ -1315,9 +1315,6 @@ on property:ro.debuggable=1
      # Give reads to anyone for the accessibility trace folder on debug builds.
      chmod 0775 /data/misc/a11ytrace
- 
+
 -on init && property:ro.debuggable=1
 -    start console
 -
@@ -27,5 +27,5 @@ index 471059bc8..0019c38d6 100644
  on property:persist.device_config.mglru_native.lru_gen_config=none
    write /sys/kernel/mm/lru_gen/enabled 0
 -- 
-2.25.1
+2.52.0
 

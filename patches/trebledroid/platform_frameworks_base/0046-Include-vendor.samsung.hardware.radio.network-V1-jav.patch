@@ -1,7 +1,7 @@
-From b04fa8898bb970c3f581508a34d7ce5a62119f51 Mon Sep 17 00:00:00 2001
+From 724781d7311a54974362583cd3617f94a4705e36 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 21 Feb 2024 12:41:46 -0500
-Subject: [PATCH 46/57] Include vendor.samsung.hardware.radio.network-V1-java
+Subject: [PATCH 46/55] Include vendor.samsung.hardware.radio.network-V1-java
  in base libs, will be used by f/o/telephony
 
 ---
@@ -21,5 +21,5 @@ index e7c20418bcef..df041ccf1d4a 100644
          "android.hardware.thermal-V1.0-java",
          "android.hardware.thermal-V1.1-java",
 -- 
-2.25.1
+2.52.0
 

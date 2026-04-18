@@ -15,15 +15,15 @@ index 93540aec..4916c823 100644
 @@ -48,7 +48,10 @@ public final class SystemDeviceLockManagerImpl implements SystemDeviceLockManage
          final DeviceLockManager deviceLockManager = context.getSystemService(
                  DeviceLockManager.class);
- 
+
 -        mIDeviceLockService = deviceLockManager.getService();
 +        if (deviceLockManager != null)
 +            mIDeviceLockService = deviceLockManager.getService();
 +        else
 +            mIDeviceLockService = null;
      }
- 
+
      private SystemDeviceLockManagerImpl() {
 -- 
-2.25.1
+2.52.0
 

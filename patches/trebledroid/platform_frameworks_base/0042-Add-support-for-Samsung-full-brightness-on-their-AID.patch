@@ -1,7 +1,7 @@
-From 684b083e68eff3c5239de87ee8c291762510cc8c Mon Sep 17 00:00:00 2001
+From 7221657305a6252d744e3f2a521a196c0a00dd7e Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 10 Dec 2023 18:04:49 -0500
-Subject: [PATCH 42/57] Add support for Samsung full brightness on their AIDL
+Subject: [PATCH 42/51] Add support for Samsung full brightness on their AIDL
  HAL
 
 ---
@@ -10,10 +10,10 @@ Subject: [PATCH 42/57] Add support for Samsung full brightness on their AIDL
  2 files changed, 44 insertions(+)
 
 diff --git a/services/core/Android.bp b/services/core/Android.bp
-index 2f42bca26fa7..b79ed8473638 100644
+index 640233c20..cb61b1fd4 100644
 --- a/services/core/Android.bp
 +++ b/services/core/Android.bp
-@@ -272,6 +272,10 @@ java_library_static {
+@@ -267,6 +267,10 @@ java_library_static {
          "vendor.oplus.hardware.biometrics.fingerprint-V2.1-java",
          "vendor.oppo.hardware.biometrics.fingerprint-V2.1-java",
          "vendor.xiaomi.hardware.fingerprintextension-V1.0-java",
@@ -21,17 +21,17 @@ index 2f42bca26fa7..b79ed8473638 100644
 +        //AIDL
 +        "vendor.samsung.hardware.biometrics.fingerprint-V1-java",
 +        "vendor.samsung.hardware.light-V1-java",
+         "aconfig_adbdauth_flags_java_lib",
+         "AvfBuildFlags",
      ],
-     javac_shard_size: 50,
-     javacflags: [
 diff --git a/services/core/java/com/android/server/lights/LightsService.java b/services/core/java/com/android/server/lights/LightsService.java
-index 67f6932921f6..0379eadfa383 100644
+index d6349a676..19b0c2e17 100644
 --- a/services/core/java/com/android/server/lights/LightsService.java
 +++ b/services/core/java/com/android/server/lights/LightsService.java
 @@ -44,8 +44,10 @@ import com.android.internal.util.DumpUtils;
  import com.android.internal.util.Preconditions;
  import com.android.server.SystemService;
- 
+
 +import java.io.File;
  import java.io.FileDescriptor;
  import java.io.PrintWriter;
@@ -42,7 +42,7 @@ index 67f6932921f6..0379eadfa383 100644
 @@ -53,6 +55,8 @@ import java.util.List;
  import java.util.Map;
  import java.util.function.Supplier;
- 
+
 +import vendor.samsung.hardware.light.ISehLights;
 +
  public class LightsService extends SystemService {
@@ -51,17 +51,17 @@ index 67f6932921f6..0379eadfa383 100644
 @@ -63,6 +67,10 @@ public class LightsService extends SystemService {
      @Nullable
      private final Supplier<ILights> mVintfLights;
- 
+
 +    @Nullable
 +    private ISehLights mSamsungLights;
 +    private int mSamsungMaxBrightness;
 +
      @VisibleForTesting
      final LightsManagerBinderService mManagerService;
- 
-@@ -300,6 +308,17 @@ public class LightsService extends SystemService {
+
+@@ -315,6 +323,17 @@ public class LightsService extends SystemService {
                  int brightnessInt = BrightnessSynchronizer.brightnessFloatToInt(brightness);
- 
+
                  if(mHwLight.id == 0) {
 +                    if (mSamsungLights != null && SystemProperties.getBoolean("persist.sys.samsung.full_brightness", false)) {
 +                        HwLightState lightState = new HwLightState(); // don't care
@@ -77,10 +77,10 @@ index 67f6932921f6..0379eadfa383 100644
                      String fp = SystemProperties.get("ro.vendor.build.fingerprint", "hello");
                      if(fp.matches(".*astarqlte.*")) {
                          int newBrightness = brightnessInt;
-@@ -502,6 +521,27 @@ public class LightsService extends SystemService {
+@@ -517,6 +536,27 @@ public class LightsService extends SystemService {
          mH = new Handler(looper);
          mVintfLights = service.get() != null ? service : null;
- 
+
 +        if (service.get() != null) {
 +            try {
 +                mSamsungLights = ISehLights.Stub.asInterface(service.get().asBinder().getExtension());
@@ -106,5 +106,5 @@ index 67f6932921f6..0379eadfa383 100644
          mManagerService = new LightsManagerBinderService();
      }
 -- 
-2.25.1
+2.52.0
 

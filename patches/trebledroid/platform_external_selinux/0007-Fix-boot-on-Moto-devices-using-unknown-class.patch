@@ -37,7 +37,7 @@ index 6740b8f1..2e7465a0 100644
 @@ -584,6 +584,14 @@ int cil_gen_class(struct cil_db *db, struct cil_tree_node *parse_current, struct
  	struct cil_tree_node *perms = NULL;
  	int rc = SEPOL_ERR;
- 
+
 +        {
 +            const char* path = cil_tree_get_cil_path(parse_current);
 +            if(strstr(path, "vendor/")) {
@@ -52,7 +52,7 @@ index 6740b8f1..2e7465a0 100644
 @@ -879,6 +887,14 @@ int cil_gen_classpermission(struct cil_db *db, struct cil_tree_node *parse_curre
  	};
  	size_t syntax_len = sizeof(syntax)/sizeof(*syntax);
- 
+
 +        {
 +            const char* path = cil_tree_get_cil_path(parse_current);
 +            if(strstr(path, "vendor/")) {
@@ -67,7 +67,7 @@ index 6740b8f1..2e7465a0 100644
 @@ -2109,6 +2125,14 @@ int cil_gen_avrule(struct cil_tree_node *parse_current, struct cil_tree_node *as
  	rule->src_str = parse_current->next->data;
  	rule->tgt_str = parse_current->next->next->data;
- 
+
 +        {
 +            const char *classname = parse_current->next->next->next->cl_head->data;
 +            if(strcmp(classname, "keystore_moto_key") == 0) {
@@ -80,5 +80,5 @@ index 6740b8f1..2e7465a0 100644
  	if (rc != SEPOL_OK) {
  		goto exit;
 -- 
-2.25.1
+2.52.0
 

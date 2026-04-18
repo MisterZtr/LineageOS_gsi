@@ -16,7 +16,7 @@ index 37c08321..8456682b 100644
 @@ -1707,6 +1707,14 @@ public class ImsManager implements FeatureUpdates {
          }
      }
- 
+
 +    public static void updateImsServiceConfig(Context context, int phoneId, boolean force) {
 +        ImsManager mgr = ImsManager.getInstance(context, phoneId);
 +        if (mgr != null) {
@@ -29,5 +29,5 @@ index 37c08321..8456682b 100644
       * Push configuration updates to the ImsService implementation.
       */
 -- 
-2.25.1
+2.52.0
 

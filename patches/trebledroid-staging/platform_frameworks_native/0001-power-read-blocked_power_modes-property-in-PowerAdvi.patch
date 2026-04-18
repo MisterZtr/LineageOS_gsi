@@ -1,0 +1,40 @@
+From edb02b21da210186d350baa07e83db2023d39f27 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 10 Apr 2026 00:43:34 +0100
+Subject: [PATCH 1/7] power: read blocked_power_modes property in PowerAdvisor
+
+replace the per-mode EXPENSIVE_RENDERING property with a check against
+the generic persist.sys.phh.blocked_power_modes property.  if mode 6
+(EXPENSIVE_RENDERING) is in the comma-separated list, disable the
+expensive rendering path in SurfaceFlinger.
+
+the property is populated automatically by power-mode-monitor.sh on
+MTK devices.
+---
+ services/surfaceflinger/PowerAdvisor/PowerAdvisor.cpp | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/services/surfaceflinger/PowerAdvisor/PowerAdvisor.cpp b/services/surfaceflinger/PowerAdvisor/PowerAdvisor.cpp
+index a3da24b99a..e5977b275a 100644
+--- a/services/surfaceflinger/PowerAdvisor/PowerAdvisor.cpp
++++ b/services/surfaceflinger/PowerAdvisor/PowerAdvisor.cpp
+@@ -69,6 +69,16 @@ static constexpr ftl::Flags<Workload> TRIGGER_LOAD_CHANGE_HINTS = Workload::EFFE
+ PowerAdvisor::PowerAdvisor(std::function<void()>&& sfDisableExpensiveFn,
+                            std::chrono::milliseconds timeout)
+       : mPowerHal(std::make_unique<power::PowerHalController>()) {
++    // check if EXPENSIVE_RENDERING (mode 6) is in the blocked list.
++    // the property is populated by power-mode-monitor.sh on MTK devices.
++    std::string blocked = android::base::GetProperty("persist.sys.phh.blocked_power_modes", "");
++    if (!blocked.empty()) {
++        std::string search = "," + blocked + ",";
++        if (search.find(",6,") != std::string::npos) {
++            mHasExpensiveRendering = false;
++            ALOGI("EXPENSIVE_RENDERING disabled (mode 6 in blocked_power_modes)");
++        }
++    }
+     if (timeout > 0ms) {
+         mScreenUpdateTimer.emplace("UpdateImminentTimer", timeout,
+                                    /* resetCallback */ nullptr,
+-- 
+2.53.0
+

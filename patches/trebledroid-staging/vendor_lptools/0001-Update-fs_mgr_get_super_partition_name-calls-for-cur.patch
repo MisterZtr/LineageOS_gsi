@@ -1,0 +1,37 @@
+From 7d0bfb0810e5f542fa5fd43f42fcb585772af8e5 Mon Sep 17 00:00:00 2001
+From: Christopher A. Williamson <contact@chrisaw.io>
+Date: Tue, 10 Feb 2026 00:00:00 +0000
+Subject: [PATCH] Update fs_mgr_get_super_partition_name calls for current API
+
+The function no longer takes a slot number argument.
+
+Change-Id: I0000000000000000000000000000000000000006
+---
+ lptools.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lptools.cc b/lptools.cc
+index 160cd44..22eebaf 100644
+--- a/lptools.cc
++++ b/lptools.cc
+@@ -80,7 +80,7 @@ std::optional<std::string> FindPhysicalPartition(const std::string& name) {
+ std::string GetSuperSlotSuffix(const std::string& partition_name) {
+     std::string current_slot_suffix = ::android::base::GetProperty("ro.boot.slot_suffix", "");
+     uint32_t current_slot_number = SlotNumberForSlotSuffix(current_slot_suffix);
+-    std::string super_partition = fs_mgr_get_super_partition_name(current_slot_number);
++    std::string super_partition = fs_mgr_get_super_partition_name();
+     if (GetPartitionSlotSuffix(super_partition).empty()) {
+         return current_slot_suffix;
+     }
+@@ -111,7 +111,7 @@ PartitionBuilder::PartitionBuilder() {
+     auto partition_name = "system" + ::android::base::GetProperty("ro.boot.slot_suffix", "");
+     std::string slot_suffix = GetSuperSlotSuffix(partition_name);
+     slot_number_ = android::fs_mgr::SlotNumberForSlotSuffix(slot_suffix);
+-    auto super_device = FindPhysicalPartition(fs_mgr_get_super_partition_name(slot_number_));
++    auto super_device = FindPhysicalPartition(fs_mgr_get_super_partition_name());
+     if (!super_device) {
+         return;
+     }
+-- 
+2.52.0
+

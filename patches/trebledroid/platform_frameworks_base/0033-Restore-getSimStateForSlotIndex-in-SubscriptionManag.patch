@@ -1,7 +1,7 @@
 From 2a8271ca96a66370570bc43aed9e133a1150ec30 Mon Sep 17 00:00:00 2001
 From: Andy CrossGate Yan <GeForce8800Ultra@gmail.com>
 Date: Wed, 2 Aug 2023 20:59:53 +0800
-Subject: [PATCH 33/57] Restore getSimStateForSlotIndex in SubscriptionManager
+Subject: [PATCH 33/55] Restore getSimStateForSlotIndex in SubscriptionManager
 
 MTK IMS still needs it here
 
@@ -17,7 +17,7 @@ index e04d285d6632..36826e8ff43d 100644
 @@ -2968,6 +2968,20 @@ public class SubscriptionManager {
          return TelephonyManager.getDefault().isNetworkRoaming(subId);
      }
- 
+
 +    /**
 +     * Returns a constant indicating the state of sim for the slot index.
 +     *
@@ -36,5 +36,5 @@ index e04d285d6632..36826e8ff43d 100644
       * Set a field in the subscription database. Note not all fields are supported.
       *
 -- 
-2.25.1
+2.52.0
 

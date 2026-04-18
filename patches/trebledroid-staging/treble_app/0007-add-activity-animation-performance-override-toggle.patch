@@ -1,0 +1,61 @@
+From 7b03d6e70a3090aeb5e93fa27822059a42c1a5d5 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Wed, 25 Mar 2026 23:10:58 +0000
+Subject: [PATCH 07/8] add activity animation performance override toggle
+
+add a toggle for persist.sys.activity_anim_perf_override which
+replaces stock AOSP XML-based activity transition animations with
+lightweight programmatic equivalents.  fixes lag in Settings and
+during app open/close on low-end MTK devices running android 16.
+---
+ app/src/main/java/me/phh/treble/app/Misc.kt         | 4 ++++
+ app/src/main/java/me/phh/treble/app/MiscSettings.kt | 1 +
+ app/src/main/res/xml/pref_misc.xml                  | 5 +++++
+ 3 files changed, 10 insertions(+)
+
+diff --git a/app/src/main/java/me/phh/treble/app/Misc.kt b/app/src/main/java/me/phh/treble/app/Misc.kt
+index bfcf15c..4828fa4 100644
+--- a/app/src/main/java/me/phh/treble/app/Misc.kt
++++ b/app/src/main/java/me/phh/treble/app/Misc.kt
+@@ -406,6 +406,10 @@ object Misc: EntryStartup {
+                 val value = sp.getBoolean(key, false)
+                 SystemProperties.set("persist.sys.phh.securize", if (value) "1" else "0")
+             }
++            MiscSettings.activityAnimPerfOverride -> {
++                val value = sp.getBoolean(key, false)
++                SystemProperties.set("persist.sys.activity_anim_perf_override", if (value) "true" else "false")
++            }
+             MiscSettings.disableExpensiveRenderingMode -> {
+                 val value = sp.getBoolean(key, false)
+                 SystemProperties.set("persist.sys.phh.disable_expensive_rendering_mode", if (value) "1" else "0")
+diff --git a/app/src/main/java/me/phh/treble/app/MiscSettings.kt b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
+index 1e23888..cdb08fc 100644
+--- a/app/src/main/java/me/phh/treble/app/MiscSettings.kt
++++ b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
+@@ -21,6 +21,7 @@ object MiscSettings : Settings {
+     val disableButtonsBacklight = "key_misc_disable_buttons_backlight"
+     val forceNavbarOff = "key_misc_force_navbar_off"
+     val bluetooth = "key_misc_bluetooth"
++    val activityAnimPerfOverride = "key_misc_activity_anim_perf_override"
+     val securize = "key_misc_securize"
+     val disableExpensiveRenderingMode = "key_misc_disable_expensive_rendering_mode"
+     val secureAdb = "key_misc_secure_adb"
+diff --git a/app/src/main/res/xml/pref_misc.xml b/app/src/main/res/xml/pref_misc.xml
+index 6d6a593..c120344 100644
+--- a/app/src/main/res/xml/pref_misc.xml
++++ b/app/src/main/res/xml/pref_misc.xml
+@@ -275,6 +275,11 @@
+             android:key="key_misc_securize"
+             android:title="Enable Securize"
+             android:summary="Disabling may fix play services on uncertified devices" />
++        <SwitchPreference
++            android:defaultValue="false"
++            android:key="key_misc_activity_anim_perf_override"
++            android:title="Activity animation performance override"
++            android:summary="Use lightweight programmatic activity transitions instead of XML animations\nFixes lag in Settings on low-end MTK devices" />
+         <SwitchPreference
+             android:defaultValue="false"
+             android:key="key_misc_disable_expensive_rendering_mode"
+-- 
+2.53.0
+

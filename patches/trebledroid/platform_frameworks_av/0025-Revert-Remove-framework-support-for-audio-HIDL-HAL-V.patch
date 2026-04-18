@@ -1,4 +1,4 @@
-From 8e551a8890b1eea53dadcb35c1bab8e6d3b8e1fe Mon Sep 17 00:00:00 2001
+From a9074f2fad90562844b1277bfae7b47b3925911c Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Fri, 13 Jun 2025 18:32:08 -0400
 Subject: [PATCH 25/25] Revert "Remove framework support for audio HIDL HAL V5"
@@ -16,7 +16,7 @@ index 609db07184..7d7befa13e 100644
 +++ b/media/libaudiohal/Android.bp
 @@ -23,6 +23,7 @@ cc_library_shared {
      ],
- 
+
      required: [
 +        "libaudiohal@5.0",
          "libaudiohal@6.0",
@@ -38,7 +38,7 @@ index 2c30693a61..15cb297b5c 100644
      AudioHalVersionInfo(AudioHalVersionInfo::Type::HIDL, 6, 0),
 +    AudioHalVersionInfo(AudioHalVersionInfo::Type::HIDL, 5, 0),
  };
- 
+
  static const std::map<AudioHalVersionInfo::Type, InterfaceName> sDevicesHALInterfaces = {
 diff --git a/media/libaudiohal/impl/Android.bp b/media/libaudiohal/impl/Android.bp
 index 00f3929bff..3585402202 100644
@@ -47,7 +47,7 @@ index 00f3929bff..3585402202 100644
 @@ -82,6 +82,32 @@ cc_defaults {
      ],
  }
- 
+
 +cc_library_shared {
 +    name: "libaudiohal@5.0",
 +    defaults: [
@@ -78,5 +78,5 @@ index 00f3929bff..3585402202 100644
      name: "libaudiohal@6.0",
      defaults: [
 -- 
-2.25.1
+2.52.0
 

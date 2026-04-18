@@ -1,7 +1,7 @@
 From 21d4d870565609b9a83dca6298a831f00772e330 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 21 Feb 2024 16:21:51 -0500
-Subject: [PATCH 09/11] Initialize Samsung HIDL ISehRadio. Fixes 5G on S20
+Subject: [PATCH 09/12] Initialize Samsung HIDL ISehRadio. Fixes 5G on S20
  Ultra
 
 ---
@@ -51,7 +51,7 @@ index f4123f82b1..2d7224486d 100644
 @@ -34,6 +34,7 @@ import java.util.ArrayList;
  import java.util.List;
  import java.util.stream.Collectors;
- 
+
 +// AIDL
  import vendor.samsung.hardware.radio.network.ISehRadioNetworkIndication;
  import vendor.samsung.hardware.radio.network.ISehRadioNetworkResponse;
@@ -59,7 +59,7 @@ index f4123f82b1..2d7224486d 100644
 @@ -48,6 +49,10 @@ import vendor.samsung.hardware.radio.network.SehRoamingNetworkInfo;
  import vendor.samsung.hardware.radio.network.SehSignalBar;
  import vendor.samsung.hardware.radio.network.SehVendorConfiguration;
- 
+
 +// HIDL
 +import android.hardware.radio.V1_0.RadioResponseInfo;
 +import vendor.samsung.hardware.radio.V2_2.ISehRadio;
@@ -78,7 +78,7 @@ index f4123f82b1..2d7224486d 100644
              version = RIL.getServiceHalVersion(network.getInterfaceVersion());
 @@ -167,7 +172,7 @@ public class RadioNetworkProxy extends RadioServiceProxy {
              };
- 
+
              var samsungResponse = new ISehRadioNetworkResponse.Stub() {
 -                void l(String v) {
 +                private void l(String v) {
@@ -97,7 +97,7 @@ index f4123f82b1..2d7224486d 100644
 @@ -808,6 +813,117 @@ public class RadioNetworkProxy extends RadioServiceProxy {
          }
      }
- 
+
 +    @Override
 +    public void setHidl(HalVersion halVersion, android.hardware.radio.V1_4.IRadio radio) {
 +        super.setHidl(halVersion, radio);
@@ -227,5 +227,5 @@ index 02fc751484..fa02d5202b 100644
 +    }
  }
 -- 
-2.25.1
+2.52.0
 

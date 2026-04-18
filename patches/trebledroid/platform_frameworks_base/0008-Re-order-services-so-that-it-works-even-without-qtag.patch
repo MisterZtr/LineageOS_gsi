@@ -1,7 +1,7 @@
 From 636a8cd78ba912ab59485549909a653f721fa353 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Thu, 8 Nov 2018 23:04:03 +0100
-Subject: [PATCH 08/57] Re-order services so that it works even without qtaguid
+Subject: [PATCH 08/55] Re-order services so that it works even without qtaguid
 
 Change-Id: I0c0f527b3ae151d45c68f7ac6c205da3f34e74df
 ---
@@ -26,7 +26,7 @@ index 1d376b4bdfd5..b7f8d48c4fe6 100644
 @@ -1033,10 +1037,6 @@ public class NetworkPolicyManagerService extends INetworkPolicyManager.Stub {
                  return;
              }
- 
+
 -            mUsageStats = LocalServices.getService(UsageStatsManagerInternal.class);
 -            mAppStandby = LocalServices.getService(AppStandbyInternal.class);
 -            mActivityManagerInternal = LocalServices.getService(ActivityManagerInternal.class);
@@ -35,5 +35,5 @@ index 1d376b4bdfd5..b7f8d48c4fe6 100644
              mUseDifferentDelaysForBackgroundChain = Flags.useDifferentDelaysForBackgroundChain();
              mNeverApplyRulesToCoreUids = Flags.neverApplyRulesToCoreUids();
 -- 
-2.25.1
+2.52.0
 

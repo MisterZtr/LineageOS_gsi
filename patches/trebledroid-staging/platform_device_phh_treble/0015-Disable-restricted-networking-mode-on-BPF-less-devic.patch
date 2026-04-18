@@ -1,0 +1,45 @@
+From 4205e15f2931f8ee07abd9c77ca36df8aa4609e7 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 10 Mar 2026 00:00:00 +0000
+Subject: [PATCH 15/21] Disable restricted networking mode on BPF-less devices
+
+Android 14+ enables restricted_networking_mode by default, which uses
+BPF firewall chains to block network access for apps without the
+CONNECTIVITY_USE_RESTRICTED_NETWORKS permission.  On GSI devices with
+older kernels where BPF is absent or only partially functional, the
+framework may enable the restricted chain but the BPF programs that
+process the allowlist never load correctly.  This causes a complete
+loss of network connectivity for all apps.
+
+At boot_completed, check whether the BPF uid_owner_map (used by the
+restricted firewall chain) actually exists.  If it does not, force
+restricted_networking_mode to 0 so the framework does not attempt to
+enforce a chain that cannot function.
+---
+ phh-on-boot.sh | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/phh-on-boot.sh b/phh-on-boot.sh
+index d2d5b0a..678fef1 100644
+--- a/phh-on-boot.sh
++++ b/phh-on-boot.sh
+@@ -1,5 +1,16 @@
+ #!/system/bin/sh
+
++# Disable restricted networking mode on devices without working BPF.
++# Android 14+ uses BPF firewall chains to enforce restricted_networking_mode.
++# On older kernels where BPF maps failed to load, the restricted chain cannot
++# maintain its allowlist, causing all apps to lose network connectivity.
++# The uid_owner_map is the BPF map backing firewall chain rules -- if it does
++# not exist, the restricted chain cannot function and must be disabled.
++if [ ! -e /sys/fs/bpf/netd_shared/map_netd_uid_owner_map ]; then
++    settings put global restricted_networking_mode 0
++    log -t phh-on-boot "Disabled restricted_networking_mode (BPF uid_owner_map absent)"
++fi
++
+ vndk="$(getprop persist.sys.vndk)"
+ [ -z "$vndk" ] && vndk="$(getprop ro.vndk.version |grep -oE '^[0-9]+')"
+
+-- 
+2.53.0
+

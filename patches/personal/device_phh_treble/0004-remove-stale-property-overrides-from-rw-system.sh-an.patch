@@ -1,0 +1,65 @@
+From 3cd858593031ceb1ebe004ebd132440d603bf530 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 27 Mar 2026 11:03:04 +0000
+Subject: [PATCH] remove stale property overrides from rw-system.sh and
+ base.mk
+
+remove ro.adb.secure=0: LineageOS has its own mechanism for setting this parameter.
+
+remove ro.bluetooth.library_name override: no longer needed since the
+framework defaults to libbluetooth.so.
+
+remove media volume step overrides: let device defaults apply rather
+than forcing a specific step count and default volume.
+---
+ base.mk      | 1 -
+ rw-system.sh | 4 ----
+ system.prop  | 1 -
+ 3 files changed, 6 deletions(-)
+
+diff --git a/base.mk b/base.mk
+index 2be5c51..87bb372 100644
+--- a/base.mk
++++ b/base.mk
+@@ -37,7 +37,6 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+     ro.build.version.all_codenames=$(PLATFORM_VERSION_ALL_CODENAMES) \
+     ro.build.version.release=$(PLATFORM_VERSION) \
+     ro.build.version.security_patch=$(PLATFORM_SECURITY_PATCH) \
+-    ro.adb.secure=0 \
+     ro.logd.auditd=true \
+     ro.logd.kernel=true \
+ 
+diff --git a/rw-system.sh b/rw-system.sh
+index 55db957..6e6337c 100644
+--- a/rw-system.sh
++++ b/rw-system.sh
+@@ -1047,7 +1047,6 @@ if getprop ro.build.overlay.deviceid |grep -iq -e RMX2185 -e RMX1941 -e RMX1945
+     setprop persist.sys.overlay.devinputjack true
+ fi
+ 
+-resetprop_phh ro.bluetooth.library_name libbluetooth.so
+ 
+ board="$(getprop ro.board.platform)"
+ 
+@@ -1223,9 +1222,6 @@ if getprop ro.product.vendor.device | grep -q -e TECNO-LG8n; then
+     chown -R system:system /sys/class/leds/vibrator_single/
+ fi
+ 
+-# Override media volume steps
+-resetprop_phh ro.config.media_vol_steps 25
+-resetprop_phh ro.config.media_vol_default 8
+ 
+ # Force disable Sunlight Reading Mode to prevent weird color issues
+ if getprop ro.vendor.build.fingerprint | grep -iq -e xiaomi/renoir; then
+diff --git a/system.prop b/system.prop
+index ae895b6..41a0688 100644
+--- a/system.prop
++++ b/system.prop
+@@ -1,4 +1,3 @@
+-ro.adb.secure=0
+ #Some devices have sdcardfs kernel panicing on 8.0
+ #Disable for everyone for the moment
+ ro.sys.sdcardfs=0
+-- 
+2.53.0
+

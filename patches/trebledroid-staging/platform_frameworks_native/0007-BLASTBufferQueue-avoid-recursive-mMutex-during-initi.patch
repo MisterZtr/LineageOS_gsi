@@ -1,0 +1,58 @@
+From 73a4bd0d4e96fcb16c3caf687ce63bcbf185c64d Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Wed, 8 Apr 2026 14:13:17 +0100
+Subject: [PATCH 07/7] BLASTBufferQueue: avoid recursive mMutex during initialize
+
+setMaxDequeuedBufferCount(2) is currently called inside initialize()
+while BLASTBufferQueue::mMutex is held by std::lock_guard. The call
+goes through BBQBufferQueueProducer::setMaxDequeuedBufferCount which,
+when newFrameHistorySize > FrameEventHistory::INITIAL_MAX_FRAME_HISTORY
+(8), invokes BLASTBufferQueue::resizeFrameEventHistory. That method
+re-enters mMutex via std::unique_lock, deadlocking the calling thread
+because std::mutex is non-recursive.
+
+The condition is met whenever maxAcquiredBuffers >= 5, which happens on
+high refresh rate displays (e.g. 120Hz panels) where SurfaceFlinger
+returns a higher buffer count from getMaxAcquiredBufferCount(). On
+those devices the very first BLASTBufferQueue creation in any client
+process hangs the calling thread, manifesting as system_server watchdog
+kills, launcher ANRs and a black screen at boot.
+
+Move the call into onFirstRef() after initialize() returns, mirroring
+the upstream AOSP main fix. The BBQ mMutex is no longer held when
+setMaxDequeuedBufferCount runs, so the resizeFrameEventHistory path can
+take its own lock without recursion.
+---
+ libs/gui/BLASTBufferQueue.cpp | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/libs/gui/BLASTBufferQueue.cpp b/libs/gui/BLASTBufferQueue.cpp
+index 75792c412b..4f40a7cb13 100644
+--- a/libs/gui/BLASTBufferQueue.cpp
++++ b/libs/gui/BLASTBufferQueue.cpp
+@@ -238,10 +238,6 @@ void BLASTBufferQueue::initialize() {
+                 if (callbackCopy) callbackCopy(reason);
+             },
+             this);
+-
+-    // safe default, most producers are expected to override this
+-    mProducer->setMaxDequeuedBufferCount(2);
+-
+     BQA_LOGV("BLASTBufferQueue created");
+ }
+ 
+@@ -277,6 +273,11 @@ BLASTBufferQueue::~BLASTBufferQueue() {
+ 
+ void BLASTBufferQueue::onFirstRef() {
+     initialize();
++    // safe default, most producers are expected to override this.
++    // call after initialize() returns so the BBQ mMutex is no longer held;
++    // setMaxDequeuedBufferCount calls back into BBQ::resizeFrameEventHistory which
++    // re-enters mMutex and would deadlock if invoked from inside initialize().
++    mProducer->setMaxDequeuedBufferCount(2);
+ }
+ 
+ void BLASTBufferQueue::update(const sp<SurfaceControl>& surface, uint32_t width, uint32_t height,
+-- 
+2.53.0
+

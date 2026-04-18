@@ -1,7 +1,7 @@
-From ae9029c4a2859dc686afe549cb813c4010a5249c Mon Sep 17 00:00:00 2001
+From 5a15db535c71c4fb5188b6ecd1dbc48feb34b964 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 4 Feb 2024 18:01:07 -0500
-Subject: [PATCH 45/57] Some Samsung devices use SW_FLIP 0x15 rather than
+Subject: [PATCH 45/55] Some Samsung devices use SW_FLIP 0x15 rather than
  SW_MACHINE_COVER 0x10, so use that
 
 ---
@@ -13,17 +13,17 @@ index f6fa44825e68..699774f676f5 100644
 --- a/services/core/java/com/android/server/input/InputManagerService.java
 +++ b/services/core/java/com/android/server/input/InputManagerService.java
 @@ -428,6 +428,8 @@ public class InputManagerService extends IInputManager.Stub
- 
+
      /** Switch code: Cover. When set, the cover is closed. */
      public static final int SW_MACHINE_COVER = 0x10;
 +    // Samsung
 +    public static final int SW_FLIP = 0x15;
- 
+
      public static final int SW_LID_BIT = 1 << SW_LID;
      public static final int SW_TABLET_MODE_BIT = 1 << SW_TABLET_MODE;
 @@ -586,13 +588,22 @@ public class InputManagerService extends IInputManager.Stub
      }
- 
+
      private void checkForSwMachineCover() {
 -        int machineCoverState = getSwitchState(-1 /* deviceId */, InputDevice.SOURCE_ANY, SW_MACHINE_COVER);
 -        if (machineCoverState != KEY_STATE_UNKNOWN) {
@@ -49,8 +49,8 @@ index f6fa44825e68..699774f676f5 100644
 +            }
 +            android.util.Log.e("PHH", "Switch state got " + machineCoverState + " and " + flip);
      }
- 
+
      void registerLidSwitchCallbackInternal(@NonNull LidSwitchCallback callback) {
 -- 
-2.25.1
+2.52.0
 

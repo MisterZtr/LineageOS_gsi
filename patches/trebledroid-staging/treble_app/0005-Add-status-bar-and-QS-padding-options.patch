@@ -1,0 +1,162 @@
+From 7c40504e4b9c1b7f05232ccbf32bcfa2ab7a8f61 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Wed, 13 Aug 2025 16:13:20 +0100
+Subject: [PATCH 05/8] Add status bar and QS padding options
+
+Add EditTextPreference fields for status bar padding (top, start, end,
+bottom) and Quick Settings clock padding (left, right) to the Treble app
+UI. These set persist.sys.phh.status_bar_padding_* and
+persist.sys.phh.qs_clock_*_padding system properties, allowing users to
+fix clipped UI elements on devices with unusual display cutouts.
+---
+ app/src/main/java/me/phh/treble/app/Misc.kt   | 50 +++++++++++++++++++
+ .../java/me/phh/treble/app/MiscSettings.kt    |  6 +++
+ app/src/main/res/xml/pref_misc.xml            | 40 ++++++++++++++-
+ 3 files changed, 95 insertions(+), 1 deletion(-)
+
+diff --git a/app/src/main/java/me/phh/treble/app/Misc.kt b/app/src/main/java/me/phh/treble/app/Misc.kt
+index dbeaf14..fce71f9 100644
+--- a/app/src/main/java/me/phh/treble/app/Misc.kt
++++ b/app/src/main/java/me/phh/treble/app/Misc.kt
+@@ -143,6 +143,8 @@ object Misc: EntryStartup {
+                 if (value >= 0) {
+                     Settings.Secure.putInt(c.contentResolver, "sysui_rounded_content_padding", value)
+                     SystemProperties.set("persist.sys.phh.rounded_corners_padding", value.toString())
++		} else {
++                    SystemProperties.set("persist.sys.phh.rounded_corners_padding", null)
+                 }
+             }
+             MiscSettings.roundedCornersOverlay -> {
+@@ -302,6 +304,54 @@ object Misc: EntryStartup {
+                 val value = sp.getBoolean(key, false)
+                 SystemProperties.set("persist.sys.phh.allow_binder_thread_on_incoming_calls", if(value) "1" else "0")
+             }
++            MiscSettings.statusbarpaddingtop -> {
++                val value = sp.getString(key, "-1").toInt()
++                if(value != -1) {
++                SystemProperties.set("persist.sys.phh.status_bar_padding_top", value.toString())
++                } else {
++                    SystemProperties.set("persist.sys.phh.status_bar_padding_top", null)
++                }
++            }
++            MiscSettings.statusbarpaddingstart -> {
++                val value = sp.getString(key, "-1").toInt()
++                if(value != -1) {
++                SystemProperties.set("persist.sys.phh.status_bar_padding_start", value.toString())
++                } else {
++                    SystemProperties.set("persist.sys.phh.status_bar_padding_start", null)
++                }
++            }
++            MiscSettings.statusbarpaddingend -> {
++                val value = sp.getString(key, "-1").toInt()
++                if(value != -1) {
++                SystemProperties.set("persist.sys.phh.status_bar_padding_end", value.toString())
++                } else {
++                    SystemProperties.set("persist.sys.phh.status_bar_padding_end", null)
++                }
++            }
++            MiscSettings.statusbarpaddingbottom -> {
++                val value = sp.getString(key, "-1").toInt()
++                if(value != -1) {
++                SystemProperties.set("persist.sys.phh.status_bar_padding_bottom", value.toString())
++                } else {
++                    SystemProperties.set("persist.sys.phh.status_bar_padding_bottom", null)
++                }
++            }
++            MiscSettings.qsclockleftpadding -> {
++                val value = sp.getString(key, "-1").toInt()
++                if(value != -1) {
++                    SystemProperties.set("persist.sys.phh.qs_clock_left_padding", value.toString())
++                } else {
++                    SystemProperties.set("persist.sys.phh.qs_clock_left_padding", null)
++                }
++            }
++            MiscSettings.qsclockrightpadding -> {
++                val value = sp.getString(key, "-1").toInt()
++                if(value != -1) {
++                    SystemProperties.set("persist.sys.phh.qs_clock_right_padding", value.toString())
++                } else {
++                    SystemProperties.set("persist.sys.phh.qs_clock_right_padding", null)
++                }
++            }
+             MiscSettings.lowGammaBrightness -> {
+                 val value = sp.getBoolean(key, false)
+                 SystemProperties.set("persist.sys.phh.low_gamma_brightness", if (value) "true" else "false")
+diff --git a/app/src/main/java/me/phh/treble/app/MiscSettings.kt b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
+index 1c16d5f..b2430bb 100644
+--- a/app/src/main/java/me/phh/treble/app/MiscSettings.kt
++++ b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
+@@ -44,6 +44,12 @@ object MiscSettings : Settings {
+     val mtkTouchHintIsRotate = "key_misc_mediatek_touch_hint_rotate"
+     val mtkGedKpi = "key_misc_mediatek_ged_kpi"
+     val allowBinderThread = "key_misc_allow_binder_thread_on_incoming_calls"
++    val statusbarpaddingtop = "key_misc_sb_padding_top"
++    val statusbarpaddingstart = "key_misc_sb_padding_start"
++    val statusbarpaddingend = "key_misc_sb_padding_end"
++    val statusbarpaddingbottom = "key_misc_sb_padding_bottom"
++    val qsclockleftpadding = "key_misc_qs_clock_left_padding"
++    val qsclockrightpadding = "key_misc_qs_clock_right_padding"
+     val lowGammaBrightness = "key_misc_low_gamma_brightness"
+     val linearBrightness = "key_misc_linear_brightness"
+     val forceDisplay5g = "key_misc_force_display_5g"
+diff --git a/app/src/main/res/xml/pref_misc.xml b/app/src/main/res/xml/pref_misc.xml
+index 8644415..79d1341 100644
+--- a/app/src/main/res/xml/pref_misc.xml
++++ b/app/src/main/res/xml/pref_misc.xml
+@@ -33,7 +33,7 @@
+             android:key="key_misc_disable_fast_audio"
+             android:title="Disable fast audio" />
+     </PreferenceCategory>
+-    <PreferenceCategory android:title="Display">
++    <PreferenceCategory android:title="User interface">
+         <EditTextPreference
+             android:defaultValue="-1"
+             android:key="key_misc_rounded_corners"
+@@ -45,6 +45,44 @@
+             android:key="key_misc_rounded_corners_overlay"
+             android:title="Set forced/faked rounded corners diameter"
+             android:inputType="number" />
++        <EditTextPreference
++            android:defaultValue="-1"
++            android:key="key_misc_sb_padding_top"
++            android:title="Set status bar top padding"
++            android:inputType="number"
++            android:summary="Requires a SystemUI restart" />
++        <EditTextPreference
++            android:defaultValue="-1"
++            android:key="key_misc_sb_padding_start"
++            android:title="Set status bar start padding"
++            android:inputType="number"
++            android:summary="Requires a SystemUI restart" />
++        <EditTextPreference
++            android:defaultValue="-1"
++            android:key="key_misc_sb_padding_end"
++            android:title="Set status bar end padding"
++            android:inputType="number"
++            android:summary="Requires a SystemUI restart" />
++        <EditTextPreference
++            android:defaultValue="-1"
++            android:key="key_misc_sb_padding_bottom"
++            android:title="Set status bar bottom padding"
++            android:inputType="number"
++            android:summary="Requires a SystemUI restart" />
++        <EditTextPreference
++            android:defaultValue="-1"
++            android:key="key_misc_qs_clock_left_padding"
++            android:title="Set quick settings clock left padding"
++            android:inputType="number"
++            android:summary="Requires a SystemUI restart" />
++        <EditTextPreference
++            android:defaultValue="-1"
++            android:key="key_misc_qs_clock_right_padding"
++            android:title="Set quick settings clock right padding"
++            android:inputType="number"
++            android:summary="Requires a SystemUI restart" />
++    </PreferenceCategory>
++    <PreferenceCategory android:title="Display">
+         <ListPreference
+             android:defaultValue="-1"
+             android:entries="@array/pref_misc_display_fps"
+-- 
+2.53.0
+

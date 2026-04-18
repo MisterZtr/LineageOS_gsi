@@ -1,0 +1,86 @@
+From 3a07606b95aec84f2eef8efce9138cdcf8f350b6 Mon Sep 17 00:00:00 2001
+From: Doze-off <viniciussadxxx@gmail.com>
+Date: Wed, 25 Mar 2026 09:41:33 +0000
+Subject: [PATCH 06/8] add SurfaceFlinger latch unsignaled and backpressure toggles
+
+add three new toggles to the misc settings for SurfaceFlinger control:
+
+- latch unsigned buffers: force-latch all buffers unsignaled
+- auto latch unsigned: auto single-layer latch unsignaled (default on)
+- disable backpressure propagation: dedicated kill-switch for SF
+  backpressure
+
+all three require a reboot to take effect. placed alongside the
+existing SF GL/HWC backpressure toggles in misc settings.
+---
+ app/src/main/java/me/phh/treble/app/Misc.kt       | 12 ++++++++++++
+ .../main/java/me/phh/treble/app/MiscSettings.kt   |  3 +++
+ app/src/main/res/xml/pref_misc.xml                | 15 +++++++++++++++
+ 3 files changed, 30 insertions(+)
+
+diff --git a/app/src/main/java/me/phh/treble/app/Misc.kt b/app/src/main/java/me/phh/treble/app/Misc.kt
+index 10965f7..bfcf15c 100644
+--- a/app/src/main/java/me/phh/treble/app/Misc.kt
++++ b/app/src/main/java/me/phh/treble/app/Misc.kt
+@@ -382,6 +382,18 @@ object Misc: EntryStartup {
+                 // Note: Reversed value because the prop is enabling
+                 SystemProperties.set("persist.sys.phh.enable_sf_hwc_backpressure", if (value) "0" else "1")
+             }
++            MiscSettings.sfAutoLatchUnsignaled -> {
++                val value = sp.getBoolean(key, true)
++                SystemProperties.set("persist.sys.phh.sf_auto_latch_unsignaled", if (value) "1" else "0")
++            }
++            MiscSettings.sfDisableBackpressure -> {
++                val value = sp.getBoolean(key, false)
++                SystemProperties.set("persist.sys.phh.sf_disable_backpressure", if (value) "1" else "0")
++            }
++            MiscSettings.sfLatchUnsignaled -> {
++                val value = sp.getBoolean(key, false)
++                SystemProperties.set("persist.sys.phh.sf_latch_unsignaled", if (value) "1" else "0")
++            }
+             MiscSettings.disableSaeUpgrade -> {
+                 val value = sp.getBoolean(key, false)
+                 SystemProperties.set("persist.sys.phh.wifi_disable_sae", if (value) "true" else "false")
+diff --git a/app/src/main/java/me/phh/treble/app/MiscSettings.kt b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
+index b2430bb..1e23888 100644
+--- a/app/src/main/java/me/phh/treble/app/MiscSettings.kt
++++ b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
+@@ -56,6 +56,9 @@ object MiscSettings : Settings {
+     val disableVoiceCallIn = "key_misc_disable_voice_call_in"
+     val disableSfGlBackpressure = "key_misc_disable_sf_gl_backpressure"
+     val disableSfHwcBackpressure = "key_misc_disable_sf_hwc_backpressure"
++    val sfAutoLatchUnsignaled = "key_misc_sf_auto_latch_unsignaled"
++    val sfDisableBackpressure = "key_misc_sf_disable_backpressure"
++    val sfLatchUnsignaled = "key_misc_sf_latch_unsignaled"
+     val disableSaeUpgrade = "key_misc_disable_sae_upgrade"
+     val escoTransportUnitSize = "key_misc_esco_transport_unit_size"
+     val disableLeApcfExtended = "key_misc_disable_le_apcfe"
+diff --git a/app/src/main/res/xml/pref_misc.xml b/app/src/main/res/xml/pref_misc.xml
+index 79d1341..6d6a593 100644
+--- a/app/src/main/res/xml/pref_misc.xml
++++ b/app/src/main/res/xml/pref_misc.xml
+@@ -131,6 +131,21 @@
+             android:key="key_misc_disable_sf_hwc_backpressure"
+             android:title="Disable SF HWC backpressure"
+             android:summary="Might improve rendering performance"/>
++        <SwitchPreference
++            android:defaultValue="false"
++            android:key="key_misc_sf_disable_backpressure"
++            android:title="Disable backpressure propagation"
++            android:summary="Disables SurfaceFlinger backpressure propagation\nRequires reboot"/>
++        <SwitchPreference
++            android:defaultValue="false"
++            android:key="key_misc_sf_latch_unsignaled"
++            android:title="Latch unsigned buffers"
++            android:summary="Force-latch all buffers in SurfaceFlinger\nRequires reboot"/>
++        <SwitchPreference
++            android:defaultValue="true"
++            android:key="key_misc_sf_auto_latch_unsignaled"
++            android:title="Auto latch unsigned"
++            android:summary="Automatically latch single-layer buffers in SurfaceFlinger\nRequires reboot"/>
+         <ListPreference
+             android:defaultValue="1.86"
+             android:entries="@array/pref_misc_max_aspect_ratio_pre_o"
+-- 
+2.53.0
+

@@ -19,7 +19,7 @@ index 3927501a4..d0ab3f7bb 100644
 --- a/rootdir/ueventd.rc
 +++ b/rootdir/ueventd.rc
 @@ -60,7 +60,7 @@ subsystem vfio
- 
+
  # these should not be world writable
  /dev/uhid                 0660   uhid       uhid
 -/dev/uinput               0660   uhid       uhid
@@ -28,5 +28,5 @@ index 3927501a4..d0ab3f7bb 100644
  /dev/tty0                 0660   root       system
  /dev/graphics/*           0660   root       graphics
 -- 
-2.25.1
+2.52.0
 

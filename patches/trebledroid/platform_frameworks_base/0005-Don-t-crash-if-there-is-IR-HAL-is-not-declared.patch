@@ -1,7 +1,7 @@
 From a31853da6a965ee54cf4bdf1e9a56d0beac3c258 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Thu, 17 May 2018 20:28:35 +0200
-Subject: [PATCH 05/57] Don't crash if there is IR HAL is not declared
+Subject: [PATCH 05/55] Don't crash if there is IR HAL is not declared
 
 Change-Id: I3afded27441bbee8244d5fda544b3e6d1238dc1b
 ---
@@ -15,7 +15,7 @@ index 8362079b9009..030265567da8 100644
 +++ b/services/core/java/com/android/server/ConsumerIrService.java
 @@ -59,14 +59,6 @@ public class ConsumerIrService extends IConsumerIrService.Stub {
          mWakeLock.setReferenceCounted(true);
- 
+
          mHasNativeHal = getHalService();
 -
 -        if (mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR)) {
@@ -26,21 +26,21 @@ index 8362079b9009..030265567da8 100644
 -            throw new RuntimeException("IR HAL present, but FEATURE_CONSUMER_IR is not set!");
 -        }
      }
- 
+
      @Override
 diff --git a/services/core/jni/com_android_server_ConsumerIrService.cpp b/services/core/jni/com_android_server_ConsumerIrService.cpp
 index 63daa3503bd5..d068ec06fc14 100644
 --- a/services/core/jni/com_android_server_ConsumerIrService.cpp
 +++ b/services/core/jni/com_android_server_ConsumerIrService.cpp
 @@ -36,7 +36,7 @@ static sp<IConsumerIr> mHal;
- 
+
  static jboolean getHidlHalService(JNIEnv * /* env */, jobject /* obj */) {
      // TODO(b/31632518)
 -    mHal = IConsumerIr::getService();
 +    mHal = IConsumerIr::tryGetService();
      return mHal != nullptr;
  }
- 
+
 -- 
-2.25.1
+2.52.0
 

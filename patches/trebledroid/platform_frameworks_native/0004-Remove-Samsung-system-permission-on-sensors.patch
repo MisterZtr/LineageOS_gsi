@@ -14,12 +14,12 @@ index 797efbe5df..5295af9197 100644
 +++ b/libs/sensor/Sensor.cpp
 @@ -443,6 +443,7 @@ const String8& Sensor::getStringType() const {
  }
- 
+
  const String8& Sensor::getRequiredPermission() const {
 +    if (mRequiredPermission == "com.samsung.permission.SSENSOR") return mFakeRequiredPermission;
      return mRequiredPermission;
  }
- 
+
 diff --git a/libs/sensor/include/sensor/Sensor.h b/libs/sensor/include/sensor/Sensor.h
 index bae8a1380b..afaafb321e 100644
 --- a/libs/sensor/include/sensor/Sensor.h
@@ -33,5 +33,5 @@ index bae8a1380b..afaafb321e 100644
      int32_t mRequiredAppOp;
      int32_t mMaxDelay;
 -- 
-2.25.1
+2.52.0
 

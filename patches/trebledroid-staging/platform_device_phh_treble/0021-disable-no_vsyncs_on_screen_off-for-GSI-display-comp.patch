@@ -1,0 +1,38 @@
+From 18b138e6c2b54ae6487a09d895a3d26d4838e597 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 3 Apr 2026 20:22:11 +0100
+Subject: [PATCH 21/21] disable no_vsyncs_on_screen_off for GSI display compatibility
+
+on GSI builds, vendor HWCs (notably MTK) may not properly initialise
+DRM vblank events during the boot power-on sequence because the HWC's
+internal state is stale from the bootloader.  without hardware vsync,
+QPR2's no_vsyncs_on_screen_off optimisation prevents the EventThread
+from generating synthetic vsync as a fallback, stalling composition
+and leaving the display blank.
+
+override the flag to false via the debug property, restoring QPR0
+behaviour where synthetic vsync keeps composition alive regardless
+of hardware vsync availability.
+---
+ system.prop | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/system.prop b/system.prop
+index 8a2c5f4..ae895b6 100644
+--- a/system.prop
++++ b/system.prop
+@@ -62,3 +62,11 @@ ro.lmk.kill_heaviest_task=true
+ # minimum while preserving larger vendor values via the ? default operator.
+ dalvik.vm.heapgrowthlimit?=256m
+ dalvik.vm.heapsize?=512m
++
++# disable QPR2 vsync omission optimisation for GSI compatibility.
++# on GSI builds, vendor HWCs may not properly initialise DRM vblank
++# events during the boot power-on sequence, leaving hardware vsync
++# unavailable.  with this flag enabled, the EventThread enters Idle
++# state and composition stalls.  disabling it restores QPR0 behaviour
++# where synthetic vsync keeps composition alive as a fallback.
++debug.sf.no_vsyncs_on_screen_off=false
+-- 
+2.53.0
+

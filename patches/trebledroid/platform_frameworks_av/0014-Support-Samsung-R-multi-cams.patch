@@ -1,4 +1,4 @@
-From 9b8c50b92efd775a603829a07ce2ab4c7eec28b4 Mon Sep 17 00:00:00 2001
+From fbf7a9036edd236c795223f5ff60c4da02149bf6 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 13 Mar 2021 14:20:03 -0500
 Subject: [PATCH 14/25] Support Samsung R multi-cams
@@ -26,21 +26,21 @@ index 663eaf22ed..a6189fd02f 100644
 --- a/services/camera/libcameraservice/common/hidl/HidlProviderInfo.cpp
 +++ b/services/camera/libcameraservice/common/hidl/HidlProviderInfo.cpp
 @@ -30,6 +30,7 @@
- 
+
  #include <android/hardware/camera/device/3.7/ICameraDevice.h>
  #include <vendor/samsung/hardware/camera/provider/3.0/ISehCameraProvider.h>
 +#include <vendor/samsung/hardware/camera/provider/4.0/ISehCameraProvider.h>
- 
+
  namespace {
  const bool kEnableLazyHal(property_get_bool("ro.camera.enableLazyHal", false));
 @@ -176,7 +177,9 @@ status_t HidlProviderInfo::initializeHidlProvider(
      }
- 
+
      auto samsungCast = vendor::samsung::hardware::camera::provider::V3_0::ISehCameraProvider::castFrom(interface);
 +    auto samsung40Cast = vendor::samsung::hardware::camera::provider::V4_0::ISehCameraProvider::castFrom(interface);
      auto samsungProvider = samsungCast.isOk() ? static_cast<sp<vendor::samsung::hardware::camera::provider::V3_0::ISehCameraProvider>>(samsungCast) : nullptr;
 +    auto samsung40Provider = samsung40Cast.isOk() ? static_cast<sp<vendor::samsung::hardware::camera::provider::V4_0::ISehCameraProvider>>(samsung40Cast) : nullptr;
- 
+
      hardware::Return<bool> linked = interface->linkToDeath(this, /*cookie*/ mId);
      if (!linked.isOk()) {
 @@ -214,6 +217,7 @@ status_t HidlProviderInfo::initializeHidlProvider(
@@ -63,5 +63,5 @@ index 663eaf22ed..a6189fd02f 100644
      else
          ret = interface->getCameraIdList(cb);
 -- 
-2.25.1
+2.52.0
 

@@ -1,0 +1,2375 @@
+From b45328dfb29f26b97aec45bb8f766d61c0434435 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 24 Mar 2026 12:24:19 +0000
+Subject: [PATCH] Restore old kernel configs and lower version requirements for
+ GSI
+
+Restore kernel config definitions for older Android releases (P/4.4,
+Q/4.9, R/4.14, R/4.19, S/4.14, S/4.19) that were removed from the
+GrapheneOS kernel/configs tree. These are required for GSI
+compatibility with vendor partitions that shipped with these older
+kernel versions.
+
+Lower q/android-4.9 minlts from 4.9.165 to 4.9.141 and remove
+CONFIG_XFRM_INTERFACE and USB/RTL8152 dependencies that are not
+available on older kernel point releases.
+
+Lower s/android-4.19 minlts from 4.19.191 to 4.19.127 for MediaTek
+devices that ship 4.19 kernels at earlier point releases.
+
+Change-Id: Id8e1df272b30ff60d02a650eb2b644fff4668688
+---
+ p/android-4.4/Android.bp                      |  28 ++
+ p/android-4.4/android-base-arm.config         |   1 +
+ p/android-4.4/android-base-arm64.config       |   5 +
+ p/android-4.4/android-base-conditional.xml    |   1 +
+ p/android-4.4/android-base.config             | 185 +++++++++++++
+ p/android-4.4/android-recommended.config      | 144 ++++++++++
+ q/android-4.9/Android.bp                      |  26 ++
+ q/android-4.9/android-base-conditional.xml    | 144 ++++++++++
+ q/android-4.9/android-base.config             | 222 +++++++++++++++
+ q/android-4.9/android-recommended-arm.config  |   7 +
+ .../android-recommended-arm64.config          |   6 +
+ q/android-4.9/android-recommended-x86.config  |   6 +
+ q/android-4.9/android-recommended.config      | 142 ++++++++++
+ r/android-4.14/Android.bp                     |  30 ++
+ r/android-4.14/android-base-conditional.xml   | 150 ++++++++++
+ r/android-4.14/android-base.config            | 250 +++++++++++++++++
+ r/android-4.14/android-recommended-arm.config |   6 +
+ .../android-recommended-arm64.config          |   7 +
+ r/android-4.14/android-recommended-x86.config |   5 +
+ r/android-4.14/android-recommended.config     | 132 +++++++++
+ r/android-4.14/non_debuggable.config          |   2 +
+ r/android-4.19/Android.bp                     |  30 ++
+ r/android-4.19/android-base-conditional.xml   | 150 ++++++++++
+ r/android-4.19/android-base.config            | 251 +++++++++++++++++
+ r/android-4.19/android-recommended-arm.config |   6 +
+ .../android-recommended-arm64.config          |   7 +
+ r/android-4.19/android-recommended-x86.config |   5 +
+ r/android-4.19/android-recommended.config     | 130 +++++++++
+ r/android-4.19/non_debuggable.config          |   2 +
+ s/android-4.14/Android.bp                     |  30 ++
+ s/android-4.14/android-base-conditional.xml   | 146 ++++++++++
+ s/android-4.14/android-base.config            | 259 ++++++++++++++++++
+ s/android-4.14/android-recommended-arm.config |   6 +
+ .../android-recommended-arm64.config          |   7 +
+ s/android-4.14/android-recommended-x86.config |   5 +
+ s/android-4.14/android-recommended.config     | 130 +++++++++
+ s/android-4.14/non_debuggable.config          |   2 +
+ s/android-4.19/android-base-conditional.xml   |   2 +-
+ 38 files changed, 2666 insertions(+), 1 deletion(-)
+ create mode 100644 p/android-4.4/Android.bp
+ create mode 100644 p/android-4.4/android-base-arm.config
+ create mode 100644 p/android-4.4/android-base-arm64.config
+ create mode 100644 p/android-4.4/android-base-conditional.xml
+ create mode 100644 p/android-4.4/android-base.config
+ create mode 100644 p/android-4.4/android-recommended.config
+ create mode 100644 q/android-4.9/Android.bp
+ create mode 100644 q/android-4.9/android-base-conditional.xml
+ create mode 100644 q/android-4.9/android-base.config
+ create mode 100644 q/android-4.9/android-recommended-arm.config
+ create mode 100644 q/android-4.9/android-recommended-arm64.config
+ create mode 100644 q/android-4.9/android-recommended-x86.config
+ create mode 100644 q/android-4.9/android-recommended.config
+ create mode 100644 r/android-4.14/Android.bp
+ create mode 100644 r/android-4.14/android-base-conditional.xml
+ create mode 100644 r/android-4.14/android-base.config
+ create mode 100644 r/android-4.14/android-recommended-arm.config
+ create mode 100644 r/android-4.14/android-recommended-arm64.config
+ create mode 100644 r/android-4.14/android-recommended-x86.config
+ create mode 100644 r/android-4.14/android-recommended.config
+ create mode 100644 r/android-4.14/non_debuggable.config
+ create mode 100644 r/android-4.19/Android.bp
+ create mode 100644 r/android-4.19/android-base-conditional.xml
+ create mode 100644 r/android-4.19/android-base.config
+ create mode 100644 r/android-4.19/android-recommended-arm.config
+ create mode 100644 r/android-4.19/android-recommended-arm64.config
+ create mode 100644 r/android-4.19/android-recommended-x86.config
+ create mode 100644 r/android-4.19/android-recommended.config
+ create mode 100644 r/android-4.19/non_debuggable.config
+ create mode 100644 s/android-4.14/Android.bp
+ create mode 100644 s/android-4.14/android-base-conditional.xml
+ create mode 100644 s/android-4.14/android-base.config
+ create mode 100644 s/android-4.14/android-recommended-arm.config
+ create mode 100644 s/android-4.14/android-recommended-arm64.config
+ create mode 100644 s/android-4.14/android-recommended-x86.config
+ create mode 100644 s/android-4.14/android-recommended.config
+ create mode 100644 s/android-4.14/non_debuggable.config
+
+diff --git a/p/android-4.4/Android.bp b/p/android-4.4/Android.bp
+new file mode 100644
+index 0000000..ff08230
+--- /dev/null
++++ b/p/android-4.4/Android.bp
+@@ -0,0 +1,28 @@
++// Copyright (C) 2018 The Android Open Source Project
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package {
++    // See: http://go/android-license-faq
++    default_applicable_licenses: ["Android-Apache-2.0"],
++}
++
++kernel_config {
++    name: "kernel_config_p_4.4",
++    srcs: [
++        "android-base.config",
++        "android-base-arm.config",
++        "android-base-arm64.config",
++    ],
++    meta: "android-base-conditional.xml",
++}
+diff --git a/p/android-4.4/android-base-arm.config b/p/android-4.4/android-base-arm.config
+new file mode 100644
+index 0000000..a6c13b7
+--- /dev/null
++++ b/p/android-4.4/android-base-arm.config
+@@ -0,0 +1 @@
++# CONFIG_OABI_COMPAT is not set
+diff --git a/p/android-4.4/android-base-arm64.config b/p/android-4.4/android-base-arm64.config
+new file mode 100644
+index 0000000..43f23d6
+--- /dev/null
++++ b/p/android-4.4/android-base-arm64.config
+@@ -0,0 +1,5 @@
++#  KEEP ALPHABETICALLY SORTED
++CONFIG_ARMV8_DEPRECATED=y
++CONFIG_CP15_BARRIER_EMULATION=y
++CONFIG_SETEND_EMULATION=y
++CONFIG_SWP_EMULATION=y
+diff --git a/p/android-4.4/android-base-conditional.xml b/p/android-4.4/android-base-conditional.xml
+new file mode 100644
+index 0000000..97931aa
+--- /dev/null
++++ b/p/android-4.4/android-base-conditional.xml
+@@ -0,0 +1 @@
++<kernel minlts="4.4.107" />
+diff --git a/p/android-4.4/android-base.config b/p/android-4.4/android-base.config
+new file mode 100644
+index 0000000..9db3248
+--- /dev/null
++++ b/p/android-4.4/android-base.config
+@@ -0,0 +1,185 @@
++#  KEEP ALPHABETICALLY SORTED
++# CONFIG_DEVKMEM is not set
++# CONFIG_DEVMEM is not set
++# CONFIG_FHANDLE is not set
++# CONFIG_INET_LRO is not set
++# CONFIG_NFSD is not set
++# CONFIG_NFS_FS is not set
++# CONFIG_SYSVIPC is not set
++# CONFIG_USELIB is not set
++CONFIG_ADVISE_SYSCALLS=y
++CONFIG_AIO=y
++CONFIG_ANDROID=y
++CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"
++CONFIG_ANDROID_BINDER_IPC=y
++CONFIG_ASHMEM=y
++CONFIG_AUDIT=y
++CONFIG_BLK_DEV_INITRD=y
++CONFIG_BLOCK=y
++CONFIG_CGROUPS=y
++CONFIG_CGROUP_CPUACCT=y
++CONFIG_CGROUP_FREEZER=y
++CONFIG_CGROUP_SCHED=y
++CONFIG_CRYPTO_AES=y
++CONFIG_CRYPTO_CBC=y
++CONFIG_CRYPTO_ECB=y
++CONFIG_CRYPTO_GCM=y
++CONFIG_CRYPTO_HMAC=y
++CONFIG_CRYPTO_MD5=y
++CONFIG_CRYPTO_NULL=y
++CONFIG_CRYPTO_SHA1=y
++CONFIG_CRYPTO_SHA256=y
++CONFIG_CRYPTO_SHA512=y
++CONFIG_DEFAULT_SECURITY_SELINUX=y
++CONFIG_EMBEDDED=y
++CONFIG_EPOLL=y
++CONFIG_EVENTFD=y
++CONFIG_FUTEX=y
++CONFIG_HARDENED_USERCOPY=y
++CONFIG_HIGH_RES_TIMERS=y
++CONFIG_IKCONFIG=y
++CONFIG_IKCONFIG_PROC=y
++CONFIG_INET6_ESP=y
++CONFIG_INET6_IPCOMP=y
++CONFIG_INET6_XFRM_MODE_TRANSPORT=y
++CONFIG_INET6_XFRM_MODE_TUNNEL=y
++CONFIG_INET=y
++CONFIG_INET_DIAG_DESTROY=y
++CONFIG_INET_ESP=y
++CONFIG_INET_XFRM_MODE_TRANSPORT=y
++CONFIG_INET_XFRM_MODE_TUNNEL=y
++CONFIG_IP6_NF_FILTER=y
++CONFIG_IP6_NF_IPTABLES=y
++CONFIG_IP6_NF_MANGLE=y
++CONFIG_IP6_NF_MATCH_RPFILTER=y
++CONFIG_IP6_NF_RAW=y
++CONFIG_IP6_NF_TARGET_REJECT=y
++CONFIG_IPV6=y
++CONFIG_IPV6_MIP6=y
++CONFIG_IPV6_MULTIPLE_TABLES=y
++CONFIG_IPV6_OPTIMISTIC_DAD=y
++CONFIG_IPV6_ROUTER_PREF=y
++CONFIG_IPV6_ROUTE_INFO=y
++CONFIG_IPV6_VTI=y
++CONFIG_IP_ADVANCED_ROUTER=y
++CONFIG_IP_MULTICAST=y
++CONFIG_IP_MULTIPLE_TABLES=y
++CONFIG_IP_NF_ARPFILTER=y
++CONFIG_IP_NF_ARPTABLES=y
++CONFIG_IP_NF_ARP_MANGLE=y
++CONFIG_IP_NF_FILTER=y
++CONFIG_IP_NF_IPTABLES=y
++CONFIG_IP_NF_MANGLE=y
++CONFIG_IP_NF_MATCH_ECN=y
++CONFIG_IP_NF_MATCH_TTL=y
++CONFIG_IP_NF_NAT=y
++CONFIG_IP_NF_RAW=y
++CONFIG_IP_NF_SECURITY=y
++CONFIG_IP_NF_TARGET_MASQUERADE=y
++CONFIG_IP_NF_TARGET_NETMAP=y
++CONFIG_IP_NF_TARGET_REDIRECT=y
++CONFIG_IP_NF_TARGET_REJECT=y
++CONFIG_MAGIC_SYSRQ=y
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
++CONFIG_MODVERSIONS=y
++CONFIG_NET=y
++CONFIG_NETDEVICES=y
++CONFIG_NETFILTER=y
++CONFIG_NETFILTER_XT_MATCH_COMMENT=y
++CONFIG_NETFILTER_XT_MATCH_CONNLIMIT=y
++CONFIG_NETFILTER_XT_MATCH_CONNMARK=y
++CONFIG_NETFILTER_XT_MATCH_CONNTRACK=y
++CONFIG_NETFILTER_XT_MATCH_HASHLIMIT=y
++CONFIG_NETFILTER_XT_MATCH_HELPER=y
++CONFIG_NETFILTER_XT_MATCH_IPRANGE=y
++CONFIG_NETFILTER_XT_MATCH_LENGTH=y
++CONFIG_NETFILTER_XT_MATCH_LIMIT=y
++CONFIG_NETFILTER_XT_MATCH_MAC=y
++CONFIG_NETFILTER_XT_MATCH_MARK=y
++CONFIG_NETFILTER_XT_MATCH_PKTTYPE=y
++CONFIG_NETFILTER_XT_MATCH_POLICY=y
++CONFIG_NETFILTER_XT_MATCH_QTAGUID=y
++CONFIG_NETFILTER_XT_MATCH_QUOTA2=y
++CONFIG_NETFILTER_XT_MATCH_QUOTA=y
++CONFIG_NETFILTER_XT_MATCH_SOCKET=y
++CONFIG_NETFILTER_XT_MATCH_STATE=y
++CONFIG_NETFILTER_XT_MATCH_STATISTIC=y
++CONFIG_NETFILTER_XT_MATCH_STRING=y
++CONFIG_NETFILTER_XT_MATCH_TIME=y
++CONFIG_NETFILTER_XT_MATCH_U32=y
++CONFIG_NETFILTER_XT_TARGET_CLASSIFY=y
++CONFIG_NETFILTER_XT_TARGET_CONNMARK=y
++CONFIG_NETFILTER_XT_TARGET_CONNSECMARK=y
++CONFIG_NETFILTER_XT_TARGET_IDLETIMER=y
++CONFIG_NETFILTER_XT_TARGET_MARK=y
++CONFIG_NETFILTER_XT_TARGET_NFLOG=y
++CONFIG_NETFILTER_XT_TARGET_NFQUEUE=y
++CONFIG_NETFILTER_XT_TARGET_SECMARK=y
++CONFIG_NETFILTER_XT_TARGET_TCPMSS=y
++CONFIG_NETFILTER_XT_TARGET_TPROXY=y
++CONFIG_NETFILTER_XT_TARGET_TRACE=y
++CONFIG_NET_CLS_ACT=y
++CONFIG_NET_CLS_U32=y
++CONFIG_NET_EMATCH=y
++CONFIG_NET_EMATCH_U32=y
++CONFIG_NET_IPVTI=y
++CONFIG_NET_KEY=y
++CONFIG_NET_SCHED=y
++CONFIG_NET_SCH_HTB=y
++CONFIG_NF_CONNTRACK=y
++CONFIG_NF_CONNTRACK_AMANDA=y
++CONFIG_NF_CONNTRACK_EVENTS=y
++CONFIG_NF_CONNTRACK_FTP=y
++CONFIG_NF_CONNTRACK_H323=y
++CONFIG_NF_CONNTRACK_IPV4=y
++CONFIG_NF_CONNTRACK_IPV6=y
++CONFIG_NF_CONNTRACK_IRC=y
++CONFIG_NF_CONNTRACK_NETBIOS_NS=y
++CONFIG_NF_CONNTRACK_PPTP=y
++CONFIG_NF_CONNTRACK_SANE=y
++CONFIG_NF_CONNTRACK_SECMARK=y
++CONFIG_NF_CONNTRACK_TFTP=y
++CONFIG_NF_CT_NETLINK=y
++CONFIG_NF_CT_PROTO_DCCP=y
++CONFIG_NF_CT_PROTO_SCTP=y
++CONFIG_NF_CT_PROTO_UDPLITE=y
++CONFIG_NF_NAT=y
++CONFIG_NO_HZ=y
++CONFIG_PACKET=y
++CONFIG_PM_WAKELOCKS=y
++CONFIG_PPP=y
++CONFIG_PPPOLAC=y
++CONFIG_PPPOPNS=y
++CONFIG_PPP_BSDCOMP=y
++CONFIG_PPP_DEFLATE=y
++CONFIG_PPP_MPPE=y
++CONFIG_PREEMPT=y
++CONFIG_PROC_FS=y
++CONFIG_PROFILING=y
++CONFIG_RTC_CLASS=y
++CONFIG_SECCOMP=y
++CONFIG_SECCOMP_FILTER=y
++CONFIG_SECURITY=y
++CONFIG_SECURITY_NETWORK=y
++CONFIG_SECURITY_PERF_EVENTS_RESTRICT=y
++CONFIG_SECURITY_SELINUX=y
++CONFIG_SHMEM=y
++CONFIG_SIGNALFD=y
++CONFIG_STAGING=y
++CONFIG_SUSPEND=y
++CONFIG_SYNC=y
++CONFIG_SYSFS=y
++CONFIG_TIMERFD=y
++CONFIG_TUN=y
++CONFIG_UID_SYS_STATS=y
++CONFIG_UNIX=y
++CONFIG_USB_CONFIGFS=y
++CONFIG_USB_CONFIGFS_F_ACC=y
++CONFIG_USB_CONFIGFS_F_AUDIO_SRC=y
++CONFIG_USB_CONFIGFS_F_FS=y
++CONFIG_USB_CONFIGFS_F_MIDI=y
++CONFIG_USB_CONFIGFS_UEVENT=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_SUPPORT=y
++CONFIG_XFRM_USER=y
+diff --git a/p/android-4.4/android-recommended.config b/p/android-4.4/android-recommended.config
+new file mode 100644
+index 0000000..b407d6c
+--- /dev/null
++++ b/p/android-4.4/android-recommended.config
+@@ -0,0 +1,144 @@
++#  KEEP ALPHABETICALLY SORTED
++# CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS is not set
++# CONFIG_INPUT_MOUSE is not set
++# CONFIG_LEGACY_PTYS is not set
++# CONFIG_NF_CONNTRACK_SIP is not set
++# CONFIG_PM_WAKELOCKS_GC is not set
++# CONFIG_VT is not set
++CONFIG_ANDROID_TIMED_GPIO=y
++CONFIG_ARM64_SW_TTBR0_PAN=y
++CONFIG_ARM_KERNMEM_PERMS=y
++CONFIG_BACKLIGHT_LCD_SUPPORT=y
++CONFIG_BLK_DEV_DM=y
++CONFIG_BLK_DEV_LOOP=y
++CONFIG_BLK_DEV_RAM=y
++CONFIG_BLK_DEV_RAM_SIZE=8192
++CONFIG_CC_STACKPROTECTOR_STRONG=y
++CONFIG_COMPACTION=y
++CONFIG_CONFIGFS_FS=y
++CONFIG_CPU_SW_DOMAIN_PAN=y
++CONFIG_DEBUG_RODATA=y
++CONFIG_DM_CRYPT=y
++CONFIG_DM_UEVENT=y
++CONFIG_DM_VERITY=y
++CONFIG_DM_VERITY_FEC=y
++CONFIG_DRAGONRISE_FF=y
++CONFIG_ENABLE_DEFAULT_TRACERS=y
++CONFIG_EXT4_FS=y
++CONFIG_EXT4_FS_SECURITY=y
++CONFIG_FUSE_FS=y
++CONFIG_GPIOLIB=y
++CONFIG_GREENASIA_FF=y
++CONFIG_HIDRAW=y
++CONFIG_HID_A4TECH=y
++CONFIG_HID_ACRUX=y
++CONFIG_HID_ACRUX_FF=y
++CONFIG_HID_APPLE=y
++CONFIG_HID_BELKIN=y
++CONFIG_HID_CHERRY=y
++CONFIG_HID_CHICONY=y
++CONFIG_HID_CYPRESS=y
++CONFIG_HID_DRAGONRISE=y
++CONFIG_HID_ELECOM=y
++CONFIG_HID_EMS_FF=y
++CONFIG_HID_EZKEY=y
++CONFIG_HID_GENERIC=y
++CONFIG_HID_GREENASIA=y
++CONFIG_HID_GYRATION=y
++CONFIG_HID_HOLTEK=y
++CONFIG_HID_KENSINGTON=y
++CONFIG_HID_KEYTOUCH=y
++CONFIG_HID_KYE=y
++CONFIG_HID_LCPOWER=y
++CONFIG_HID_LOGITECH=y
++CONFIG_HID_LOGITECH_DJ=y
++CONFIG_HID_MAGICMOUSE=y
++CONFIG_HID_MICROSOFT=y
++CONFIG_HID_MONTEREY=y
++CONFIG_HID_MULTITOUCH=y
++CONFIG_HID_NTRIG=y
++CONFIG_HID_ORTEK=y
++CONFIG_HID_PANTHERLORD=y
++CONFIG_HID_PETALYNX=y
++CONFIG_HID_PICOLCD=y
++CONFIG_HID_PRIMAX=y
++CONFIG_HID_PRODIKEYS=y
++CONFIG_HID_ROCCAT=y
++CONFIG_HID_SAITEK=y
++CONFIG_HID_SAMSUNG=y
++CONFIG_HID_SMARTJOYPLUS=y
++CONFIG_HID_SONY=y
++CONFIG_HID_SPEEDLINK=y
++CONFIG_HID_SUNPLUS=y
++CONFIG_HID_THRUSTMASTER=y
++CONFIG_HID_TIVO=y
++CONFIG_HID_TOPSEED=y
++CONFIG_HID_TWINHAN=y
++CONFIG_HID_UCLOGIC=y
++CONFIG_HID_WACOM=y
++CONFIG_HID_WALTOP=y
++CONFIG_HID_WIIMOTE=y
++CONFIG_HID_ZEROPLUS=y
++CONFIG_HID_ZYDACRON=y
++CONFIG_INPUT_EVDEV=y
++CONFIG_INPUT_GPIO=y
++CONFIG_INPUT_JOYSTICK=y
++CONFIG_INPUT_KEYCHORD=y
++CONFIG_INPUT_KEYRESET=y
++CONFIG_INPUT_MISC=y
++CONFIG_INPUT_TABLET=y
++CONFIG_INPUT_UINPUT=y
++CONFIG_ION=y
++CONFIG_JOYSTICK_XPAD=y
++CONFIG_JOYSTICK_XPAD_FF=y
++CONFIG_JOYSTICK_XPAD_LEDS=y
++CONFIG_KALLSYMS=y
++CONFIG_KALLSYMS_ALL=y
++CONFIG_KEYS=y
++CONFIG_KSM=y
++CONFIG_LOGIG940_FF=y
++CONFIG_LOGIRUMBLEPAD2_FF=y
++CONFIG_LOGITECH_FF=y
++CONFIG_MD=y
++CONFIG_MEDIA_SUPPORT=y
++CONFIG_MEMORY_STATE_TIME=y
++CONFIG_MISC_FILESYSTEMS=y
++CONFIG_MSDOS_FS=y
++CONFIG_PANIC_TIMEOUT=5
++CONFIG_PANTHERLORD_FF=y
++CONFIG_PERF_EVENTS=y
++CONFIG_PM_DEBUG=y
++CONFIG_PM_WAKELOCKS_LIMIT=0
++CONFIG_POWER_SUPPLY=y
++CONFIG_PSTORE=y
++CONFIG_PSTORE_CONSOLE=y
++CONFIG_PSTORE_RAM=y
++CONFIG_QFMT_V2=y
++CONFIG_QUOTA=y
++CONFIG_QUOTACTL=y
++CONFIG_QUOTA_NETLINK_INTERFACE=y
++CONFIG_QUOTA_TREE=y
++CONFIG_RANDOMIZE_BASE=y
++CONFIG_SCHEDSTATS=y
++CONFIG_SDCARD_FS=y
++CONFIG_SMARTJOYPLUS_FF=y
++CONFIG_SND=y
++CONFIG_SOUND=y
++CONFIG_TABLET_USB_ACECAD=y
++CONFIG_TABLET_USB_AIPTEK=y
++CONFIG_TABLET_USB_GTCO=y
++CONFIG_TABLET_USB_HANWANG=y
++CONFIG_TABLET_USB_KBTAB=y
++CONFIG_TASKSTATS=y
++CONFIG_TASK_DELAY_ACCT=y
++CONFIG_TASK_IO_ACCOUNTING=y
++CONFIG_TASK_XACCT=y
++CONFIG_TIMER_STATS=y
++CONFIG_TMPFS=y
++CONFIG_TMPFS_POSIX_ACL=y
++CONFIG_UHID=y
++CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_HIDDEV=y
++CONFIG_USB_USBNET=y
++CONFIG_VFAT_FS=y
+diff --git a/q/android-4.9/Android.bp b/q/android-4.9/Android.bp
+new file mode 100644
+index 0000000..1b0cf2a
+--- /dev/null
++++ b/q/android-4.9/Android.bp
+@@ -0,0 +1,26 @@
++// Copyright (C) 2018 The Android Open Source Project
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package {
++    // See: http://go/android-license-faq
++    default_applicable_licenses: ["Android-Apache-2.0"],
++}
++
++kernel_config {
++    name: "kernel_config_q_4.9",
++    srcs: [
++        "android-base.config",
++    ],
++    meta: "android-base-conditional.xml",
++}
+diff --git a/q/android-4.9/android-base-conditional.xml b/q/android-4.9/android-base-conditional.xml
+new file mode 100644
+index 0000000..703a512
+--- /dev/null
++++ b/q/android-4.9/android-base-conditional.xml
+@@ -0,0 +1,144 @@
++<kernel minlts="4.9.141" />
++
++<!-- KEEP ALPHABETICALLY SORTED -->
++<!-- ARM base requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_ARM</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_AEABI</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_CPU_SW_DOMAIN_PAN</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_OABI_COMPAT</key>
++		<value type="bool">n</value>
++	</config>
++</group>
++
++<!-- ARM64 base requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_ARM64</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_ARM64_SW_TTBR0_PAN</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_ARMV8_DEPRECATED</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_COMPAT</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_CP15_BARRIER_EMULATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_SETEND_EMULATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_SWP_EMULATION</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- x86 base requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_X86</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_PAGE_TABLE_ISOLATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_RETPOLINE</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- CONFIG_ACPI || CONFIG_OF -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_ACPI</key>
++			<value type="bool">n</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_OF</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_OF</key>
++			<value type="bool">n</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_ACPI</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- CONFIG_ANDROID_LOW_MEMORY_KILLER || (CONFIG_MEMCG && CONFIG_MEMCG_SWAP) -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_ANDROID_LOW_MEMORY_KILLER</key>
++			<value type="bool">n</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_MEMCG</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_MEMCG_SWAP</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_MEMCG</key>
++			<value type="bool">n</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_ANDROID_LOW_MEMORY_KILLER</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_MEMCG_SWAP</key>
++			<value type="bool">n</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_ANDROID_LOW_MEMORY_KILLER</key>
++		<value type="bool">y</value>
++	</config>
++</group>
+diff --git a/q/android-4.9/android-base.config b/q/android-4.9/android-base.config
+new file mode 100644
+index 0000000..136c2c2
+--- /dev/null
++++ b/q/android-4.9/android-base.config
+@@ -0,0 +1,222 @@
++#  KEEP ALPHABETICALLY SORTED
++# CONFIG_DEVKMEM is not set
++# CONFIG_DEVMEM is not set
++# CONFIG_FHANDLE is not set
++# CONFIG_NETFILTER_XT_MATCH_QTAGUID is not set
++# CONFIG_NFSD is not set
++# CONFIG_NFS_FS is not set
++# CONFIG_PM_AUTOSLEEP is not set
++# CONFIG_SYSVIPC is not set
++# CONFIG_USELIB is not set
++CONFIG_ADVISE_SYSCALLS=y
++CONFIG_AIO=y
++CONFIG_ANDROID=y
++CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"
++CONFIG_ANDROID_BINDER_IPC=y
++CONFIG_ASHMEM=y
++CONFIG_AUDIT=y
++CONFIG_BINFMT_ELF=y
++CONFIG_BINFMT_SCRIPT=y
++CONFIG_BLK_DEV_INITRD=y
++CONFIG_BLK_DEV_LOOP=y
++CONFIG_BLOCK=y
++CONFIG_BPF_SYSCALL=y
++CONFIG_CC_STACKPROTECTOR_STRONG=y
++CONFIG_CGROUPS=y
++CONFIG_CGROUP_BPF=y
++CONFIG_CGROUP_CPUACCT=y
++CONFIG_CGROUP_FREEZER=y
++CONFIG_CGROUP_SCHED=y
++CONFIG_CROSS_MEMORY_ATTACH=y
++CONFIG_CRYPTO_AES=y
++CONFIG_CRYPTO_CBC=y
++CONFIG_CRYPTO_ECB=y
++CONFIG_CRYPTO_GCM=y
++CONFIG_CRYPTO_HMAC=y
++CONFIG_CRYPTO_MD5=y
++CONFIG_CRYPTO_NULL=y
++CONFIG_CRYPTO_SHA1=y
++CONFIG_CRYPTO_SHA256=y
++CONFIG_CRYPTO_SHA512=y
++CONFIG_DEBUG_RODATA=y
++CONFIG_DEBUG_SET_MODULE_RONX=y
++CONFIG_DEFAULT_SECURITY_SELINUX=y
++CONFIG_DM_VERITY=y
++CONFIG_EMBEDDED=y
++CONFIG_EPOLL=y
++CONFIG_EVENTFD=y
++CONFIG_FILE_LOCKING=y
++CONFIG_FUSE_FS=y
++CONFIG_FUTEX=y
++CONFIG_HARDENED_USERCOPY=y
++CONFIG_HIGH_RES_TIMERS=y
++CONFIG_IKCONFIG=y
++CONFIG_IKCONFIG_PROC=y
++CONFIG_INET6_ESP=y
++CONFIG_INET6_IPCOMP=y
++CONFIG_INET6_XFRM_MODE_TRANSPORT=y
++CONFIG_INET6_XFRM_MODE_TUNNEL=y
++CONFIG_INET=y
++CONFIG_INET_DIAG_DESTROY=y
++CONFIG_INET_ESP=y
++CONFIG_INET_UDP_DIAG=y
++CONFIG_INET_XFRM_MODE_TRANSPORT=y
++CONFIG_INET_XFRM_MODE_TUNNEL=y
++CONFIG_INOTIFY_USER=y
++CONFIG_IP6_NF_FILTER=y
++CONFIG_IP6_NF_IPTABLES=y
++CONFIG_IP6_NF_MANGLE=y
++CONFIG_IP6_NF_MATCH_RPFILTER=y
++CONFIG_IP6_NF_RAW=y
++CONFIG_IP6_NF_TARGET_REJECT=y
++CONFIG_IPV6=y
++CONFIG_IPV6_MIP6=y
++CONFIG_IPV6_MULTIPLE_TABLES=y
++CONFIG_IPV6_OPTIMISTIC_DAD=y
++CONFIG_IPV6_ROUTER_PREF=y
++CONFIG_IPV6_ROUTE_INFO=y
++CONFIG_IPV6_VTI=y
++CONFIG_IP_ADVANCED_ROUTER=y
++CONFIG_IP_MULTICAST=y
++CONFIG_IP_MULTIPLE_TABLES=y
++CONFIG_IP_NF_ARPFILTER=y
++CONFIG_IP_NF_ARPTABLES=y
++CONFIG_IP_NF_ARP_MANGLE=y
++CONFIG_IP_NF_FILTER=y
++CONFIG_IP_NF_IPTABLES=y
++CONFIG_IP_NF_MANGLE=y
++CONFIG_IP_NF_MATCH_ECN=y
++CONFIG_IP_NF_MATCH_TTL=y
++CONFIG_IP_NF_NAT=y
++CONFIG_IP_NF_RAW=y
++CONFIG_IP_NF_SECURITY=y
++CONFIG_IP_NF_TARGET_MASQUERADE=y
++CONFIG_IP_NF_TARGET_NETMAP=y
++CONFIG_IP_NF_TARGET_REDIRECT=y
++CONFIG_IP_NF_TARGET_REJECT=y
++CONFIG_L2TP=y
++CONFIG_MAGIC_SYSRQ=y
++CONFIG_MD=y
++CONFIG_MEMBARRIER=y
++CONFIG_MMU=y
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
++CONFIG_MODVERSIONS=y
++CONFIG_MULTIUSER=y
++CONFIG_NET=y
++CONFIG_NETDEVICES=y
++CONFIG_NETFILTER=y
++CONFIG_NETFILTER_XT_MATCH_BPF=y
++CONFIG_NETFILTER_XT_MATCH_COMMENT=y
++CONFIG_NETFILTER_XT_MATCH_CONNLIMIT=y
++CONFIG_NETFILTER_XT_MATCH_CONNMARK=y
++CONFIG_NETFILTER_XT_MATCH_CONNTRACK=y
++CONFIG_NETFILTER_XT_MATCH_HASHLIMIT=y
++CONFIG_NETFILTER_XT_MATCH_HELPER=y
++CONFIG_NETFILTER_XT_MATCH_IPRANGE=y
++CONFIG_NETFILTER_XT_MATCH_LENGTH=y
++CONFIG_NETFILTER_XT_MATCH_LIMIT=y
++CONFIG_NETFILTER_XT_MATCH_MAC=y
++CONFIG_NETFILTER_XT_MATCH_MARK=y
++CONFIG_NETFILTER_XT_MATCH_OWNER=y
++CONFIG_NETFILTER_XT_MATCH_PKTTYPE=y
++CONFIG_NETFILTER_XT_MATCH_POLICY=y
++CONFIG_NETFILTER_XT_MATCH_QUOTA2=y
++CONFIG_NETFILTER_XT_MATCH_QUOTA=y
++CONFIG_NETFILTER_XT_MATCH_SOCKET=y
++CONFIG_NETFILTER_XT_MATCH_STATE=y
++CONFIG_NETFILTER_XT_MATCH_STATISTIC=y
++CONFIG_NETFILTER_XT_MATCH_STRING=y
++CONFIG_NETFILTER_XT_MATCH_TIME=y
++CONFIG_NETFILTER_XT_MATCH_U32=y
++CONFIG_NETFILTER_XT_TARGET_CLASSIFY=y
++CONFIG_NETFILTER_XT_TARGET_CONNMARK=y
++CONFIG_NETFILTER_XT_TARGET_CONNSECMARK=y
++CONFIG_NETFILTER_XT_TARGET_CT=y
++CONFIG_NETFILTER_XT_TARGET_IDLETIMER=y
++CONFIG_NETFILTER_XT_TARGET_MARK=y
++CONFIG_NETFILTER_XT_TARGET_NFLOG=y
++CONFIG_NETFILTER_XT_TARGET_NFQUEUE=y
++CONFIG_NETFILTER_XT_TARGET_SECMARK=y
++CONFIG_NETFILTER_XT_TARGET_TCPMSS=y
++CONFIG_NETFILTER_XT_TARGET_TPROXY=y
++CONFIG_NETFILTER_XT_TARGET_TRACE=y
++CONFIG_NET_CLS_ACT=y
++CONFIG_NET_CLS_BPF=y
++CONFIG_NET_CLS_U32=y
++CONFIG_NET_EMATCH=y
++CONFIG_NET_EMATCH_U32=y
++CONFIG_NET_IPGRE_DEMUX=y
++CONFIG_NET_IPVTI=y
++CONFIG_NET_KEY=y
++CONFIG_NET_SCHED=y
++CONFIG_NET_SCH_HTB=y
++CONFIG_NET_SCH_INGRESS=y
++CONFIG_NF_CONNTRACK=y
++CONFIG_NF_CONNTRACK_AMANDA=y
++CONFIG_NF_CONNTRACK_EVENTS=y
++CONFIG_NF_CONNTRACK_FTP=y
++CONFIG_NF_CONNTRACK_H323=y
++CONFIG_NF_CONNTRACK_IPV4=y
++CONFIG_NF_CONNTRACK_IPV6=y
++CONFIG_NF_CONNTRACK_IRC=y
++CONFIG_NF_CONNTRACK_NETBIOS_NS=y
++CONFIG_NF_CONNTRACK_PPTP=y
++CONFIG_NF_CONNTRACK_SANE=y
++CONFIG_NF_CONNTRACK_SECMARK=y
++CONFIG_NF_CONNTRACK_TFTP=y
++CONFIG_NF_CT_NETLINK=y
++CONFIG_NF_CT_PROTO_DCCP=y
++CONFIG_NF_CT_PROTO_SCTP=y
++CONFIG_NF_CT_PROTO_UDPLITE=y
++CONFIG_NF_NAT=y
++CONFIG_NO_HZ=y
++CONFIG_PACKET=y
++CONFIG_PM_WAKELOCKS=y
++CONFIG_PPP=y
++CONFIG_PPPOL2TP=y
++CONFIG_PPP_BSDCOMP=y
++CONFIG_PPP_DEFLATE=y
++CONFIG_PPP_MPPE=y
++CONFIG_PPTP=y
++CONFIG_PREEMPT=y
++CONFIG_PROC_FS=y
++CONFIG_PROFILING=y
++CONFIG_QFMT_V2=y
++CONFIG_QUOTA=y
++CONFIG_QUOTACTL=y
++CONFIG_RTC_CLASS=y
++CONFIG_SCHED_DEBUG=y
++CONFIG_SECCOMP=y
++CONFIG_SECCOMP_FILTER=y
++CONFIG_SECURITY=y
++CONFIG_SECURITY_NETWORK=y
++CONFIG_SECURITY_PERF_EVENTS_RESTRICT=y
++CONFIG_SECURITY_SELINUX=y
++CONFIG_SHMEM=y
++CONFIG_SIGNALFD=y
++CONFIG_SND=y
++CONFIG_SOUND=y
++CONFIG_STAGING=y
++CONFIG_SUSPEND=y
++CONFIG_SYNC_FILE=y
++CONFIG_SYSFS=y
++CONFIG_TASKSTATS=y
++CONFIG_TASK_IO_ACCOUNTING=y
++CONFIG_TASK_XACCT=y
++CONFIG_TIMERFD=y
++CONFIG_TTY=y
++CONFIG_TUN=y
++CONFIG_UID_SYS_STATS=y
++CONFIG_UNIX=y
++CONFIG_USB=y
++CONFIG_USB_CONFIGFS=y
++CONFIG_USB_CONFIGFS_F_ACC=y
++CONFIG_USB_CONFIGFS_F_AUDIO_SRC=y
++CONFIG_USB_CONFIGFS_F_FS=y
++CONFIG_USB_CONFIGFS_F_MIDI=y
++CONFIG_USB_CONFIGFS_UEVENT=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_SUPPORT=y
++CONFIG_XFRM_STATISTICS=y
++CONFIG_XFRM_USER=y
+diff --git a/q/android-4.9/android-recommended-arm.config b/q/android-4.9/android-recommended-arm.config
+new file mode 100644
+index 0000000..629e693
+--- /dev/null
++++ b/q/android-4.9/android-recommended-arm.config
+@@ -0,0 +1,7 @@
++#  KEEP ALPHABETICALLY SORTED
++CONFIG_ARM_CRYPTO=y
++CONFIG_CRYPTO_AES_ARM_CE=y
++CONFIG_CRYPTO_SHA2_ARM_CE=y
++CONFIG_KERNEL_MODE_NEON=y
++CONFIG_NEON=y
++CONFIG_UPROBE_EVENT=y
+diff --git a/q/android-4.9/android-recommended-arm64.config b/q/android-4.9/android-recommended-arm64.config
+new file mode 100644
+index 0000000..51cb599
+--- /dev/null
++++ b/q/android-4.9/android-recommended-arm64.config
+@@ -0,0 +1,6 @@
++#  KEEP ALPHABETICALLY SORTED
++CONFIG_ARM64_CRYPTO=y
++CONFIG_CRYPTO_AES_ARM64_CE_BLK=y
++CONFIG_CRYPTO_SHA2_ARM64_CE=y
++CONFIG_RANDOMIZE_BASE=y
++CONFIG_RELOCATABLE=y
+diff --git a/q/android-4.9/android-recommended-x86.config b/q/android-4.9/android-recommended-x86.config
+new file mode 100644
+index 0000000..0043ff1
+--- /dev/null
++++ b/q/android-4.9/android-recommended-x86.config
+@@ -0,0 +1,6 @@
++#  KEEP ALPHABETICALLY SORTED
++CONFIG_CRYPTO_AES_NI_INTEL=y
++CONFIG_CRYPTO_SHA256_SSSE3=y
++CONFIG_RANDOMIZE_BASE=y
++CONFIG_RELOCATABLE=y
++CONFIG_UPROBE_EVENT=y
+diff --git a/q/android-4.9/android-recommended.config b/q/android-4.9/android-recommended.config
+new file mode 100644
+index 0000000..50c9def
+--- /dev/null
++++ b/q/android-4.9/android-recommended.config
+@@ -0,0 +1,142 @@
++#  KEEP ALPHABETICALLY SORTED
++# CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS is not set
++# CONFIG_INPUT_MOUSE is not set
++# CONFIG_KSM is not set
++# CONFIG_LEGACY_PTYS is not set
++# CONFIG_NF_CONNTRACK_SIP is not set
++# CONFIG_PM_WAKELOCKS_GC is not set
++# CONFIG_VT is not set
++CONFIG_BACKLIGHT_LCD_SUPPORT=y
++CONFIG_BLK_DEV_DM=y
++CONFIG_BLK_DEV_RAM=y
++CONFIG_BLK_DEV_RAM_SIZE=8192
++CONFIG_CGROUP_SCHEDTUNE=y
++CONFIG_COMPACTION=y
++CONFIG_CONFIGFS_FS=y
++CONFIG_COREDUMP=y
++CONFIG_CPU_FREQ=y
++CONFIG_CPU_FREQ_GOV_SCHEDUTIL=y
++CONFIG_DEBUG_RODATA=y
++CONFIG_DEFAULT_USE_ENERGY_AWARE=y
++CONFIG_DM_BOW=y
++CONFIG_DM_CRYPT=y
++CONFIG_DM_UEVENT=y
++CONFIG_DM_VERITY_FEC=y
++CONFIG_DRAGONRISE_FF=y
++CONFIG_ELF_CORE=y
++CONFIG_ENABLE_DEFAULT_TRACERS=y
++CONFIG_EXT4_ENCRYPTION=y
++CONFIG_EXT4_FS=y
++CONFIG_EXT4_FS_SECURITY=y
++CONFIG_F2FS_FS=y
++CONFIG_F2FS_FS_ENCRYPTION=y
++CONFIG_F2FS_FS_SECURITY=y
++CONFIG_FTRACE=y
++CONFIG_GREENASIA_FF=y
++CONFIG_HIDRAW=y
++CONFIG_HID_A4TECH=y
++CONFIG_HID_ACRUX=y
++CONFIG_HID_ACRUX_FF=y
++CONFIG_HID_APPLE=y
++CONFIG_HID_BELKIN=y
++CONFIG_HID_CHERRY=y
++CONFIG_HID_CHICONY=y
++CONFIG_HID_CYPRESS=y
++CONFIG_HID_DRAGONRISE=y
++CONFIG_HID_ELECOM=y
++CONFIG_HID_EMS_FF=y
++CONFIG_HID_EZKEY=y
++CONFIG_HID_GENERIC=y
++CONFIG_HID_GREENASIA=y
++CONFIG_HID_GYRATION=y
++CONFIG_HID_HOLTEK=y
++CONFIG_HID_KENSINGTON=y
++CONFIG_HID_KEYTOUCH=y
++CONFIG_HID_KYE=y
++CONFIG_HID_LCPOWER=y
++CONFIG_HID_LOGITECH=y
++CONFIG_HID_LOGITECH_DJ=y
++CONFIG_HID_MAGICMOUSE=y
++CONFIG_HID_MICROSOFT=y
++CONFIG_HID_MONTEREY=y
++CONFIG_HID_MULTITOUCH=y
++CONFIG_HID_NTRIG=y
++CONFIG_HID_ORTEK=y
++CONFIG_HID_PANTHERLORD=y
++CONFIG_HID_PETALYNX=y
++CONFIG_HID_PICOLCD=y
++CONFIG_HID_PRIMAX=y
++CONFIG_HID_PRODIKEYS=y
++CONFIG_HID_ROCCAT=y
++CONFIG_HID_SAITEK=y
++CONFIG_HID_SAMSUNG=y
++CONFIG_HID_SMARTJOYPLUS=y
++CONFIG_HID_SONY=y
++CONFIG_HID_SPEEDLINK=y
++CONFIG_HID_SUNPLUS=y
++CONFIG_HID_THRUSTMASTER=y
++CONFIG_HID_TIVO=y
++CONFIG_HID_TOPSEED=y
++CONFIG_HID_TWINHAN=y
++CONFIG_HID_UCLOGIC=y
++CONFIG_HID_WACOM=y
++CONFIG_HID_WALTOP=y
++CONFIG_HID_WIIMOTE=y
++CONFIG_HID_ZEROPLUS=y
++CONFIG_HID_ZYDACRON=y
++CONFIG_INPUT=y
++CONFIG_INPUT_EVDEV=y
++CONFIG_INPUT_GPIO=y
++CONFIG_INPUT_JOYSTICK=y
++CONFIG_INPUT_KEYRESET=y
++CONFIG_INPUT_MISC=y
++CONFIG_INPUT_TABLET=y
++CONFIG_INPUT_UINPUT=y
++CONFIG_ION=y
++CONFIG_JOYSTICK_XPAD=y
++CONFIG_JOYSTICK_XPAD_FF=y
++CONFIG_JOYSTICK_XPAD_LEDS=y
++CONFIG_KALLSYMS=y
++CONFIG_KALLSYMS_ALL=y
++CONFIG_KEYS=y
++CONFIG_KPROBES=y
++CONFIG_KPROBE_EVENT=y
++CONFIG_LOGIG940_FF=y
++CONFIG_LOGIRUMBLEPAD2_FF=y
++CONFIG_LOGITECH_FF=y
++CONFIG_MEDIA_SUPPORT=y
++CONFIG_MISC_FILESYSTEMS=y
++CONFIG_MSDOS_FS=y
++CONFIG_NET_SCH_NETEM=y
++CONFIG_OVERLAY_FS=y
++CONFIG_PANIC_TIMEOUT=5
++CONFIG_PANTHERLORD_FF=y
++CONFIG_PERF_EVENTS=y
++CONFIG_PM_DEBUG=y
++CONFIG_PM_WAKELOCKS_LIMIT=0
++CONFIG_POWER_SUPPLY=y
++CONFIG_PSI=y
++CONFIG_PSTORE=y
++CONFIG_PSTORE_CONSOLE=y
++CONFIG_PSTORE_RAM=y
++CONFIG_SCHEDSTATS=y
++CONFIG_SCHED_TUNE=y
++CONFIG_SDCARD_FS=y
++CONFIG_SMARTJOYPLUS_FF=y
++CONFIG_SND=y
++CONFIG_SOUND=y
++CONFIG_TABLET_USB_ACECAD=y
++CONFIG_TABLET_USB_AIPTEK=y
++CONFIG_TABLET_USB_GTCO=y
++CONFIG_TABLET_USB_HANWANG=y
++CONFIG_TABLET_USB_KBTAB=y
++CONFIG_TASK_DELAY_ACCT=y
++CONFIG_TIMER_STATS=y
++CONFIG_TMPFS=y
++CONFIG_TMPFS_POSIX_ACL=y
++CONFIG_UHID=y
++CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_HIDDEV=y
++CONFIG_USB_USBNET=y
++CONFIG_VFAT_FS=y
+diff --git a/r/android-4.14/Android.bp b/r/android-4.14/Android.bp
+new file mode 100644
+index 0000000..f6089bd
+--- /dev/null
++++ b/r/android-4.14/Android.bp
+@@ -0,0 +1,30 @@
++// Copyright (C) 2020 The Android Open Source Project
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package {
++    // See: http://go/android-license-faq
++    default_applicable_licenses: ["Android-Apache-2.0"],
++}
++
++kernel_config {
++    name: "kernel_config_r_4.14",
++    srcs: [
++        "android-base.config",
++        "non_debuggable.config",
++    ],
++    debuggable_srcs: [
++        "android-base.config",
++    ],
++    meta: "android-base-conditional.xml",
++}
+diff --git a/r/android-4.14/android-base-conditional.xml b/r/android-4.14/android-base-conditional.xml
+new file mode 100644
+index 0000000..5b56452
+--- /dev/null
++++ b/r/android-4.14/android-base-conditional.xml
+@@ -0,0 +1,150 @@
++<kernel minlts="4.14.180" />
++
++<!-- KEEP ALPHABETICALLY SORTED -->
++<!-- ARM base requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_ARM</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_AEABI</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_CPU_SW_DOMAIN_PAN</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_DEVKMEM</key>
++		<value type="bool">n</value>
++	</config>
++	<config>
++		<key>CONFIG_OABI_COMPAT</key>
++		<value type="bool">n</value>
++	</config>
++</group>
++
++<!-- ARM64 base requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_ARM64</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_ARM64_PAN</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_ARM64_SW_TTBR0_PAN</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_ARMV8_DEPRECATED</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_COMPAT</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_CP15_BARRIER_EMULATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_SETEND_EMULATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_SWP_EMULATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_BPF_JIT_ALWAYS_ON</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- x86 base requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_X86</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_DEVKMEM</key>
++		<value type="bool">n</value>
++	</config>
++	<config>
++		<key>CONFIG_PAGE_TABLE_ISOLATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_RETPOLINE</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_BPF_JIT_ALWAYS_ON</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- CONFIG_ACPI || CONFIG_OF -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_ACPI</key>
++			<value type="bool">n</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_OF</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_OF</key>
++			<value type="bool">n</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_ACPI</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- EXT4 requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_EXT4_FS</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_EXT4_FS_POSIX_ACL</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- F2FS requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_F2FS_FS</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_F2FS_FS_POSIX_ACL</key>
++		<value type="bool">y</value>
++	</config>
++</group>
+diff --git a/s/android-4.14/android-base-conditional.xml b/s/android-4.14/android-base-conditional.xml
+index f3fceb5..593694f 100644
+--- a/s/android-4.14/android-base-conditional.xml
++++ b/s/android-4.14/android-base-conditional.xml
+@@ -1,4 +1,4 @@
+-<kernel minlts="4.14.336" />
++<kernel minlts="4.14.186" />
+ 
+ <!-- KEEP ALPHABETICALLY SORTED -->
+ <!-- ARM base requirements -->
+diff --git a/r/android-4.14/android-base.config b/r/android-4.14/android-base.config
+new file mode 100644
+index 0000000..a126f5d
+--- /dev/null
++++ b/r/android-4.14/android-base.config
+@@ -0,0 +1,250 @@
++#  KEEP ALPHABETICALLY SORTED
++# CONFIG_DEVMEM is not set
++# CONFIG_FHANDLE is not set
++# CONFIG_IP6_NF_NAT is not set
++# CONFIG_MODULE_FORCE_UNLOAD is not set
++# CONFIG_NETFILTER_XT_MATCH_QTAGUID is not set
++# CONFIG_NFSD is not set
++# CONFIG_NFS_FS is not set
++# CONFIG_PM_AUTOSLEEP is not set
++# CONFIG_RT_GROUP_SCHED is not set
++# CONFIG_SYSVIPC is not set
++# CONFIG_USELIB is not set
++# CONFIG_VHOST is not set
++CONFIG_ADVISE_SYSCALLS=y
++CONFIG_AIO=y
++CONFIG_ANDROID=y
++CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"
++CONFIG_ANDROID_BINDER_IPC=y
++CONFIG_ANDROID_BINDERFS=y
++CONFIG_ASHMEM=y
++CONFIG_AUDIT=y
++CONFIG_BINFMT_ELF=y
++CONFIG_BINFMT_SCRIPT=y
++CONFIG_BLK_DEV_INITRD=y
++CONFIG_BLK_DEV_LOOP=y
++CONFIG_BLOCK=y
++CONFIG_BPF_JIT=y
++CONFIG_BPF_SYSCALL=y
++CONFIG_CC_STACKPROTECTOR_STRONG=y
++CONFIG_CGROUPS=y
++CONFIG_CGROUP_BPF=y
++CONFIG_CGROUP_CPUACCT=y
++CONFIG_CGROUP_FREEZER=y
++CONFIG_CGROUP_SCHED=y
++CONFIG_CROSS_MEMORY_ATTACH=y
++CONFIG_CRYPTO_AES=y
++CONFIG_CRYPTO_CBC=y
++CONFIG_CRYPTO_ECB=y
++CONFIG_CRYPTO_GCM=y
++CONFIG_CRYPTO_HMAC=y
++CONFIG_CRYPTO_MD5=y
++CONFIG_CRYPTO_NULL=y
++CONFIG_CRYPTO_SHA1=y
++CONFIG_CRYPTO_SHA256=y
++CONFIG_CRYPTO_SHA512=y
++CONFIG_DEBUG_LIST=y
++CONFIG_DEFAULT_SECURITY_SELINUX=y
++CONFIG_DM_SNAPSHOT=y
++CONFIG_DM_VERITY=y
++CONFIG_DUMMY=y
++CONFIG_EMBEDDED=y
++CONFIG_EPOLL=y
++CONFIG_EVENTFD=y
++CONFIG_FILE_LOCKING=y
++CONFIG_FS_ENCRYPTION=y
++CONFIG_FS_VERITY=y
++CONFIG_FS_VERITY_BUILTIN_SIGNATURES=y
++CONFIG_FUSE_FS=y
++CONFIG_FUTEX=y
++CONFIG_HARDENED_USERCOPY=y
++CONFIG_HID_GENERIC=y
++CONFIG_HID_SONY=y
++CONFIG_HIGH_RES_TIMERS=y
++CONFIG_IKCONFIG=y
++CONFIG_IKCONFIG_PROC=y
++CONFIG_INET6_ESP=y
++CONFIG_INET6_IPCOMP=y
++CONFIG_INET6_XFRM_MODE_TRANSPORT=y
++CONFIG_INET6_XFRM_MODE_TUNNEL=y
++CONFIG_INET=y
++CONFIG_INET_DIAG_DESTROY=y
++CONFIG_INET_ESP=y
++CONFIG_INET_UDP_DIAG=y
++CONFIG_INET_XFRM_MODE_TRANSPORT=y
++CONFIG_INET_XFRM_MODE_TUNNEL=y
++CONFIG_INOTIFY_USER=y
++CONFIG_INPUT=y
++CONFIG_INPUT_EVDEV=y
++CONFIG_INPUT_JOYSTICK=y
++CONFIG_IP6_NF_FILTER=y
++CONFIG_IP6_NF_IPTABLES=y
++CONFIG_IP6_NF_MANGLE=y
++CONFIG_IP6_NF_MATCH_RPFILTER=y
++CONFIG_IP6_NF_RAW=y
++CONFIG_IP6_NF_TARGET_REJECT=y
++CONFIG_IPV6=y
++CONFIG_IPV6_MIP6=y
++CONFIG_IPV6_MULTIPLE_TABLES=y
++CONFIG_IPV6_OPTIMISTIC_DAD=y
++CONFIG_IPV6_ROUTER_PREF=y
++CONFIG_IPV6_ROUTE_INFO=y
++CONFIG_IPV6_VTI=y
++CONFIG_IP_ADVANCED_ROUTER=y
++CONFIG_IP_MULTICAST=y
++CONFIG_IP_MULTIPLE_TABLES=y
++CONFIG_IP_NF_ARPFILTER=y
++CONFIG_IP_NF_ARPTABLES=y
++CONFIG_IP_NF_ARP_MANGLE=y
++CONFIG_IP_NF_FILTER=y
++CONFIG_IP_NF_IPTABLES=y
++CONFIG_IP_NF_MANGLE=y
++CONFIG_IP_NF_MATCH_ECN=y
++CONFIG_IP_NF_MATCH_TTL=y
++CONFIG_IP_NF_NAT=y
++CONFIG_IP_NF_RAW=y
++CONFIG_IP_NF_SECURITY=y
++CONFIG_IP_NF_TARGET_MASQUERADE=y
++CONFIG_IP_NF_TARGET_NETMAP=y
++CONFIG_IP_NF_TARGET_REDIRECT=y
++CONFIG_IP_NF_TARGET_REJECT=y
++CONFIG_JOYSTICK_XPAD=y
++CONFIG_L2TP=y
++CONFIG_MAGIC_SYSRQ=y
++CONFIG_MD=y
++CONFIG_MEMBARRIER=y
++CONFIG_MMU=y
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
++CONFIG_MODVERSIONS=y
++CONFIG_MULTIUSER=y
++CONFIG_NAMESPACES=y
++CONFIG_NET=y
++CONFIG_NETDEVICES=y
++CONFIG_NETFILTER=y
++CONFIG_NETFILTER_XT_MATCH_BPF=y
++CONFIG_NETFILTER_XT_MATCH_COMMENT=y
++CONFIG_NETFILTER_XT_MATCH_CONNLIMIT=y
++CONFIG_NETFILTER_XT_MATCH_CONNMARK=y
++CONFIG_NETFILTER_XT_MATCH_CONNTRACK=y
++CONFIG_NETFILTER_XT_MATCH_HASHLIMIT=y
++CONFIG_NETFILTER_XT_MATCH_HELPER=y
++CONFIG_NETFILTER_XT_MATCH_IPRANGE=y
++CONFIG_NETFILTER_XT_MATCH_LENGTH=y
++CONFIG_NETFILTER_XT_MATCH_LIMIT=y
++CONFIG_NETFILTER_XT_MATCH_MAC=y
++CONFIG_NETFILTER_XT_MATCH_MARK=y
++CONFIG_NETFILTER_XT_MATCH_OWNER=y
++CONFIG_NETFILTER_XT_MATCH_PKTTYPE=y
++CONFIG_NETFILTER_XT_MATCH_POLICY=y
++CONFIG_NETFILTER_XT_MATCH_QUOTA2=y
++CONFIG_NETFILTER_XT_MATCH_QUOTA2_LOG=y
++CONFIG_NETFILTER_XT_MATCH_QUOTA=y
++CONFIG_NETFILTER_XT_MATCH_SOCKET=y
++CONFIG_NETFILTER_XT_MATCH_STATE=y
++CONFIG_NETFILTER_XT_MATCH_STATISTIC=y
++CONFIG_NETFILTER_XT_MATCH_STRING=y
++CONFIG_NETFILTER_XT_MATCH_TIME=y
++CONFIG_NETFILTER_XT_MATCH_U32=y
++CONFIG_NETFILTER_XT_TARGET_CLASSIFY=y
++CONFIG_NETFILTER_XT_TARGET_CONNMARK=y
++CONFIG_NETFILTER_XT_TARGET_CONNSECMARK=y
++CONFIG_NETFILTER_XT_TARGET_CT=y
++CONFIG_NETFILTER_XT_TARGET_IDLETIMER=y
++CONFIG_NETFILTER_XT_TARGET_MARK=y
++CONFIG_NETFILTER_XT_TARGET_NFLOG=y
++CONFIG_NETFILTER_XT_TARGET_NFQUEUE=y
++CONFIG_NETFILTER_XT_TARGET_SECMARK=y
++CONFIG_NETFILTER_XT_TARGET_TCPMSS=y
++CONFIG_NETFILTER_XT_TARGET_TPROXY=y
++CONFIG_NETFILTER_XT_TARGET_TRACE=y
++CONFIG_NET_CLS_ACT=y
++CONFIG_NET_CLS_BPF=y
++CONFIG_NET_CLS_U32=y
++CONFIG_NET_EMATCH=y
++CONFIG_NET_EMATCH_U32=y
++CONFIG_NET_IPGRE_DEMUX=y
++CONFIG_NET_IPVTI=y
++CONFIG_NET_KEY=y
++CONFIG_NET_NS=y
++CONFIG_NET_SCHED=y
++CONFIG_NET_SCH_HTB=y
++CONFIG_NET_SCH_INGRESS=y
++CONFIG_NF_CONNTRACK=y
++CONFIG_NF_CONNTRACK_AMANDA=y
++CONFIG_NF_CONNTRACK_EVENTS=y
++CONFIG_NF_CONNTRACK_FTP=y
++CONFIG_NF_CONNTRACK_H323=y
++CONFIG_NF_CONNTRACK_IPV4=y
++CONFIG_NF_CONNTRACK_IPV6=y
++CONFIG_NF_CONNTRACK_IRC=y
++CONFIG_NF_CONNTRACK_NETBIOS_NS=y
++CONFIG_NF_CONNTRACK_PPTP=y
++CONFIG_NF_CONNTRACK_SANE=y
++CONFIG_NF_CONNTRACK_SECMARK=y
++CONFIG_NF_CONNTRACK_TFTP=y
++CONFIG_NF_CT_NETLINK=y
++CONFIG_NF_CT_PROTO_DCCP=y
++CONFIG_NF_CT_PROTO_SCTP=y
++CONFIG_NF_CT_PROTO_UDPLITE=y
++CONFIG_NF_NAT=y
++CONFIG_NF_SOCKET_IPV4=y
++CONFIG_NF_SOCKET_IPV6=y
++CONFIG_NO_HZ=y
++CONFIG_PACKET=y
++CONFIG_PM_WAKELOCKS=y
++CONFIG_POSIX_TIMERS=y
++CONFIG_PPP=y
++CONFIG_PPPOL2TP=y
++CONFIG_PPP_BSDCOMP=y
++CONFIG_PPP_DEFLATE=y
++CONFIG_PPP_MPPE=y
++CONFIG_PPTP=y
++CONFIG_PREEMPT=y
++CONFIG_PROC_FS=y
++CONFIG_PROFILING=y
++CONFIG_PSI=y
++CONFIG_QFMT_V2=y
++CONFIG_QUOTA=y
++CONFIG_QUOTACTL=y
++CONFIG_RTC_CLASS=y
++CONFIG_SCHED_DEBUG=y
++CONFIG_SECCOMP=y
++CONFIG_SECCOMP_FILTER=y
++CONFIG_SECURITY=y
++CONFIG_SECURITY_NETWORK=y
++CONFIG_SECURITY_SELINUX=y
++CONFIG_SHMEM=y
++CONFIG_SIGNALFD=y
++CONFIG_SND=y
++CONFIG_SOUND=y
++CONFIG_STAGING=y
++CONFIG_STATIC_USERMODEHELPER=y
++CONFIG_STRICT_KERNEL_RWX=y
++CONFIG_STRICT_MODULE_RWX=y
++CONFIG_SUSPEND=y
++CONFIG_SYNC_FILE=y
++CONFIG_SYSFS=y
++CONFIG_TASKSTATS=y
++CONFIG_TASK_IO_ACCOUNTING=y
++CONFIG_TASK_XACCT=y
++CONFIG_TIMERFD=y
++CONFIG_TTY=y
++CONFIG_TUN=y
++CONFIG_UHID=y
++CONFIG_UID_SYS_STATS=y
++CONFIG_UNIX=y
++CONFIG_USB=y
++CONFIG_USB_CONFIGFS=y
++CONFIG_USB_CONFIGFS_F_ACC=y
++CONFIG_USB_CONFIGFS_F_AUDIO_SRC=y
++CONFIG_USB_CONFIGFS_F_FS=y
++CONFIG_USB_CONFIGFS_F_MIDI=y
++CONFIG_USB_CONFIGFS_UEVENT=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_SUPPORT=y
++CONFIG_UTS_NS=y
++CONFIG_VETH=y
++CONFIG_XFRM_INTERFACE=y
++CONFIG_XFRM_STATISTICS=y
++CONFIG_XFRM_USER=y
+diff --git a/r/android-4.14/android-recommended-arm.config b/r/android-4.14/android-recommended-arm.config
+new file mode 100644
+index 0000000..1ff0342
+--- /dev/null
++++ b/r/android-4.14/android-recommended-arm.config
+@@ -0,0 +1,6 @@
++#  KEEP ALPHABETICALLY SORTED
++CONFIG_ARM_CRYPTO=y
++CONFIG_CRYPTO_AES_ARM_CE=y
++CONFIG_CRYPTO_SHA2_ARM_CE=y
++CONFIG_KERNEL_MODE_NEON=y
++CONFIG_NEON=y
+diff --git a/r/android-4.14/android-recommended-arm64.config b/r/android-4.14/android-recommended-arm64.config
+new file mode 100644
+index 0000000..16ec836
+--- /dev/null
++++ b/r/android-4.14/android-recommended-arm64.config
+@@ -0,0 +1,7 @@
++#  KEEP ALPHABETICALLY SORTED
++CONFIG_ARM64_CRYPTO=y
++CONFIG_ARM64_SW_TTBR0_PAN=y
++CONFIG_CRYPTO_AES_ARM64_CE_BLK=y
++CONFIG_CRYPTO_SHA2_ARM64_CE=y
++CONFIG_RANDOMIZE_BASE=y
++CONFIG_RELOCATABLE=y
+diff --git a/r/android-4.14/android-recommended-x86.config b/r/android-4.14/android-recommended-x86.config
+new file mode 100644
+index 0000000..0388b3f
+--- /dev/null
++++ b/r/android-4.14/android-recommended-x86.config
+@@ -0,0 +1,5 @@
++#  KEEP ALPHABETICALLY SORTED
++CONFIG_CRYPTO_AES_NI_INTEL=y
++CONFIG_CRYPTO_SHA256_SSSE3=y
++CONFIG_RANDOMIZE_BASE=y
++CONFIG_RELOCATABLE=y
+diff --git a/r/android-4.14/android-recommended.config b/r/android-4.14/android-recommended.config
+new file mode 100644
+index 0000000..95b2803
+--- /dev/null
++++ b/r/android-4.14/android-recommended.config
+@@ -0,0 +1,132 @@
++#  KEEP ALPHABETICALLY SORTED
++# CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS is not set
++# CONFIG_INPUT_MOUSE is not set
++# CONFIG_KSM is not set
++# CONFIG_LEGACY_PTYS is not set
++# CONFIG_NF_CONNTRACK_SIP is not set
++# CONFIG_VT is not set
++CONFIG_BACKLIGHT_LCD_SUPPORT=y
++CONFIG_BLK_DEV_DM=y
++CONFIG_BLK_DEV_RAM=y
++CONFIG_BLK_DEV_RAM_SIZE=8192
++CONFIG_COMPACTION=y
++CONFIG_CONFIGFS_FS=y
++CONFIG_COREDUMP=y
++CONFIG_CPU_FREQ=y
++CONFIG_CPU_FREQ_GOV_SCHEDUTIL=y
++CONFIG_DEFAULT_USE_ENERGY_AWARE=y
++CONFIG_DM_BOW=y
++CONFIG_DM_CRYPT=y
++CONFIG_DM_UEVENT=y
++CONFIG_DM_VERITY_FEC=y
++CONFIG_DRAGONRISE_FF=y
++CONFIG_ELF_CORE=y
++CONFIG_ENABLE_DEFAULT_TRACERS=y
++CONFIG_EXT4_FS=y
++CONFIG_EXT4_FS_SECURITY=y
++CONFIG_F2FS_FS=y
++CONFIG_F2FS_FS_SECURITY=y
++CONFIG_FTRACE=y
++CONFIG_GREENASIA_FF=y
++CONFIG_HIDRAW=y
++CONFIG_HID_A4TECH=y
++CONFIG_HID_ACRUX=y
++CONFIG_HID_ACRUX_FF=y
++CONFIG_HID_APPLE=y
++CONFIG_HID_BELKIN=y
++CONFIG_HID_CHERRY=y
++CONFIG_HID_CHICONY=y
++CONFIG_HID_CYPRESS=y
++CONFIG_HID_DRAGONRISE=y
++CONFIG_HID_ELECOM=y
++CONFIG_HID_EMS_FF=y
++CONFIG_HID_EZKEY=y
++CONFIG_HID_GREENASIA=y
++CONFIG_HID_GYRATION=y
++CONFIG_HID_HOLTEK=y
++CONFIG_HID_KENSINGTON=y
++CONFIG_HID_KEYTOUCH=y
++CONFIG_HID_KYE=y
++CONFIG_HID_LCPOWER=y
++CONFIG_HID_LOGITECH=y
++CONFIG_HID_LOGITECH_DJ=y
++CONFIG_HID_MAGICMOUSE=y
++CONFIG_HID_MICROSOFT=y
++CONFIG_HID_MONTEREY=y
++CONFIG_HID_MULTITOUCH=y
++CONFIG_HID_NTRIG=y
++CONFIG_HID_ORTEK=y
++CONFIG_HID_PANTHERLORD=y
++CONFIG_HID_PETALYNX=y
++CONFIG_HID_PICOLCD=y
++CONFIG_HID_PRIMAX=y
++CONFIG_HID_PRODIKEYS=y
++CONFIG_HID_ROCCAT=y
++CONFIG_HID_SAITEK=y
++CONFIG_HID_SAMSUNG=y
++CONFIG_HID_SMARTJOYPLUS=y
++CONFIG_HID_SPEEDLINK=y
++CONFIG_HID_STEAM=y
++CONFIG_HID_SUNPLUS=y
++CONFIG_HID_THRUSTMASTER=y
++CONFIG_HID_TIVO=y
++CONFIG_HID_TOPSEED=y
++CONFIG_HID_TWINHAN=y
++CONFIG_HID_UCLOGIC=y
++CONFIG_HID_WACOM=y
++CONFIG_HID_WALTOP=y
++CONFIG_HID_WIIMOTE=y
++CONFIG_HID_ZEROPLUS=y
++CONFIG_HID_ZYDACRON=y
++CONFIG_INPUT_GPIO=y
++CONFIG_INPUT_KEYRESET=y
++CONFIG_INPUT_MISC=y
++CONFIG_INPUT_TABLET=y
++CONFIG_INPUT_UINPUT=y
++CONFIG_ION=y
++CONFIG_JOYSTICK_XPAD_FF=y
++CONFIG_JOYSTICK_XPAD_LEDS=y
++CONFIG_KALLSYMS=y
++CONFIG_KALLSYMS_ALL=y
++CONFIG_KEYS=y
++CONFIG_LOGIG940_FF=y
++CONFIG_LOGIRUMBLEPAD2_FF=y
++CONFIG_LOGITECH_FF=y
++CONFIG_MEDIA_SUPPORT=y
++CONFIG_MISC_FILESYSTEMS=y
++CONFIG_MSDOS_FS=y
++CONFIG_NET_SCH_NETEM=y
++CONFIG_OVERLAY_FS=y
++CONFIG_PANIC_TIMEOUT=5
++CONFIG_PANTHERLORD_FF=y
++CONFIG_PERF_EVENTS=y
++CONFIG_PM_DEBUG=y
++CONFIG_POWER_SUPPLY=y
++CONFIG_PSI=y
++CONFIG_PSTORE=y
++CONFIG_PSTORE_CONSOLE=y
++CONFIG_PSTORE_RAM=y
++CONFIG_REFCOUNT_FULL=y
++CONFIG_SCHEDSTATS=y
++CONFIG_SCHED_TUNE=y
++CONFIG_SDCARD_FS=y
++CONFIG_SMARTJOYPLUS_FF=y
++CONFIG_SMP=y
++CONFIG_SND=y
++CONFIG_SOUND=y
++CONFIG_STRICT_KERNEL_RWX=y
++CONFIG_TABLET_USB_ACECAD=y
++CONFIG_TABLET_USB_AIPTEK=y
++CONFIG_TABLET_USB_GTCO=y
++CONFIG_TABLET_USB_HANWANG=y
++CONFIG_TABLET_USB_KBTAB=y
++CONFIG_TASK_DELAY_ACCT=y
++CONFIG_TMPFS=y
++CONFIG_TMPFS_POSIX_ACL=y
++CONFIG_UPROBE_EVENTS=y
++CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_HIDDEV=y
++CONFIG_USB_RTL8152=y
++CONFIG_USB_USBNET=y
++CONFIG_VFAT_FS=y
+diff --git a/r/android-4.14/non_debuggable.config b/r/android-4.14/non_debuggable.config
+new file mode 100644
+index 0000000..71b51bf
+--- /dev/null
++++ b/r/android-4.14/non_debuggable.config
+@@ -0,0 +1,2 @@
++#  KEEP ALPHABETICALLY SORTED
++# CONFIG_DEBUG_FS is not set
+diff --git a/r/android-4.19/Android.bp b/r/android-4.19/Android.bp
+new file mode 100644
+index 0000000..9d00624
+--- /dev/null
++++ b/r/android-4.19/Android.bp
+@@ -0,0 +1,30 @@
++// Copyright (C) 2020 The Android Open Source Project
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package {
++    // See: http://go/android-license-faq
++    default_applicable_licenses: ["Android-Apache-2.0"],
++}
++
++kernel_config {
++    name: "kernel_config_r_4.19",
++    srcs: [
++        "android-base.config",
++        "non_debuggable.config",
++    ],
++    debuggable_srcs: [
++        "android-base.config",
++    ],
++    meta: "android-base-conditional.xml",
++}
+diff --git a/r/android-4.19/android-base-conditional.xml b/r/android-4.19/android-base-conditional.xml
+new file mode 100644
+index 0000000..e5b8635
+--- /dev/null
++++ b/r/android-4.19/android-base-conditional.xml
+@@ -0,0 +1,150 @@
++<kernel minlts="4.19.110" />
++
++<!-- KEEP ALPHABETICALLY SORTED -->
++<!-- ARM base requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_ARM</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_AEABI</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_CPU_SW_DOMAIN_PAN</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_DEVKMEM</key>
++		<value type="bool">n</value>
++	</config>
++	<config>
++		<key>CONFIG_OABI_COMPAT</key>
++		<value type="bool">n</value>
++	</config>
++</group>
++
++<!-- ARM64 base requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_ARM64</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_ARM64_PAN</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_ARM64_SW_TTBR0_PAN</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_ARMV8_DEPRECATED</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_COMPAT</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_CP15_BARRIER_EMULATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_SETEND_EMULATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_SWP_EMULATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_BPF_JIT_ALWAYS_ON</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- x86 base requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_X86</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_DEVKMEM</key>
++		<value type="bool">n</value>
++	</config>
++	<config>
++		<key>CONFIG_PAGE_TABLE_ISOLATION</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_RETPOLINE</key>
++		<value type="bool">y</value>
++	</config>
++	<config>
++		<key>CONFIG_BPF_JIT_ALWAYS_ON</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- CONFIG_ACPI || CONFIG_OF -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_ACPI</key>
++			<value type="bool">n</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_OF</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_OF</key>
++			<value type="bool">n</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_ACPI</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- EXT4 requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_EXT4_FS</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_EXT4_FS_POSIX_ACL</key>
++		<value type="bool">y</value>
++	</config>
++</group>
++
++<!-- F2FS requirements -->
++<group>
++	<conditions>
++		<config>
++			<key>CONFIG_F2FS_FS</key>
++			<value type="bool">y</value>
++		</config>
++	</conditions>
++	<config>
++		<key>CONFIG_F2FS_FS_POSIX_ACL</key>
++		<value type="bool">y</value>
++	</config>
++</group>
+diff --git a/r/android-4.19/android-base.config b/r/android-4.19/android-base.config
+new file mode 100644
+index 0000000..fef4c6f
+--- /dev/null
++++ b/r/android-4.19/android-base.config
+@@ -0,0 +1,251 @@
++#  KEEP ALPHABETICALLY SORTED
++# CONFIG_ANDROID_LOW_MEMORY_KILLER is not set
++# CONFIG_BPFILTER is not set
++# CONFIG_DEVMEM is not set
++# CONFIG_FHANDLE is not set
++# CONFIG_FW_CACHE is not set
++# CONFIG_IP6_NF_NAT is not set
++# CONFIG_MODULE_FORCE_UNLOAD is not set
++# CONFIG_NFSD is not set
++# CONFIG_NFS_FS is not set
++# CONFIG_PM_AUTOSLEEP is not set
++# CONFIG_RT_GROUP_SCHED is not set
++# CONFIG_SYSVIPC is not set
++# CONFIG_USELIB is not set
++# CONFIG_VHOST is not set
++CONFIG_ADVISE_SYSCALLS=y
++CONFIG_AIO=y
++CONFIG_ANDROID=y
++CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"
++CONFIG_ANDROID_BINDER_IPC=y
++CONFIG_ANDROID_BINDERFS=y
++CONFIG_ASHMEM=y
++CONFIG_AUDIT=y
++CONFIG_BINFMT_ELF=y
++CONFIG_BINFMT_SCRIPT=y
++CONFIG_BLK_DEV_INITRD=y
++CONFIG_BLK_DEV_LOOP=y
++CONFIG_BLOCK=y
++CONFIG_BPF_JIT=y
++CONFIG_BPF_SYSCALL=y
++CONFIG_CGROUPS=y
++CONFIG_CGROUP_BPF=y
++CONFIG_CGROUP_CPUACCT=y
++CONFIG_CGROUP_FREEZER=y
++CONFIG_CGROUP_SCHED=y
++CONFIG_CROSS_MEMORY_ATTACH=y
++CONFIG_CRYPTO_AES=y
++CONFIG_CRYPTO_CBC=y
++CONFIG_CRYPTO_ECB=y
++CONFIG_CRYPTO_GCM=y
++CONFIG_CRYPTO_HMAC=y
++CONFIG_CRYPTO_MD5=y
++CONFIG_CRYPTO_NULL=y
++CONFIG_CRYPTO_SHA1=y
++CONFIG_CRYPTO_SHA256=y
++CONFIG_CRYPTO_SHA512=y
++CONFIG_DEBUG_LIST=y
++CONFIG_DEFAULT_SECURITY_SELINUX=y
++CONFIG_DM_SNAPSHOT=y
++CONFIG_DM_VERITY=y
++CONFIG_DUMMY=y
++CONFIG_EMBEDDED=y
++CONFIG_EPOLL=y
++CONFIG_EVENTFD=y
++CONFIG_FILE_LOCKING=y
++CONFIG_FS_ENCRYPTION=y
++CONFIG_FS_VERITY=y
++CONFIG_FS_VERITY_BUILTIN_SIGNATURES=y
++CONFIG_FUSE_FS=y
++CONFIG_FUTEX=y
++CONFIG_HARDENED_USERCOPY=y
++CONFIG_HID_GENERIC=y
++CONFIG_HID_SONY=y
++CONFIG_HIGH_RES_TIMERS=y
++CONFIG_IKCONFIG=y
++CONFIG_IKCONFIG_PROC=y
++CONFIG_INET6_ESP=y
++CONFIG_INET6_IPCOMP=y
++CONFIG_INET6_XFRM_MODE_TRANSPORT=y
++CONFIG_INET6_XFRM_MODE_TUNNEL=y
++CONFIG_INET=y
++CONFIG_INET_DIAG_DESTROY=y
++CONFIG_INET_ESP=y
++CONFIG_INET_UDP_DIAG=y
++CONFIG_INET_XFRM_MODE_TRANSPORT=y
++CONFIG_INET_XFRM_MODE_TUNNEL=y
++CONFIG_INOTIFY_USER=y
++CONFIG_INPUT=y
++CONFIG_INPUT_EVDEV=y
++CONFIG_INPUT_JOYSTICK=y
++CONFIG_IP6_NF_FILTER=y
++CONFIG_IP6_NF_IPTABLES=y
++CONFIG_IP6_NF_MANGLE=y
++CONFIG_IP6_NF_MATCH_RPFILTER=y
++CONFIG_IP6_NF_RAW=y
++CONFIG_IP6_NF_TARGET_REJECT=y
++CONFIG_IPV6=y
++CONFIG_IPV6_MIP6=y
++CONFIG_IPV6_MULTIPLE_TABLES=y
++CONFIG_IPV6_OPTIMISTIC_DAD=y
++CONFIG_IPV6_ROUTER_PREF=y
++CONFIG_IPV6_ROUTE_INFO=y
++CONFIG_IPV6_VTI=y
++CONFIG_IP_ADVANCED_ROUTER=y
++CONFIG_IP_MULTICAST=y
++CONFIG_IP_MULTIPLE_TABLES=y
++CONFIG_IP_NF_ARPFILTER=y
++CONFIG_IP_NF_ARPTABLES=y
++CONFIG_IP_NF_ARP_MANGLE=y
++CONFIG_IP_NF_FILTER=y
++CONFIG_IP_NF_IPTABLES=y
++CONFIG_IP_NF_MANGLE=y
++CONFIG_IP_NF_MATCH_ECN=y
++CONFIG_IP_NF_MATCH_TTL=y
++CONFIG_IP_NF_NAT=y
++CONFIG_IP_NF_RAW=y
++CONFIG_IP_NF_SECURITY=y
++CONFIG_IP_NF_TARGET_MASQUERADE=y
++CONFIG_IP_NF_TARGET_NETMAP=y
++CONFIG_IP_NF_TARGET_REDIRECT=y
++CONFIG_IP_NF_TARGET_REJECT=y
++CONFIG_JOYSTICK_XPAD=y
++CONFIG_L2TP=y
++CONFIG_MAGIC_SYSRQ=y
++CONFIG_MD=y
++CONFIG_MEMBARRIER=y
++CONFIG_MMU=y
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
++CONFIG_MODVERSIONS=y
++CONFIG_MULTIUSER=y
++CONFIG_NAMESPACES=y
++CONFIG_NET=y
++CONFIG_NETDEVICES=y
++CONFIG_NETFILTER=y
++CONFIG_NETFILTER_XT_MATCH_BPF=y
++CONFIG_NETFILTER_XT_MATCH_COMMENT=y
++CONFIG_NETFILTER_XT_MATCH_CONNLIMIT=y
++CONFIG_NETFILTER_XT_MATCH_CONNMARK=y
++CONFIG_NETFILTER_XT_MATCH_CONNTRACK=y
++CONFIG_NETFILTER_XT_MATCH_HASHLIMIT=y
++CONFIG_NETFILTER_XT_MATCH_HELPER=y
++CONFIG_NETFILTER_XT_MATCH_IPRANGE=y
++CONFIG_NETFILTER_XT_MATCH_LENGTH=y
++CONFIG_NETFILTER_XT_MATCH_LIMIT=y
++CONFIG_NETFILTER_XT_MATCH_MAC=y
++CONFIG_NETFILTER_XT_MATCH_MARK=y
++CONFIG_NETFILTER_XT_MATCH_OWNER=y
++CONFIG_NETFILTER_XT_MATCH_PKTTYPE=y
++CONFIG_NETFILTER_XT_MATCH_POLICY=y
++CONFIG_NETFILTER_XT_MATCH_QUOTA2=y
++CONFIG_NETFILTER_XT_MATCH_QUOTA2_LOG=y
++CONFIG_NETFILTER_XT_MATCH_QUOTA=y
++CONFIG_NETFILTER_XT_MATCH_SOCKET=y
++CONFIG_NETFILTER_XT_MATCH_STATE=y
++CONFIG_NETFILTER_XT_MATCH_STATISTIC=y
++CONFIG_NETFILTER_XT_MATCH_STRING=y
++CONFIG_NETFILTER_XT_MATCH_TIME=y
++CONFIG_NETFILTER_XT_MATCH_U32=y
++CONFIG_NETFILTER_XT_TARGET_CLASSIFY=y
++CONFIG_NETFILTER_XT_TARGET_CONNMARK=y
++CONFIG_NETFILTER_XT_TARGET_CONNSECMARK=y
++CONFIG_NETFILTER_XT_TARGET_CT=y
++CONFIG_NETFILTER_XT_TARGET_IDLETIMER=y
++CONFIG_NETFILTER_XT_TARGET_MARK=y
++CONFIG_NETFILTER_XT_TARGET_NFLOG=y
++CONFIG_NETFILTER_XT_TARGET_NFQUEUE=y
++CONFIG_NETFILTER_XT_TARGET_SECMARK=y
++CONFIG_NETFILTER_XT_TARGET_TCPMSS=y
++CONFIG_NETFILTER_XT_TARGET_TPROXY=y
++CONFIG_NETFILTER_XT_TARGET_TRACE=y
++CONFIG_NET_CLS_ACT=y
++CONFIG_NET_CLS_BPF=y
++CONFIG_NET_CLS_U32=y
++CONFIG_NET_EMATCH=y
++CONFIG_NET_EMATCH_U32=y
++CONFIG_NET_IPGRE_DEMUX=y
++CONFIG_NET_IPVTI=y
++CONFIG_NET_KEY=y
++CONFIG_NET_NS=y
++CONFIG_NET_SCHED=y
++CONFIG_NET_SCH_HTB=y
++CONFIG_NET_SCH_INGRESS=y
++CONFIG_NF_CONNTRACK=y
++CONFIG_NF_CONNTRACK_AMANDA=y
++CONFIG_NF_CONNTRACK_EVENTS=y
++CONFIG_NF_CONNTRACK_FTP=y
++CONFIG_NF_CONNTRACK_H323=y
++CONFIG_NF_CONNTRACK_IRC=y
++CONFIG_NF_CONNTRACK_NETBIOS_NS=y
++CONFIG_NF_CONNTRACK_PPTP=y
++CONFIG_NF_CONNTRACK_SANE=y
++CONFIG_NF_CONNTRACK_SECMARK=y
++CONFIG_NF_CONNTRACK_TFTP=y
++CONFIG_NF_CT_NETLINK=y
++CONFIG_NF_CT_PROTO_DCCP=y
++CONFIG_NF_CT_PROTO_SCTP=y
++CONFIG_NF_CT_PROTO_UDPLITE=y
++CONFIG_NF_NAT=y
++CONFIG_NF_SOCKET_IPV4=y
++CONFIG_NF_SOCKET_IPV6=y
++CONFIG_NO_HZ=y
++CONFIG_PACKET=y
++CONFIG_PM_WAKELOCKS=y
++CONFIG_POSIX_TIMERS=y
++CONFIG_PPP=y
++CONFIG_PPPOL2TP=y
++CONFIG_PPP_BSDCOMP=y
++CONFIG_PPP_DEFLATE=y
++CONFIG_PPP_MPPE=y
++CONFIG_PPTP=y
++CONFIG_PREEMPT=y
++CONFIG_PROC_FS=y
++CONFIG_PROFILING=y
++CONFIG_PSI=y
++CONFIG_QFMT_V2=y
++CONFIG_QUOTA=y
++CONFIG_QUOTACTL=y
++CONFIG_RTC_CLASS=y
++CONFIG_SCHED_DEBUG=y
++CONFIG_SECCOMP=y
++CONFIG_SECCOMP_FILTER=y
++CONFIG_SECURITY=y
++CONFIG_SECURITY_NETWORK=y
++CONFIG_SECURITY_SELINUX=y
++CONFIG_SHMEM=y
++CONFIG_SIGNALFD=y
++CONFIG_SND=y
++CONFIG_SOUND=y
++CONFIG_STACKPROTECTOR=y
++CONFIG_STACKPROTECTOR_STRONG=y
++CONFIG_STAGING=y
++CONFIG_STATIC_USERMODEHELPER=y
++CONFIG_STRICT_KERNEL_RWX=y
++CONFIG_STRICT_MODULE_RWX=y
++CONFIG_SUSPEND=y
++CONFIG_SYNC_FILE=y
++CONFIG_SYSFS=y
++CONFIG_TASKSTATS=y
++CONFIG_TASK_IO_ACCOUNTING=y
++CONFIG_TASK_XACCT=y
++CONFIG_TIMERFD=y
++CONFIG_TTY=y
++CONFIG_TUN=y
++CONFIG_UHID=y
++CONFIG_UID_SYS_STATS=y
++CONFIG_UNIX=y
++CONFIG_USB=y
++CONFIG_USB_CONFIGFS=y
++CONFIG_USB_CONFIGFS_F_ACC=y
++CONFIG_USB_CONFIGFS_F_AUDIO_SRC=y
++CONFIG_USB_CONFIGFS_F_FS=y
++CONFIG_USB_CONFIGFS_F_MIDI=y
++CONFIG_USB_CONFIGFS_UEVENT=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_SUPPORT=y
++CONFIG_UTS_NS=y
++CONFIG_VETH=y
++CONFIG_XFRM_INTERFACE=y
++CONFIG_XFRM_STATISTICS=y
++CONFIG_XFRM_USER=y
+diff --git a/r/android-4.19/android-recommended-arm.config b/r/android-4.19/android-recommended-arm.config
+new file mode 100644
+index 0000000..1ff0342
+--- /dev/null
++++ b/r/android-4.19/android-recommended-arm.config
+@@ -0,0 +1,6 @@
++#  KEEP ALPHABETICALLY SORTED
++CONFIG_ARM_CRYPTO=y
++CONFIG_CRYPTO_AES_ARM_CE=y
++CONFIG_CRYPTO_SHA2_ARM_CE=y
++CONFIG_KERNEL_MODE_NEON=y
++CONFIG_NEON=y
+diff --git a/r/android-4.19/android-recommended-arm64.config b/r/android-4.19/android-recommended-arm64.config
+new file mode 100644
+index 0000000..16ec836
+--- /dev/null
++++ b/r/android-4.19/android-recommended-arm64.config
+@@ -0,0 +1,7 @@
++#  KEEP ALPHABETICALLY SORTED
++CONFIG_ARM64_CRYPTO=y
++CONFIG_ARM64_SW_TTBR0_PAN=y
++CONFIG_CRYPTO_AES_ARM64_CE_BLK=y
++CONFIG_CRYPTO_SHA2_ARM64_CE=y
++CONFIG_RANDOMIZE_BASE=y
++CONFIG_RELOCATABLE=y
+diff --git a/r/android-4.19/android-recommended-x86.config b/r/android-4.19/android-recommended-x86.config
+new file mode 100644
+index 0000000..0388b3f
+--- /dev/null
++++ b/r/android-4.19/android-recommended-x86.config
+@@ -0,0 +1,5 @@
++#  KEEP ALPHABETICALLY SORTED
++CONFIG_CRYPTO_AES_NI_INTEL=y
++CONFIG_CRYPTO_SHA256_SSSE3=y
++CONFIG_RANDOMIZE_BASE=y
++CONFIG_RELOCATABLE=y
+diff --git a/r/android-4.19/android-recommended.config b/r/android-4.19/android-recommended.config
+new file mode 100644
+index 0000000..e47684c
+--- /dev/null
++++ b/r/android-4.19/android-recommended.config
+@@ -0,0 +1,130 @@
++#  KEEP ALPHABETICALLY SORTED
++# CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS is not set
++# CONFIG_INPUT_MOUSE is not set
++# CONFIG_KSM is not set
++# CONFIG_LEGACY_PTYS is not set
++# CONFIG_NF_CONNTRACK_SIP is not set
++# CONFIG_VT is not set
++CONFIG_BACKLIGHT_LCD_SUPPORT=y
++CONFIG_BLK_DEV_DM=y
++CONFIG_BLK_DEV_RAM=y
++CONFIG_BLK_DEV_RAM_SIZE=8192
++CONFIG_COMPACTION=y
++CONFIG_CONFIGFS_FS=y
++CONFIG_COREDUMP=y
++CONFIG_CPU_FREQ=y
++CONFIG_CPU_FREQ_GOV_SCHEDUTIL=y
++CONFIG_DM_BOW=y
++CONFIG_DM_CRYPT=y
++CONFIG_DM_UEVENT=y
++CONFIG_DM_VERITY_FEC=y
++CONFIG_DRAGONRISE_FF=y
++CONFIG_ELF_CORE=y
++CONFIG_ENABLE_DEFAULT_TRACERS=y
++CONFIG_ENERGY_MODEL=y
++CONFIG_EXT4_FS=y
++CONFIG_EXT4_FS_SECURITY=y
++CONFIG_F2FS_FS=y
++CONFIG_F2FS_FS_SECURITY=y
++CONFIG_FTRACE=y
++CONFIG_GREENASIA_FF=y
++CONFIG_HIDRAW=y
++CONFIG_HID_A4TECH=y
++CONFIG_HID_ACRUX=y
++CONFIG_HID_ACRUX_FF=y
++CONFIG_HID_APPLE=y
++CONFIG_HID_BELKIN=y
++CONFIG_HID_CHERRY=y
++CONFIG_HID_CHICONY=y
++CONFIG_HID_CYPRESS=y
++CONFIG_HID_DRAGONRISE=y
++CONFIG_HID_ELECOM=y
++CONFIG_HID_EMS_FF=y
++CONFIG_HID_EZKEY=y
++CONFIG_HID_GREENASIA=y
++CONFIG_HID_GYRATION=y
++CONFIG_HID_HOLTEK=y
++CONFIG_HID_KENSINGTON=y
++CONFIG_HID_KEYTOUCH=y
++CONFIG_HID_KYE=y
++CONFIG_HID_LCPOWER=y
++CONFIG_HID_LOGITECH=y
++CONFIG_HID_LOGITECH_DJ=y
++CONFIG_HID_MAGICMOUSE=y
++CONFIG_HID_MICROSOFT=y
++CONFIG_HID_MONTEREY=y
++CONFIG_HID_MULTITOUCH=y
++CONFIG_HID_NTRIG=y
++CONFIG_HID_ORTEK=y
++CONFIG_HID_PANTHERLORD=y
++CONFIG_HID_PETALYNX=y
++CONFIG_HID_PICOLCD=y
++CONFIG_HID_PRIMAX=y
++CONFIG_HID_PRODIKEYS=y
++CONFIG_HID_ROCCAT=y
++CONFIG_HID_SAITEK=y
++CONFIG_HID_SAMSUNG=y
++CONFIG_HID_SMARTJOYPLUS=y
++CONFIG_HID_SPEEDLINK=y
++CONFIG_HID_STEAM=y
++CONFIG_HID_SUNPLUS=y
++CONFIG_HID_THRUSTMASTER=y
++CONFIG_HID_TIVO=y
++CONFIG_HID_TOPSEED=y
++CONFIG_HID_TWINHAN=y
++CONFIG_HID_UCLOGIC=y
++CONFIG_HID_WACOM=y
++CONFIG_HID_WALTOP=y
++CONFIG_HID_WIIMOTE=y
++CONFIG_HID_ZEROPLUS=y
++CONFIG_HID_ZYDACRON=y
++CONFIG_INPUT_MISC=y
++CONFIG_INPUT_TABLET=y
++CONFIG_INPUT_UINPUT=y
++CONFIG_ION=y
++CONFIG_JOYSTICK_XPAD_FF=y
++CONFIG_JOYSTICK_XPAD_LEDS=y
++CONFIG_KALLSYMS=y
++CONFIG_KALLSYMS_ALL=y
++CONFIG_KEYS=y
++CONFIG_LOGIG940_FF=y
++CONFIG_LOGIRUMBLEPAD2_FF=y
++CONFIG_LOGITECH_FF=y
++CONFIG_MEDIA_SUPPORT=y
++CONFIG_MISC_FILESYSTEMS=y
++CONFIG_MSDOS_FS=y
++CONFIG_NET_SCH_NETEM=y
++CONFIG_OVERLAY_FS=y
++CONFIG_PANIC_TIMEOUT=5
++CONFIG_PANTHERLORD_FF=y
++CONFIG_PERF_EVENTS=y
++CONFIG_PM_DEBUG=y
++CONFIG_POWER_SUPPLY=y
++CONFIG_PSI=y
++CONFIG_PSTORE=y
++CONFIG_PSTORE_CONSOLE=y
++CONFIG_PSTORE_RAM=y
++CONFIG_REFCOUNT_FULL=y
++CONFIG_SCHEDSTATS=y
++CONFIG_SCHED_TUNE=y
++CONFIG_SDCARD_FS=y
++CONFIG_SMARTJOYPLUS_FF=y
++CONFIG_SMP=y
++CONFIG_SND=y
++CONFIG_SOUND=y
++CONFIG_STRICT_KERNEL_RWX=y
++CONFIG_TABLET_USB_ACECAD=y
++CONFIG_TABLET_USB_AIPTEK=y
++CONFIG_TABLET_USB_GTCO=y
++CONFIG_TABLET_USB_HANWANG=y
++CONFIG_TABLET_USB_KBTAB=y
++CONFIG_TASK_DELAY_ACCT=y
++CONFIG_TMPFS=y
++CONFIG_TMPFS_POSIX_ACL=y
++CONFIG_UPROBE_EVENTS=y
++CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_HIDDEV=y
++CONFIG_USB_RTL8152=y
++CONFIG_USB_USBNET=y
++CONFIG_VFAT_FS=y
+diff --git a/r/android-4.19/non_debuggable.config b/r/android-4.19/non_debuggable.config
+new file mode 100644
+index 0000000..71b51bf
+--- /dev/null
++++ b/r/android-4.19/non_debuggable.config
+@@ -0,0 +1,2 @@
++#  KEEP ALPHABETICALLY SORTED
++# CONFIG_DEBUG_FS is not set
+diff --git a/s/android-4.19/android-base-conditional.xml b/s/android-4.19/android-base-conditional.xml
+index 8aab2a0..24e2b47 100644
+--- a/s/android-4.19/android-base-conditional.xml
++++ b/s/android-4.19/android-base-conditional.xml
+@@ -1,4 +1,4 @@
+-<kernel minlts="4.19.325" />
++<kernel minlts="4.19.127" />
+
+ <!-- KEEP ALPHABETICALLY SORTED -->
+ <!-- ARM base requirements -->
+-- 
+2.53.0
+

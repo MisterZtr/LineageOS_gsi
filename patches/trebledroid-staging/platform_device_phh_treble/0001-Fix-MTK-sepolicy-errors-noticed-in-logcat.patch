@@ -1,0 +1,26 @@
+From 272eab8a4d6657f55abf07ae456579889f023a8f Mon Sep 17 00:00:00 2001
+From: Jonathon Fitch <lightman1@virginmedia.com>
+Date: Mon, 26 May 2025 15:59:24 +0100
+Subject: [PATCH 1/21] Fix MTK sepolicy errors noticed in logcat
+
+---
+ sepolicy/mediatek.te | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/sepolicy/mediatek.te b/sepolicy/mediatek.te
+index 0344d0f..2b24965 100644
+--- a/sepolicy/mediatek.te
++++ b/sepolicy/mediatek.te
+@@ -6,6 +6,9 @@ allow init mnt_product_file:dir mounton;
+
+ type mtk_hal_audio, domain;
+ typeattribute mtk_hal_audio hal_broadcastradio_client;
++allow mtk_hal_audio audioserver:fifo_file write;
++allow mtk_hal_audio untrusted_app:fifo_file write;
++allow hal_audio_sysbta untrusted_app:fifo_file write;
+
+ type mtk_hal_power, domain;
+ allow mtk_hal_power system_data_root_file:file create_file_perms;
+-- 
+2.53.0
+

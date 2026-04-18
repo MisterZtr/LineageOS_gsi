@@ -1,0 +1,47 @@
+From 7ef7e27ce5333e0f76a33cac7cbeeed81316687c Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 7 Apr 2026 14:33:52 +0000
+Subject: [PATCH 3/3] bionic: tolerate MADV_WIPEONFORK failure on pre-4.14 kernels
+
+MADV_WIPEONFORK was introduced in linux 4.14. on older vendor kernels
+(e.g. 4.9.x on samsung exynos devices) the madvise call returns EINVAL,
+causing async_safe_fatal to abort init (pid 1), which triggers a kernel
+panic: "Attempted to kill init task group".
+
+degrade gracefully: if the kernel rejects MADV_WIPEONFORK with EINVAL,
+continue without the fork-wipe protection. arc4random state will not be
+zeroed across fork on these kernels, but the device will boot.
+
+requires <errno.h> which is added to the includes.
+---
+ libc/upstream-openbsd/android/include/arc4random.h | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/libc/upstream-openbsd/android/include/arc4random.h b/libc/upstream-openbsd/android/include/arc4random.h
+index 1940398..2449c6e 100644
+--- a/libc/upstream-openbsd/android/include/arc4random.h
++++ b/libc/upstream-openbsd/android/include/arc4random.h
+@@ -18,6 +18,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include <errno.h>
+ #include <pthread.h>
+ #include <sys/mman.h>
+ #include <sys/prctl.h>
+@@ -59,8 +60,10 @@ static inline int _rs_allocate(struct _rs** rsp, struct _rsx** rsxp) {
+     async_safe_fatal("arc4random data allocation failed: %m");
+   }
+ 
+-  // Equivalent to OpenBSD's minherit(MAP_INHERIT_ZERO).
+-  if (madvise(p, size, MADV_WIPEONFORK) == -1) {
++  // MADV_WIPEONFORK requires linux 4.14+. on pre-4.14 vendor kernels the call
++  // returns EINVAL; tolerate that gracefully so these devices can still boot.
++  // the trade-off is that arc4random state is not zeroed on fork on such kernels.
++  if (madvise(p, size, MADV_WIPEONFORK) == -1 && errno != EINVAL) {
+     async_safe_fatal("arc4random data MADV_WIPEONFORK failed: %m");
+   }
+ 
+-- 
+2.53.0
+

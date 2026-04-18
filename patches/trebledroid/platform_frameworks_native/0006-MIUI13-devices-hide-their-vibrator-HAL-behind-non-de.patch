@@ -16,7 +16,7 @@ index 302e3e1299..5ad4aa8729 100644
 @@ -56,6 +56,16 @@ std::shared_ptr<HalWrapper> connectHal(std::shared_ptr<CallbackScheduler> schedu
          }
      }
- 
+
 +    serviceName = std::string(IVibrator::descriptor) + "/vibratorfeature";
 +    if (AServiceManager_isDeclared(serviceName.c_str())) {
 +        std::shared_ptr<IVibrator> hal = IVibrator::fromBinder(
@@ -31,5 +31,5 @@ index 302e3e1299..5ad4aa8729 100644
      gHalExists = false;
      return nullptr;
 -- 
-2.25.1
+2.52.0
 

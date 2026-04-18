@@ -1,0 +1,30 @@
+From bd9c780f6edb63cd892a507d294ab74c511d956a Mon Sep 17 00:00:00 2001
+From: MisterZtr <andey2004586@gmail.com>
+Date: Sat, 18 Apr 2026 11:22:54 +0300
+Subject: [PATCH] config: Log privapp-permissions whitelist violations
+
+enforce may prevent some vendors from successfully booting the system if app permissions are violated
+
+---
+ config/common.mk | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/config/common.mk b/config/common.mk
+index b961788f..2e1959e0 100644
+--- a/config/common.mk
++++ b/config/common.mk
+@@ -99,9 +99,9 @@ PRODUCT_PACKAGES += \
+ PRODUCT_COPY_FILES += \
+     vendor/lineage/config/permissions/org.lineageos.android.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/permissions/org.lineageos.android.xml
+ 
+-# Enforce privapp-permissions whitelist
++# Log privapp-permissions whitelist violations
+ PRODUCT_PRODUCT_PROPERTIES += \
+-    ro.control_privapp_permissions=enforce
++    ro.control_privapp_permissions=log
+ 
+ ifneq ($(TARGET_DISABLE_LINEAGE_SDK), true)
+ # Lineage SDK
+-- 
+2.53.0
+

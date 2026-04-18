@@ -1,4 +1,4 @@
-From c699c9a9f5ea2bdf1df9b675900d5ff8ea5307dd Mon Sep 17 00:00:00 2001
+From 423f0748c4c8934aaee68c734b37e5dd44a6c265 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 1 Oct 2019 13:35:49 +0200
 Subject: [PATCH 03/25] Add (partial, cam id is hardcoded) support for Asus ZF6
@@ -37,11 +37,11 @@ index 7358ed3d4c..ae4b45e09d 100644
 +            physicalFrontCam(cameraId == "1");
              finishConnectLocked(client, partial, oomScoreOffset, systemNativeClient);
          }
- 
+
 @@ -2858,6 +2861,27 @@ status_t CameraService::addOfflineClient(const std::string &cameraId,
      return OK;
  }
- 
+
 +void CameraService::physicalFrontCam(bool on) {
 +    if(on == mPhysicalFrontCamStatus) return;
 +    mPhysicalFrontCamStatus = on;
@@ -69,7 +69,7 @@ index 7358ed3d4c..ae4b45e09d 100644
 @@ -4205,6 +4229,8 @@ binder::Status CameraService::BasicClient::disconnect() {
      }
      mDisconnected = true;
- 
+
 +    sCameraService->physicalFrontCam(false);
 +
      sCameraService->removeByClient(this);
@@ -82,13 +82,13 @@ index 55542b71d0..b3ada0c161 100644
 @@ -291,6 +291,9 @@ public:
      // Register an offline client for a given active camera id
      status_t addOfflineClient(const std::string &cameraId, sp<BasicClient> offlineClient);
- 
+
 +    bool mPhysicalFrontCamStatus;
 +    void physicalFrontCam(bool on);
 +
      /////////////////////////////////////////////////////////////////////
      // Client functionality
- 
+
 -- 
-2.25.1
+2.52.0
 

@@ -19,8 +19,8 @@ index 2e7465a0..27e1a51a 100644
  		node->data = prev;
 -		return SEPOL_EEXIST;
  	}
- 
+
  	return SEPOL_OK;
 -- 
-2.25.1
+2.52.0
 

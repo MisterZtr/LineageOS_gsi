@@ -7,8 +7,8 @@ Subject: [PATCH 2/2] Add new mechanism to fake vendor props on a per-process
 This reads debug.phh.props.<process name>. If its value is "vendor",
 then ro.product.device/ro.product.manufacturer is read from vendor
 ---
- libc/system_properties/system_properties.cpp | 87 +++++++++++++++++++-
- 1 file changed, 85 insertions(+), 2 deletions(-)
+ libc/system_properties/system_properties.cpp | 94 +++++++++++++++++++-
+ 1 file changed, 92 insertions(+), 2 deletions(-)
 
 diff --git a/libc/system_properties/system_properties.cpp b/libc/system_properties/system_properties.cpp
 index e0d38a822..60974e8ae 100644
@@ -20,13 +20,13 @@ index e0d38a822..60974e8ae 100644
  #include <unistd.h>
 +#include <string.h>
 +#include <fcntl.h>
- 
+
  #include <new>
- 
+
 @@ -53,6 +55,85 @@
  #define SERIAL_VALUE_LEN(serial) ((serial) >> 24)
  #define APPCOMPAT_PREFIX "ro.appcompat_override."
- 
+
 +static char comm[128];
 +static bool self_ok = false;
 +static char comm_override[PROP_VALUE_MAX];
@@ -109,28 +109,35 @@ index e0d38a822..60974e8ae 100644
  static bool is_dir(const char* pathname) {
    struct stat info;
    if (stat(pathname, &info) == -1) {
-@@ -160,17 +241,19 @@ uint32_t SystemProperties::AreaSerial() {
+@@ -160,17 +241,26 @@ uint32_t SystemProperties::AreaSerial() {
  }
- 
+
  const prop_info* SystemProperties::Find(const char* name) {
 +  const char* newName = redirectToProp(name);
 +
    if (!initialized_) {
      return nullptr;
    }
- 
+
 -  prop_area* pa = contexts_->GetPropAreaForName(name);
 +  prop_area* pa = contexts_->GetPropAreaForName(newName);
    if (!pa) {
      async_safe_format_log(ANDROID_LOG_WARN, "libc", "Access denied finding property \"%s\"", name);
      return nullptr;
    }
- 
+
 -  return pa->find(name);
-+  return pa->find(newName);
++  const prop_info* pi = pa->find(newName);
++  if (pi == nullptr && newName != name) {
++    pa = contexts_->GetPropAreaForName(name);
++    if (pa) {
++      pi = pa->find(name);
++    }
++  }
++  return pi;
  }
- 
+
  static bool is_appcompat_override(const char* name) {
 -- 
-2.25.1
+2.52.0
 

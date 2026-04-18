@@ -1,0 +1,27 @@
+From 639f79462ed3d2994e5bc556784ab1a75036894e Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 27 Mar 2026 11:50:04 +0000
+Subject: [PATCH 17/21] guard no_present_or_validate behind vndk presence check
+
+add [ -n "$vndk" ] guard to prevent shell errors when vndk-detect
+fails to set persist.sys.vndk.
+---
+ rw-system.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/rw-system.sh b/rw-system.sh
+index 8fddc05..5eaee71 100644
+--- a/rw-system.sh
++++ b/rw-system.sh
+@@ -1118,7 +1118,7 @@ if [ -f /vendor/etc/init/vendor.ozoaudio.media.c2@1.0-service.rc ];then
+     fi
+ fi
+ 
+-if [ "$vndk" -le 27 ];then
++if [ -n "$vndk" ] && [ "$vndk" -le 27 ];then
+     setprop persist.sys.phh.no_present_or_validate true
+ fi
+ 
+-- 
+2.53.0
+

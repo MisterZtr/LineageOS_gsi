@@ -1,7 +1,7 @@
-From ac7797b5cc4f93710218a1fc80149ba12b612be1 Mon Sep 17 00:00:00 2001
+From 00c324dbe0870152faf6668344a3aa0806310a94 Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Sat, 21 Dec 2024 11:04:35 -0500
-Subject: [PATCH 52/57] Add support for treating virtual biometric sensors as
+Subject: [PATCH 52/55] Add support for treating virtual biometric sensors as
  real ones
 
 This happens on Unihertz Jelly Max. They forgot to change their sensor
@@ -23,7 +23,7 @@ index 586830c8d189..d7fcfdb6df2b 100644
 +import android.os.SystemProperties;
  import android.util.Log;
  import android.util.Slog;
- 
+
 @@ -172,6 +173,10 @@ public class FingerprintSensorConfigurations implements Parcelable {
       * @return real fqName
       */
@@ -45,5 +45,5 @@ index 586830c8d189..d7fcfdb6df2b 100644
              Slog.i(TAG, "getIFingerprint fqName is mapped: " + fqName + "->" + fqNameMapped);
              try {
 -- 
-2.25.1
+2.52.0
 

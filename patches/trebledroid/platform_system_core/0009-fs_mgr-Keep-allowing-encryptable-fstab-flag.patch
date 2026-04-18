@@ -17,7 +17,7 @@ index ec23ce5cf..f2e1ad6b8 100644
 @@ -346,16 +346,6 @@ bool ParseFsMgrFlags(const std::string& flags, FstabEntry* entry) {
          }
      }
- 
+
 -    // FDE is no longer supported, so reject "encryptable" when used without
 -    // "vold_managed".  For now skip this check when in recovery mode, since
 -    // some recovery fstabs still contain the FDE options since they didn't do
@@ -30,7 +30,7 @@ index ec23ce5cf..f2e1ad6b8 100644
 -    }
      return true;
  }
- 
+
 -- 
-2.25.1
+2.52.0
 

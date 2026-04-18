@@ -1,0 +1,46 @@
+From 1f74acd2bf8afb1a8e54ae592b59a20086f7a3e1 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 17 Mar 2026 23:12:58 +0000
+Subject: [PATCH 14/21] Add safe lmkd defaults and heap floor for GSI builds
+
+Disable critical_upgrade and enable kill_heaviest_task for more
+predictable memory management across diverse hardware.
+
+Set a minimum dalvik.vm.heapgrowthlimit of 256m. Some vendor
+build.prop files ship an aggressive 16m limit tuned for their stock ROM.
+Android 16's system_server requires significantly more than 16m to
+initialise; without this override rw-system.sh crashes early (empty vndk
+var arithmetic) and the vendor value is never corrected, causing
+system_server to OOM-loop and the device to be stuck on bootsplash.
+
+Drop ro.lmk.use_new_strategy -- it is not a real AOSP lmkd property
+and has no effect. The cgroup v1 memcg fallback for kernels without PSI
+is now handled properly in libprocessgroup/CgroupSetup().
+---
+ system.prop | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/system.prop b/system.prop
+index f3c0c45..8a2c5f4 100644
+--- a/system.prop
++++ b/system.prop
+@@ -49,3 +49,16 @@ bluetooth.profile.sap.server.enabled?=true
+
+ # Samsung vendors default to a Samsung-specific gadget for MTP. Set this to use AOSP's functionfs MTP
+ vendor.usb.use_ffs_mtp=1
++
++# lmkd tuning: safe defaults for GSI across diverse hardware
++# Disable critical_upgrade to prevent overly aggressive kills on devices
++# where memory pressure detection may not work correctly (e.g., older kernels)
++ro.lmk.critical_upgrade=false
++# Kill heaviest task first for more predictable memory management
++ro.lmk.kill_heaviest_task=true
++
++# Heap floor: vendor build.prop values as low as 16m are seen in the wild.
++# Android 16 system_server needs ~200m+ to initialise; override with a safe
++# minimum while preserving larger vendor values via the ? default operator.
++dalvik.vm.heapgrowthlimit?=256m
++dalvik.vm.heapsize?=512m
+-- 
+2.53.0
+

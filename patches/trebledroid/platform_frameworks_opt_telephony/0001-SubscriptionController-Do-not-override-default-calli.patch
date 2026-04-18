@@ -1,7 +1,7 @@
-From d0308bee3ef9b6508bcf9a156c4ecce69ca518c9 Mon Sep 17 00:00:00 2001
+From 38658e3b2dbc460549da403a28dca404cb72fc55 Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Mon, 5 Sep 2022 14:02:37 -0400
-Subject: [PATCH 01/11] SubscriptionController: Do not override default calling
+Subject: [PATCH 01/12] SubscriptionController: Do not override default calling
  account from third-party apps
 
 When the user has selected a calling account from a third-party app as
@@ -14,23 +14,15 @@ to keep re-selecting the desired calling account after every reboot.
 Test: manual
 Change-Id: Iccab64e9b3b3ab4773bd8944d47c2006f229d472
 ---
- .../SubscriptionManagerService.java            | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
+ .../SubscriptionManagerService.java             | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
 diff --git a/src/java/com/android/internal/telephony/subscription/SubscriptionManagerService.java b/src/java/com/android/internal/telephony/subscription/SubscriptionManagerService.java
-index bedc20e9d5..8acca40a55 100644
+index 32e836c..894a1db 100644
 --- a/src/java/com/android/internal/telephony/subscription/SubscriptionManagerService.java
 +++ b/src/java/com/android/internal/telephony/subscription/SubscriptionManagerService.java
-@@ -88,6 +88,7 @@ import android.util.Base64;
- import android.util.EventLog;
- import android.util.IndentingPrintWriter;
- import android.util.LocalLog;
-+import android.util.Log;
- 
- import com.android.internal.R;
- import com.android.internal.annotations.VisibleForTesting;
-@@ -3291,7 +3292,22 @@ public class SubscriptionManagerService extends ISub.Stub {
- 
+@@ -3329,7 +3329,22 @@ public class SubscriptionManagerService extends ISub.Stub {
+
                  TelecomManager telecomManager = mContext.getSystemService(TelecomManager.class);
                  if (telecomManager != null) {
 -                    telecomManager.setUserSelectedOutgoingPhoneAccount(newHandle);
@@ -51,8 +43,8 @@ index bedc20e9d5..8acca40a55 100644
 +                        log("[setDefaultVoiceSubId] default phoneAccountHandle not changed.");
 +                    }
                  }
- 
+
                  updateDefaultSubId();
 -- 
-2.25.1
+2.52.0
 

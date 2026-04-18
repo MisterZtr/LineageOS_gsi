@@ -16,21 +16,21 @@ index 5dc41e6b8..69abb4e2b 100644
  #include <string.h>
  #include <unistd.h>
 +#include <sys/stat.h>
- 
+
  #include <android-base/logging.h>
- 
+
  #define DEV_NAME "/dev/watchdog"
 +#define DEV_NAME2 "/dev/watchdog1"
- 
+
  int main(int argc, char** argv) {
 +    struct stat st_buf;
      android::base::InitLogging(argv, &android::base::KernelLogger);
- 
+
      int interval = 10;
 @@ -42,6 +45,13 @@ int main(int argc, char** argv) {
          return 1;
      }
- 
+
 +    int fd2 = open(DEV_NAME2, O_RDWR | O_CLOEXEC);
 +    fstat(fd2, &st_buf);
 +    if ((st_buf.st_mode & S_IFMT) != S_IFCHR) {
@@ -44,7 +44,7 @@ index 5dc41e6b8..69abb4e2b 100644
 @@ -61,8 +71,31 @@ int main(int argc, char** argv) {
          }
      }
- 
+
 +    if(fd2 >= 0) {
 +        int interval2 = interval;
 +        ret = ioctl(fd2, WDIOC_SETTIMEOUT, &timeout);
@@ -74,5 +74,5 @@ index 5dc41e6b8..69abb4e2b 100644
      }
  }
 -- 
-2.25.1
+2.52.0
 

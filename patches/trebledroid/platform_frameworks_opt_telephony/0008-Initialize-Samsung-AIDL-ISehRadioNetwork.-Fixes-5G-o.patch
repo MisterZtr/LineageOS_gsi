@@ -1,7 +1,7 @@
 From 8bb603c8f973de594444c7506723da323f93c975 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 21 Feb 2024 12:50:28 -0500
-Subject: [PATCH 08/11] Initialize Samsung AIDL ISehRadioNetwork. Fixes 5G on
+Subject: [PATCH 08/12] Initialize Samsung AIDL ISehRadioNetwork. Fixes 5G on
  S24
 
 ---
@@ -42,7 +42,7 @@ index 5db77067f2..f4123f82b1 100644
 @@ -34,6 +34,20 @@ import java.util.ArrayList;
  import java.util.List;
  import java.util.stream.Collectors;
- 
+
 +import vendor.samsung.hardware.radio.network.ISehRadioNetworkIndication;
 +import vendor.samsung.hardware.radio.network.ISehRadioNetworkResponse;
 +import vendor.samsung.hardware.radio.network.ISehRadioNetwork;
@@ -72,7 +72,7 @@ index 5db77067f2..f4123f82b1 100644
 @@ -80,6 +94,133 @@ public class RadioNetworkProxy extends RadioServiceProxy {
          mNetworkProxy = network;
          mIsAidl = true;
- 
+
 +        try {
 +            var samsungIndication = new ISehRadioNetworkIndication.Stub() {
 +                void l(String v) {
@@ -204,5 +204,5 @@ index 5db77067f2..f4123f82b1 100644
          return mHalVersion;
      }
 -- 
-2.25.1
+2.52.0
 

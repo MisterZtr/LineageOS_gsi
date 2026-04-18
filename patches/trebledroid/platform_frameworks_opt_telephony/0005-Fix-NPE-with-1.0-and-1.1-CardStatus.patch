@@ -1,7 +1,7 @@
 From 999a6cf558320d2e15e88b15e59c82337bc1fb0e Mon Sep 17 00:00:00 2001
 From: Christian Hoffmann <chrmhoffmann@gmail.com>
 Date: Fri, 21 Oct 2022 12:58:04 +0200
-Subject: [PATCH 05/11] Fix NPE with 1.0 and 1.1 CardStatus
+Subject: [PATCH 05/12] Fix NPE with 1.0 and 1.1 CardStatus
 
 Change-Id: I965f6ef419b7aef828da02f5d4745bd33d09fe3a
 ---
@@ -13,7 +13,7 @@ index ada45ec0f7..84e15c6d2c 100644
 --- a/src/java/com/android/internal/telephony/RadioResponse.java
 +++ b/src/java/com/android/internal/telephony/RadioResponse.java
 @@ -1871,6 +1871,8 @@ public class RadioResponse extends IRadioResponse.Stub {
- 
+
          if (rr != null) {
              IccCardStatus iccCardStatus = RILUtils.convertHalCardStatus(cardStatus);
 +            IccSlotPortMapping slotPortMapping = new IccSlotPortMapping();
@@ -22,5 +22,5 @@ index ada45ec0f7..84e15c6d2c 100644
              if (responseInfo.error == RadioError.NONE) {
                  sendMessageResponse(rr.mResult, iccCardStatus);
 -- 
-2.25.1
+2.52.0
 

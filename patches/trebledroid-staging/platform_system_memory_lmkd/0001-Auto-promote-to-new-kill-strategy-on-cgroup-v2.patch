@@ -1,0 +1,34 @@
+From 4e03391b0b0d2d121be9ace22e261229f9445049 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 24 Mar 2026 11:47:03 +0000
+Subject: [PATCH] Auto-promote to new kill strategy on cgroup v2
+
+Vendor partitions may set ro.lmk.use_new_strategy=false for the old
+kill strategy which depends on cgroup v1 memcg attributes.  When a
+GSI replaces the system partition it mounts cgroup v2 (the modern
+Android default), making the old strategy impossible.  Rather than
+exiting, promote to the new strategy automatically and log a warning.
+
+Change-Id: I3e8ce4d46b126562b5d01f5f97c3dc71dc5f706d
+---
+ lmkd.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lmkd.cpp b/lmkd.cpp
+index b2cc335..00c6124 100644
+--- a/lmkd.cpp
++++ b/lmkd.cpp
+@@ -3587,8 +3587,8 @@ static bool init_psi_monitors() {
+     bool use_new_strategy =
+         GET_LMK_PROPERTY(bool, "use_new_strategy", low_ram_device || !use_minfree_levels);
+     if (!use_new_strategy && memcg_version() != MemcgVersion::kV1) {
+-        ALOGE("Old kill strategy can only be used with v1 cgroup hierarchy");
+-        return false;
++        ALOGW("Old kill strategy requested but cgroup v1 is unavailable, promoting to new strategy");
++        use_new_strategy = true;
+     }
+     /* In default PSI mode override stall amounts using system properties */
+     if (use_new_strategy) {
+-- 
+2.53.0
+

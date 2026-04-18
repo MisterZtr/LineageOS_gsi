@@ -16,14 +16,14 @@ index 9c4d1ace15..6f81b5cd4c 100644
 @@ -40,6 +40,7 @@
  #include "android/hardware/sensors/2.1/types.h"
  #include "convertV2_1.h"
- 
+
 +#include <android-base/properties.h>
  using namespace android::hardware::sensors;
  using android::util::ProtoOutputStream;
  namespace sensorservice_flags = com::android::frameworks::sensorservice::flags;
 @@ -79,6 +80,8 @@ SensorDevice::SensorDevice() : mInHalBypassMode(false) {
  }
- 
+
  void SensorDevice::initializeSensorList() {
 +    if(::android::base::GetBoolProperty("persist.sys.phh.samsung_sensors", false))
 +        setMode(5555);
@@ -31,5 +31,5 @@ index 9c4d1ace15..6f81b5cd4c 100644
          return;
      }
 -- 
-2.25.1
+2.52.0
 

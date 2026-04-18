@@ -1,7 +1,7 @@
 From 81c855c2d02eaf4d3d4ca0278021c34f886aa474 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 25 Feb 2024 10:23:29 -0500
-Subject: [PATCH 10/11] When reading SMSC, ignore invalid SMSC
+Subject: [PATCH 10/12] When reading SMSC, ignore invalid SMSC
 
 On Samsung, when reading SMSC we get weird strings like
 "4392084000100",149
@@ -29,7 +29,7 @@ index 19211e15f5..3ddf6762dd 100644
 +            smsc = "";
          RadioResponse.responseString(HAL_SERVICE_MESSAGING, mRil, responseInfo, smsc);
      }
- 
+
 diff --git a/src/java/com/android/internal/telephony/RadioResponse.java b/src/java/com/android/internal/telephony/RadioResponse.java
 index 84e15c6d2c..5663dc816b 100644
 --- a/src/java/com/android/internal/telephony/RadioResponse.java
@@ -42,7 +42,7 @@ index 84e15c6d2c..5663dc816b 100644
 +            smsc = "";
          responseString(responseInfo, smsc);
      }
- 
+
 -- 
-2.25.1
+2.52.0
 

@@ -1,4 +1,4 @@
-From 7a3ab3b90a62e19b7917315f1ccca3d2dd84c62c Mon Sep 17 00:00:00 2001
+From da09d8d442f388525248743858a1744eb5e36772 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 27 Oct 2021 14:40:26 -0400
 Subject: [PATCH] Disable vndklite handling
@@ -9,18 +9,18 @@ Change-Id: I4a132512471a68891f2efb59539267c35a3c3e56
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/modules/environment.cc b/modules/environment.cc
-index 01e520e..e4991c2 100644
+index 559a5ec..5e455f9 100644
 --- a/modules/environment.cc
 +++ b/modules/environment.cc
-@@ -28,7 +28,7 @@ bool IsTreblelizedDevice() {
- }
- 
+@@ -25,7 +25,7 @@ namespace linkerconfig {
+ namespace modules {
+
  bool IsVndkLiteDevice() {
 -  return Variables::GetValue("ro.vndk.lite").value_or("") == "true";
 +  return false;
  }
- 
+
  bool IsVndkInSystemNamespace() {
 -- 
-2.25.1
+2.52.0
 

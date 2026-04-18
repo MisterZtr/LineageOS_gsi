@@ -1,0 +1,36 @@
+From d81d3a84bfe1c51519cf02023c7271720762a84d Mon Sep 17 00:00:00 2001
+From: OpenCode <opencode@localhost>
+Date: Mon, 16 Feb 2026 05:00:00 +0000
+Subject: [PATCH 5/11] Catch NoSuchElementException in Watchdog HIDL lookup
+
+On GSI builds, hwservicemanager can crash (e.g. shadow stack allocation
+failure during boot memory pressure). When Watchdog tries to collect
+thread dumps, IServiceManager.getService() throws
+NoSuchElementException because hwservicemanager is unavailable. This
+uncaught exception kills system_server, causing cascading restarts of
+SystemUI and other system components.
+
+Catch NoSuchElementException alongside RemoteException so a transient
+hwservicemanager crash doesn't take down the entire system.
+
+Change-Id: I0000000000000000000000000000000000000001
+---
+ services/core/java/com/android/server/Watchdog.java | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/services/core/java/com/android/server/Watchdog.java b/services/core/java/com/android/server/Watchdog.java
+index 115aaad1e..19281f25f 100644
+--- a/services/core/java/com/android/server/Watchdog.java
++++ b/services/core/java/com/android/server/Watchdog.java
+@@ -824,6 +824,8 @@ public class Watchdog implements Dumpable {
+             }
+         } catch (RemoteException e) {
+             Log.w(TAG, e);
++        } catch (java.util.NoSuchElementException e) {
++            Log.w(TAG, "HIDL service manager not available", e);
+         }
+     }
+
+-- 
+2.53.0
+

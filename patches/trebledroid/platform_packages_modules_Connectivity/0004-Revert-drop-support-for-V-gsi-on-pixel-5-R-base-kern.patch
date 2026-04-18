@@ -13,9 +13,9 @@ index 622fba8d0c..d419480601 100644
 --- a/service/jni/com_android_server_connectivity_ClatCoordinator.cpp
 +++ b/service/jni/com_android_server_connectivity_ClatCoordinator.cpp
 @@ -91,6 +91,11 @@ static void verifyPerms(const char * const path,
- 
+
  #undef ALOGF
- 
+
 +bool isGsiImage() {
 +    // this implementation matches 2 other places in the codebase (same function name too)
 +    return !access("/system/system_ext/etc/init/init.gsi.rc", F_OK);
@@ -23,11 +23,11 @@ index 622fba8d0c..d419480601 100644
 +
  static const char* kClatdDir = "/apex/com.android.tethering/bin/for-system";
  static const char* kClatdBin = "/apex/com.android.tethering/bin/for-system/clatd";
- 
+
 @@ -132,6 +137,14 @@ static void verifyClatPerms() {
- 
+
  #undef V2
- 
+
 +    // HACK: Some old vendor kernels lack ~5.10 backport of 'bpffs selinux genfscon' support.
 +    // This is *NOT* supported, but let's allow, at least for now, U+ GSI to boot on them.
 +    // (without this hack pixel5 R vendor + U gsi breaks)
@@ -38,7 +38,7 @@ index 622fba8d0c..d419480601 100644
 +
      if (fatal) abort();
  }
- 
+
 -- 
-2.25.1
+2.52.0
 

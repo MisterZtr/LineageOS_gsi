@@ -1,0 +1,52 @@
+From 668ac9f9fd21432a0f30995bc0246c711e503250 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Sun, 29 Mar 2026 23:54:13 +0100
+Subject: [PATCH 12/21] recover USB gadget when UDC fails to bind during boot
+
+on some exynos devices (e.g. samsung galaxy M33 / s5e8825), the dwc3
+OTG state machine detects VBUS and starts the gadget before init has
+configured USB functions via configfs.  the UDC bind then fails with
+ENODEV (-19), and the gadget remains non-functional even after cable
+replug because no retry mechanism exists.
+
+add a conditional check in phh-on-boot.sh that reads the UDC state
+after boot_completed.  if the gadget is unbound, cycle sys.usb.config
+through none and back to the persisted config with a 1-second delay,
+giving the dwc3 controller time to reset before the vendor USB init
+reconfigures the gadget.  on devices where USB works normally, the
+UDC is already bound and this block is skipped.
+---
+ phh-on-boot.sh | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/phh-on-boot.sh b/phh-on-boot.sh
+index d2d5b0a..1be78a2 100644
+--- a/phh-on-boot.sh
++++ b/phh-on-boot.sh
+@@ -5,6 +5,23 @@ vndk="$(getprop persist.sys.vndk)"
+ 
+ [ "$(getprop vold.decrypt)" = "trigger_restart_min_framework" ] && exit 0
+ 
++# recover USB gadget if the UDC failed to bind during boot.
++# on some exynos devices (e.g. samsung galaxy M33), the dwc3 OTG state
++# machine starts the gadget before init has configured USB functions via
++# configfs, leaving the UDC in a failed state with ENODEV.  cycling
++# sys.usb.config forces the vendor USB init to tear down and rebuild
++# the gadget cleanly.
++udc_state="$(cat /config/usb_gadget/g1/UDC 2>/dev/null)"
++if [ -z "$udc_state" ] || [ "$udc_state" = "none" ]; then
++    usb_cfg="$(getprop persist.sys.usb.config)"
++    if [ -n "$usb_cfg" ]; then
++        log -t phh-on-boot "USB gadget not bound, retrying config: $usb_cfg"
++        setprop sys.usb.config none
++        sleep 1
++        setprop sys.usb.config "$usb_cfg"
++    fi
++fi
++
+ setprop ctl.start media.swcodec
+ 
+ for i in wpa p2p;do
+-- 
+2.53.0
+

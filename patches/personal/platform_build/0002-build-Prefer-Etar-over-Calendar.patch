@@ -1,0 +1,18 @@
+From 2f9861d0f6d8697aa0a468fd608bfee8e20d58d9 Mon Sep 17 00:00:00 2001
+From: MisterZtr <andey2004586@gmail.com>
+Date: Wed Oct 22 21:46:56 2025 +0300
+Subject: [PATCH] build-Prefer-Etar-over-Calendar
+
+diff --git a/target/product/gsi/Android.bp b/target/product/gsi/Android.bp
+index 9063cdcf99..fda4f5cd4a 100644
+--- a/target/product/gsi/Android.bp
++++ b/target/product/gsi/Android.bp
+@@ -179,7 +179,7 @@ android_system_image {
+ 
+         // handheld_product
+         "AvatarPicker",
+-        "Calendar",
++        "Etar",
+         "Contacts",
+         "DeskClock",
+         "Gallery2",

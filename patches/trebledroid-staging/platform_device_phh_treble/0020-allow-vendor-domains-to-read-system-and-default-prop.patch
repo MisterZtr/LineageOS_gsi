@@ -1,0 +1,44 @@
+From b7d85b236f387309f77bf7bdf2c96a33df5b51c7 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 3 Apr 2026 17:30:18 +0100
+Subject: [PATCH 20/21] allow vendor domains to read system and default properties
+
+vendor blobs on GSI builds routinely read system_prop and default_prop
+for feature detection, build fingerprint checks, and configuration.
+the stricter policy in recent AOSP denies these reads for non-core
+domains, causing 55+ unique denial types across vendor HALs, modem
+daemons, and init scripts.
+
+grant all non-coredomain processes read access to system_prop and
+default_prop.  also allow vendor_init to set both property types,
+since vendor init.rc scripts set system properties during boot.
+---
+ sepolicy/hal.te | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/sepolicy/hal.te b/sepolicy/hal.te
+index 1ddc612..e0d07c9 100644
+--- a/sepolicy/hal.te
++++ b/sepolicy/hal.te
+@@ -19,3 +19,18 @@ init_daemon_domain(hal_fingerprint_oppo_compat)
+ 
+ type hal_fingerprint_oppo, domain;
+ allow hal_fingerprint_oppo vendor_default_prop:property_service { set };
++
++# allow vendor domains to read system and default properties.
++# vendor blobs compiled against older AOSP versions routinely read
++# system_prop and default_prop for feature detection, configuration,
++# and build fingerprint checks.  the GSI's tighter policy denies
++# these reads, causing widespread log spam and occasional functional
++# breakage when a HAL can't read a property it depends on.
++allow { domain -coredomain } system_prop:file { getattr open read map };
++allow { domain -coredomain } default_prop:file { getattr open read map };
++
++# allow vendor_init to set system_prop and default_prop.
++# vendor init.rc scripts set system properties during boot that
++# the stricter GSI policy blocks.
++allow vendor_init system_prop:property_service set;
++allow vendor_init default_prop:property_service set;
+-- 
+2.53.0
+

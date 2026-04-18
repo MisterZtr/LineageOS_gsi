@@ -20,7 +20,7 @@ index c41fe7ac..379c33b0 100644
 @@ -722,13 +722,19 @@ int TetherController::setForwardRules(bool add, const char *intIface, const char
          return -EREMOTEIO;
      }
- 
+
 -    std::vector<std::string> v4 = {
 +    std::vector<std::string> v4Ftp = {
              "*raw",
@@ -41,5 +41,5 @@ index c41fe7ac..379c33b0 100644
              StringPrintf("%s %s -i %s -o %s -m state --state ESTABLISHED,RELATED -g %s", op,
                           LOCAL_FORWARD, extIface, intIface, LOCAL_TETHER_COUNTERS_CHAIN),
 -- 
-2.25.1
+2.52.0
 

@@ -1,0 +1,34 @@
+From 3bddc9dd2642b92e7eaf18a17a236632a55de849 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Sat, 28 Mar 2026 19:23:05 +0000
+Subject: [PATCH 8/21] allow system_server to read phhsu_daemon_tmpfs bind mounts
+
+rw-system.sh bind-mounts empty files from /mnt/phh/empty over feature
+XMLs like android.hardware.fingerprint.xml to hide hardware features
+that are not present on the device. these bind-mounted files inherit
+the phhsu_daemon_tmpfs SELinux context from the tmpfs backing store.
+
+system_server needs getattr/read/open on these files to correctly
+detect the empty overlay during permission scanning. without this
+rule the getattr is denied and system_server falls back to the
+original file content, causing features like FEATURE_FINGERPRINT to
+remain advertised on devices that lack the hardware.
+---
+ sepolicy/su.te | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sepolicy/su.te b/sepolicy/su.te
+index 03208fc..ae430a6 100644
+--- a/sepolicy/su.te
++++ b/sepolicy/su.te
+@@ -34,6 +34,7 @@ allow phhsu_daemon { system_api_service app_api_service system_server_service }:
+ allow system_server phhsu_daemon:fifo_file { read write getattr };
+ allow system_server phhsu_daemon:fd use;
+ allow system_server phhsu_daemon:binder { call transfer };
++allow system_server phhsu_daemon_tmpfs:file { getattr read open };
+ allow system_server shell_devpts:chr_file { read write };
+ 
+ # Add su to various domains
+-- 
+2.53.0
+

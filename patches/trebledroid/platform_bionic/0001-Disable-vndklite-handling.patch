@@ -9,20 +9,20 @@ Change-Id: Ic4474cf80fc4b45a9a2760dd51e2ca29c4d961e2
  1 file changed, 5 deletions(-)
 
 diff --git a/linker/linker.cpp b/linker/linker.cpp
-index 4cf93b9ba..a5d2e05a3 100644
+index 70606ba..8b556c0 100644
 --- a/linker/linker.cpp
 +++ b/linker/linker.cpp
 @@ -98,7 +98,6 @@ static uint64_t g_module_unload_counter = 0;
  static const char* const kLdConfigArchFilePath = "/system/etc/ld.config." ABI_STRING ".txt";
- 
+
  static const char* const kLdConfigFilePath = "/system/etc/ld.config.txt";
 -static const char* const kLdConfigVndkLiteFilePath = "/system/etc/ld.config.vndk_lite.txt";
- 
+
  static const char* const kLdGeneratedConfigFilePath = "/linkerconfig/ld.config.txt";
- 
-@@ -3544,10 +3543,6 @@ static std::string get_ld_config_file_apex_path(const char* executable_path) {
+
+@@ -3578,10 +3577,6 @@ static std::string get_ld_config_file_apex_path(const char* executable_path) {
  }
- 
+
  static std::string get_ld_config_file_vndk_path() {
 -  if (android::base::GetBoolProperty("ro.vndk.lite", false)) {
 -    return kLdConfigVndkLiteFilePath;
@@ -32,5 +32,5 @@ index 4cf93b9ba..a5d2e05a3 100644
    size_t insert_pos = ld_config_file_vndk.find_last_of('.');
    if (insert_pos == std::string::npos) {
 -- 
-2.25.1
+2.52.0
 

@@ -1,0 +1,35 @@
+From 740b6648d08869e7c2b2da5c63547d36cce4e773 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Sun, 29 Mar 2026 23:50:17 +0100
+Subject: [PATCH 11/21] allow USB HAL to read system properties on samsung exynos
+ devices
+
+the coral USB HAL (android.hardware.usb@1.3-service.coral) used by
+TrebleDroid as a generic IUsb HAL is denied read access to system_prop
+by SELinux on samsung exynos devices (e.g. galaxy M33 / s5e8825).
+without this, USB port role switching fails because the HAL cannot
+read system properties needed to manage typec port roles.
+---
+ sepolicy/samsung.te | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/sepolicy/samsung.te b/sepolicy/samsung.te
+index b1575ac..168e533 100644
+--- a/sepolicy/samsung.te
++++ b/sepolicy/samsung.te
+@@ -9,6 +9,12 @@ type hal_graphics_composer_default, domain;
+ type hal_sec_inputdev_default, domain;
+ allow hal_sec_inputdev_default system_prop:file { getattr map open read };
+ 
++# allow USB HAL to read system properties on samsung exynos devices
++# (the coral USB HAL used by TrebleDroid is denied access to system_prop,
++# which breaks USB port role switching on devices like the galaxy M33)
++type hal_usb_default, domain;
++allow hal_usb_default system_prop:file { getattr map open read };
++
+ # allow qseecomd (tee) to access gatekeeper secure storage on /data
+ # (without this, PIN/password verification fails with error -506 because
+ # the gatekeeper HAL cannot load or save its brute-force throttling records;
+-- 
+2.53.0
+

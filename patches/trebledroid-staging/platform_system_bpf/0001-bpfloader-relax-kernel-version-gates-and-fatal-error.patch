@@ -1,0 +1,106 @@
+From bc5a9d980df802f88d5e10effc314fd56740fd11 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 17 Mar 2026 23:26:56 +0000
+Subject: [PATCH] bpfloader: relax kernel version gates and fatal errors for
+ GSI
+
+Remove min_kver checks from set_skip_loading() so only max_kver gates
+are applied. Programs are only skipped on kernels below 4.9 (where
+eBPF is entirely unusable) or above max_kver.
+
+Convert the /sys/fs/bpf/vendor mkdir panic to a non-fatal warning
+and continue into vendorBpfLoader() regardless.
+
+Remove the early return in vendorBpfLoader() on loadAllElfObjects
+failure so it always exec's back to netbpfload with 'done'. without
+this, bpf.progs_loaded is never set and reboot_on_failure triggers.
+
+Change-Id: I281d8f500c3638604c035d518d00e4ffca7d2905
+---
+ loader/Loader.cpp   |  1 -
+ loader/bpfloader.rs | 22 +++++++++++++++-------
+ 2 files changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/loader/Loader.cpp b/loader/Loader.cpp
+index 6303d30..fd57db2 100644
+--- a/loader/Loader.cpp
++++ b/loader/Loader.cpp
+@@ -689,7 +689,6 @@ void vendorBpfLoader() {
+         ALOGE("If this triggers randomly, you might be hitting some memory allocation "
+               "problems or startup script race.");
+         ALOGE("--- DO NOT EXPECT SYSTEM TO BOOT SUCCESSFULLY ---");
+-        return;
+     }
+ 
+     const char* args[] = {"/apex/com.android.tethering/bin/netbpfload", "done", NULL};
+diff --git a/loader/bpfloader.rs b/loader/bpfloader.rs
+index 512683f..d25ebfa 100644
+--- a/loader/bpfloader.rs
++++ b/loader/bpfloader.rs
+@@ -149,6 +149,7 @@ fn libbpf_print(level: PrintLevel, mut msg: String) {
+     }
+ }
+ 
++#[allow(dead_code)]
+ struct MapDesc {
+     name: &'static str,
+     perms: mode_t,
+@@ -169,6 +170,7 @@ impl MapDesc {
+     }
+ }
+ 
++#[allow(dead_code)]
+ struct ProgDesc {
+     name: &'static str,
+     owner: u32,
+@@ -449,15 +451,21 @@ fn set_skip_loading(
+ ) -> Result<(), anyhow::Error> {
+     let kvers = kernel_version()?;
+ 
++    // Skip everything on kernels below 4.9 where eBPF is not usable
++    let skip_all = kvers < kver(4, 9, 0);
++    if skip_all {
++        info!("Kernel < 4.9, skipping all BPF programs and maps");
++    }
++
+     for mut map in open_file.maps_mut() {
+         let name =
+             map.name().to_str().ok_or_else(|| anyhow!("Failed to parse map name into UTF-8"))?;
+         for map_desc in file_desc.maps {
+             if map_desc.name == name {
+-                if kvers < map_desc.min_kver || kvers >= map_desc.max_kver {
++                if skip_all || kvers >= map_desc.max_kver {
+                     info!(
+-                        "skipping map {} min_kver:{:x} max_kver:{:x} kvers:{:x}",
+-                        name, map_desc.min_kver, map_desc.max_kver, kvers
++                        "skipping map {} max_kver:{:x} kvers:{:x}",
++                        name, map_desc.max_kver, kvers
+                     );
+                     map.set_autocreate(false)?;
+                 }
+@@ -471,10 +479,10 @@ fn set_skip_loading(
+             prog.name().to_str().ok_or_else(|| anyhow!("Failed to parse prog name into UTF-8"))?;
+         for prog_desc in file_desc.progs {
+             if prog_desc.name == name {
+-                if kvers < prog_desc.min_kver || kvers >= prog_desc.max_kver {
++                if skip_all || kvers >= prog_desc.max_kver {
+                     info!(
+-                        "skipping program {} min_kver:{:x} max_kver:{:x} kvers:{:x}",
+-                        name, prog_desc.min_kver, prog_desc.max_kver, kvers
++                        "skipping program {} max_kver:{:x} kvers:{:x}",
++                        name, prog_desc.max_kver, kvers
+                     );
+                     prog.set_autoload(false);
+                 }
+@@ -671,7 +679,7 @@ fn main() {
+     info!("Loading legacy BPF progs");
+ 
+     if let Err(e) = create_dir(Path::new("/sys/fs/bpf/vendor")) {
+-        panic!("Error during mkdir /sys/fs/bpf/vendor: {e}");
++        error!("Failed to mkdir /sys/fs/bpf/vendor: {e} -- continuing anyway");
+     };
+ 
+     // SAFETY: Linking in the existing legacy vendor bpfloader functionality.
+-- 
+2.53.0
+

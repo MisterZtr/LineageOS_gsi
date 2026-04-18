@@ -26,9 +26,9 @@ index 680c05eb00..d4dfdca701 100644
 +    if (!isOk(ret)) {
 +        ALOGE("Failed loading ingress program");
 +    }
- 
+
      // For the devices that support cgroup socket filter, the socket filter
      // should be loaded successfully by bpfloader. So we attach the filter to
 -- 
-2.25.1
+2.52.0
 

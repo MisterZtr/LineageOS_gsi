@@ -19,9 +19,9 @@ index 4dcd4f947a..7fdb688e4c 100644
 --- a/system/device/src/esco_parameters.cc
 +++ b/system/device/src/esco_parameters.cc
 @@ -26,7 +26,8 @@
- 
+
  using namespace bluetooth;
- 
+
 -static const enh_esco_params_t default_esco_parameters[ESCO_NUM_CODECS] = {
 +#include <cutils/properties.h>
 +static enh_esco_params_t default_esco_parameters[ESCO_NUM_CODECS] = {
@@ -31,7 +31,7 @@ index 4dcd4f947a..7fdb688e4c 100644
 @@ -382,6 +383,11 @@ enh_esco_params_t esco_parameters_for_codec(esco_codec_t codec, bool offload) {
      }
    }
- 
+
 +  int escoTransportUnitSize = property_get_int32("persist.sys.bt.esco_transport_unit_size", 0);
 +  if(escoTransportUnitSize) {
 +    default_esco_parameters[codec].input_transport_unit_size = escoTransportUnitSize;
@@ -41,5 +41,5 @@ index 4dcd4f947a..7fdb688e4c 100644
      if (codec == ESCO_CODEC_SWB_Q0 || codec == ESCO_CODEC_SWB_Q1 || codec == ESCO_CODEC_SWB_Q2 ||
          codec == ESCO_CODEC_SWB_Q3) {
 -- 
-2.25.1
+2.52.0
 

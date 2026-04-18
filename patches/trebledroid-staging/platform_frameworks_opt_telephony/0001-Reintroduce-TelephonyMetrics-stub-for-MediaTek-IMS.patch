@@ -1,0 +1,106 @@
+From 4b2c5bf0ebc327c478c348364c2f0996d3ee60cc Mon Sep 17 00:00:00 2001
+From: ironydelerium <42721860+ironydelerium@users.noreply.github.com>
+Date: Fri, 31 Dec 2021 02:20:28 -0800
+Subject: [PATCH] Reintroduce TelephonyMetrics stub for MediaTek IMS
+ compatibility
+
+The MediaTek IMS package invokes several TelephonyMetrics methods via the
+singleton TelephonyMetrics.getInstance():
+  - writeRilSendSms(int, int, int, int)
+  - writeOnRilSolicitedResponse(int, int, int, int, Object)
+  - writeOnRilTimeoutResponse(int, int, int)
+  - writeRilAnswer(int, int, int, int)
+
+Google removed the entire TelephonyMetrics class in android-16.0.0_r4,
+replacing it with individual stats classes. MediaTek vendor blobs still
+reference the old class, causing NoSuchMethodError crashes in
+com.mediatek.ims (specifically in ImsRILAdapter.processResponseDoneInternal).
+
+This patch creates a minimal stub TelephonyMetrics class with no-op
+implementations of all methods that MTK IMS blobs call.
+
+Fixes https://github.com/phhusson/treble_experimentations/issues/2125.
+
+Co-authored-by: Sarah Vandomelen <sarah@sightworks.com>
+---
+ .../telephony/metrics/TelephonyMetrics.java   | 68 +++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+ create mode 100644 src/java/com/android/internal/telephony/metrics/TelephonyMetrics.java
+
+diff --git a/src/java/com/android/internal/telephony/metrics/TelephonyMetrics.java b/src/java/com/android/internal/telephony/metrics/TelephonyMetrics.java
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/src/java/com/android/internal/telephony/metrics/TelephonyMetrics.java
+@@ -0,0 +1,68 @@
++/*
++ * Copyright (C) 2016 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.internal.telephony.metrics;
++
++/**
++ * Stub TelephonyMetrics class.
++ *
++ * The full implementation was removed in android-16.0.0_r4. This stub
++ * exists solely to prevent NoSuchMethodError crashes in MediaTek IMS
++ * vendor blobs (com.mediatek.ims) that invoke these methods.
++ */
++public class TelephonyMetrics {
++
++    private static final TelephonyMetrics sInstance = new TelephonyMetrics();
++
++    public TelephonyMetrics() {
++    }
++
++    public static TelephonyMetrics getInstance() {
++        return sInstance;
++    }
++
++    public void writeRilSendSms(int phoneId, int rilSerial, int tech, int format) {
++        // No-op stub for MediaTek IMS compatibility
++    }
++
++    public synchronized void writeRilSendSms(int phoneId, int rilSerial, int tech, int format,
++            long messageId) {
++        // No-op stub for MediaTek IMS compatibility
++    }
++
++    /**
++     * No-op stub. Called by ImsRILAdapter.processResponseDoneInternal when
++     * processing solicited RIL responses.
++     */
++    public void writeOnRilSolicitedResponse(int phoneId, int rilSerial, int rilError,
++            int rilRequest, Object ret) {
++        // No-op stub for MediaTek IMS compatibility
++    }
++
++    /**
++     * No-op stub. Called by ImsRILAdapter when a RIL request times out.
++     */
++    public void writeOnRilTimeoutResponse(int phoneId, int rilSerial, int rilRequest) {
++        // No-op stub for MediaTek IMS compatibility
++    }
++
++    /**
++     * No-op stub. Called by ImsRILAdapter when answering a call.
++     */
++    public void writeRilAnswer(int phoneId, int rilSerial, int rilError, int rilRequest) {
++        // No-op stub for MediaTek IMS compatibility
++    }
++}
+-- 
+2.52.0
+

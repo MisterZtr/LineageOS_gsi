@@ -1,7 +1,7 @@
-From 04c1192278c4aa9f4d02bd57f77c7df00efb6708 Mon Sep 17 00:00:00 2001
+From 75124c1e863d2f15b87f747a0f57fb61086de2f1 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 17 Apr 2024 04:49:18 -0400
-Subject: [PATCH 49/57] Don't crash system_server if we fail to parse dynamic
+Subject: [PATCH 49/55] Don't crash system_server if we fail to parse dynamic
  udfps position
 
 ---
@@ -36,7 +36,7 @@ index 5fc5a57bd1ef..b13beef51177 100644
 +                android.util.Log.e("PHH-Enroll", "FingerprintProvider dynamicUdfpsProps", t);
              }
          }
- 
+
 -- 
-2.25.1
+2.52.0
 

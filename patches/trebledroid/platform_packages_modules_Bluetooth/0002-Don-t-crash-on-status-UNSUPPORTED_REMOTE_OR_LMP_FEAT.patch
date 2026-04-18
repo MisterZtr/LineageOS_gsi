@@ -28,5 +28,5 @@ index da370a7564..06677cb7c9 100644
        // we can't treat this as hard failure since we have no way of probing this lack of support at
        // earlier time. Instead we let the command complete handler handle a empty Command Complete
 -- 
-2.25.1
+2.52.0
 

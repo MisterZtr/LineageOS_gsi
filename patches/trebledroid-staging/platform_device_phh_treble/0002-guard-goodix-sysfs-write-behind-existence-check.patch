@@ -1,0 +1,26 @@
+From 9bcebf01d9951b9e30b2dafb244a3e9cb23b3376 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 27 Mar 2026 11:02:39 +0000
+Subject: [PATCH 2/21] guard goodix sysfs write behind existence check
+
+avoid errors on devices without the goodix_ts driver by checking for
+/sys/devices/platform/goodix_ts.0/support_pen before writing to it.
+---
+ rw-system.sh | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/rw-system.sh b/rw-system.sh
+index 227913f..592e952 100644
+--- a/rw-system.sh
++++ b/rw-system.sh
+@@ -1249,4 +1249,6 @@ if getprop ro.vendor.build.fingerprint | grep -iq -e Rebecco/K70_ROW; then
+ fi
+ 
+ # Enable pen mode on Lenovo/goodix
+-echo 1 > /sys/devices/platform/goodix_ts.0/support_pen
++if [ -e /sys/devices/platform/goodix_ts.0/support_pen ]; then
++    echo 1 > /sys/devices/platform/goodix_ts.0/support_pen
++fi
+-- 
+2.53.0
+

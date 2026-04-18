@@ -18,17 +18,33 @@ Test:
 - Blackview BV9800 Pro fails to boot without this patch
 - It does boot with it
 ---
- opengl/libs/EGL/Loader.cpp | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ opengl/libs/EGL/Loader.cpp | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
 diff --git a/opengl/libs/EGL/Loader.cpp b/opengl/libs/EGL/Loader.cpp
 index 7012df21ae..18398bb01c 100644
 --- a/opengl/libs/EGL/Loader.cpp
 +++ b/opengl/libs/EGL/Loader.cpp
-@@ -321,8 +321,7 @@ void* Loader::open(egl_connection_t* cnx) {
+@@ -289,7 +289,6 @@ void* Loader::open(egl_connection_t* cnx) {
+     }
+
+     // Finally, try to load default driver.
+-    bool failToLoadFromDriverSuffixProperty = false;
+     if (!hnd) {
+         // Start by searching for the library name appended by the system
+         // properties of the GLES userspace driver in both locations.
+@@ -304,7 +303,6 @@ void* Loader::open(egl_connection_t* cnx) {
+             hnd = attempt_to_load_system_driver(cnx, prop.c_str(), true);
+             if (!hnd) {
+                 ALOGD("Failed to load drivers from property %s with value %s", key, prop.c_str());
+-                failToLoadFromDriverSuffixProperty = true;
+             }
+
+             // Abort regardless of whether subsequent properties are set, the value must be set
+@@ -321,8 +319,7 @@ void* Loader::open(egl_connection_t* cnx) {
          hnd = attempt_to_load_system_driver(cnx, nullptr, true);
      }
- 
+
 -    if (!hnd && !failToLoadFromDriverSuffixProperty &&
 -        property_get_int32("ro.vendor.api_level", 0) < __ANDROID_API_U__) {
 +    if (!hnd) {
@@ -36,5 +52,5 @@ index 7012df21ae..18398bb01c 100644
          // matching if the device is launched before Android 14.
          hnd = attempt_to_load_system_driver(cnx, nullptr, false);
 -- 
-2.25.1
+2.52.0
 

@@ -12,18 +12,18 @@ Change-Id: If04bb6572dc66677d7b44f7d302b2d69ce526200
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/init/reboot_utils.cpp b/init/reboot_utils.cpp
-index 547b1869f..dd0fbbfe8 100644
+index 85a707b..84a7298 100644
 --- a/init/reboot_utils.cpp
 +++ b/init/reboot_utils.cpp
 @@ -37,7 +37,7 @@
  namespace android {
  namespace init {
- 
--static std::string init_fatal_reboot_target = "bootloader";
-+static std::string init_fatal_reboot_target = "recovery";
+
+-[[clang::no_destroy]] static std::string init_fatal_reboot_target = "bootloader";
++[[clang::no_destroy]] static std::string init_fatal_reboot_target = "recovery";
  static bool init_fatal_panic = false;
- 
+
  // this needs to read the /proc/* files directly because it is called before
 -- 
-2.25.1
+2.52.0
 

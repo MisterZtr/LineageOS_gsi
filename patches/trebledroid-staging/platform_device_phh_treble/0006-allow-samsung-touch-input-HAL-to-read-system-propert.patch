@@ -1,0 +1,33 @@
+From 01c328526352c5200c696acccecd56b303dfef81 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Thu, 26 Mar 2026 22:53:29 +0000
+Subject: [PATCH 6/21] allow samsung touch input HAL to read system properties
+
+hal_sec_inputdev_default is the vendor's touch input HAL daemon on
+some samsung MTK devices (e.g. galaxy A14).  it was being denied
+access to system_prop by SELinux, preventing it from initialising
+properly.  without this, touch stops working after waking from sleep
+because the HAL can't track display state changes.
+---
+ sepolicy/samsung.te | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/sepolicy/samsung.te b/sepolicy/samsung.te
+index 7dee392..3d0225c 100644
+--- a/sepolicy/samsung.te
++++ b/sepolicy/samsung.te
+@@ -4,6 +4,11 @@ set_prop(system_server, boot_prop);
+ 
+ type hal_graphics_composer_default, domain;
+ 
++# allow samsung touch input HAL to read system properties
++# (without this, touch stops working after wake on some samsung devices)
++type hal_sec_inputdev_default, domain;
++allow hal_sec_inputdev_default system_prop:file { getattr map open read };
++
+ type sf_hs_mode_prop, property_type;
+ 
+ get_prop(hal_graphics_composer_default, sf_hs_mode_prop);
+-- 
+2.53.0
+

@@ -1,4 +1,4 @@
-From 479beb0f70d8f06b2e5daf6871449dbdc458f2b9 Mon Sep 17 00:00:00 2001
+From 81ddc838cc5d1378f93ff0132e59bb0ff9c61423 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 12 Sep 2020 12:32:50 +0200
 Subject: [PATCH 12/25] No longer make re-assigning legacy audio groups fatal.
@@ -28,5 +28,5 @@ index b0279b954a..99be476e18 100644
              }
              addSupportedAttributesToGroup(group, volumeGroup, strategy);
 -- 
-2.25.1
+2.52.0
 

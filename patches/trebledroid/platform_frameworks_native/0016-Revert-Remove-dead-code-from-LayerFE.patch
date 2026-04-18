@@ -20,7 +20,7 @@ index e2ea0f1397..41d4afe207 100644
 @@ -154,6 +154,9 @@ public:
      virtual std::optional<LayerSettings> prepareClientComposition(
              ClientCompositionTargetSettings&) const = 0;
- 
+
 +    // Called after the layer is displayed to update the presentation fence
 +    virtual void onLayerDisplayed(ftl::SharedFuture<FenceResult>, ui::LayerStack layerStack) = 0;
 +
@@ -34,7 +34,7 @@ index f65a9083c5..4733939ce2 100644
 @@ -50,6 +50,9 @@ public:
                         std::optional<compositionengine::LayerFE::LayerSettings>(
                                 compositionengine::LayerFE::ClientCompositionTargetSettings&));
- 
+
 +    MOCK_METHOD(void, onLayerDisplayed, (ftl::SharedFuture<FenceResult>, ui::LayerStack),
 +                (override));
 +
@@ -50,13 +50,13 @@ index 3cd432cd2b..d56e8bb1a7 100644
  #include "SurfaceFlinger.h"
  #include "ui/FenceResult.h"
 +#include "ui/LayerStack.h"
- 
+
  namespace android {
- 
+
 @@ -358,6 +359,11 @@ CompositionResult LayerFE::stealCompositionResult() {
      return result;
  }
- 
+
 +void LayerFE::onLayerDisplayed(ftl::SharedFuture<FenceResult> futureFenceResult,
 +                               ui::LayerStack layerStack) {
 +    mCompositionResult.releaseFences.emplace_back(std::move(futureFenceResult), layerStack);
@@ -74,11 +74,11 @@ index b897a90687..fad77e92a9 100644
  #include "compositionengine/LayerFECompositionState.h"
  #include "renderengine/LayerSettings.h"
 +#include "ui/LayerStack.h"
- 
+
  #include <ftl/future.h>
- 
+
  namespace android {
- 
+
  struct CompositionResult {
 +    std::vector<std::pair<ftl::SharedFuture<FenceResult>, ui::LayerStack>> releaseFences;
      sp<Fence> lastClientCompositionFence = nullptr;
@@ -93,5 +93,5 @@ index b897a90687..fad77e92a9 100644
      int32_t getSequence() const override;
      bool hasRoundedCorners() const override;
 -- 
-2.25.1
+2.52.0
 

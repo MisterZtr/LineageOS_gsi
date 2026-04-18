@@ -1,0 +1,54 @@
+From 63623721333cc76361ef93a9fd4464abe0357813 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 27 Mar 2026 16:22:26 +0000
+Subject: [PATCH 2/2] broaden /sys/vm/ genfscon bypass to cover all subpaths
+
+vendors frequently define their own types for proc /sys/vm/ knobs
+that conflict with AOSP labels (watermark_scale_factor on Freebox,
+compaction_proactiveness on Galaxy A12s, dirty_writeback_centisecs
+on OPPO MT6370 devices).  replace individual strcmp checks with a
+single strncmp prefix match to handle all current and future
+/sys/vm/ conflicts.
+---
+ libsepol/cil/src/cil_post.c | 25 ++++++++-----------------
+ 1 file changed, 8 insertions(+), 17 deletions(-)
+
+diff --git a/libsepol/cil/src/cil_post.c b/libsepol/cil/src/cil_post.c
+index 09d8b8e..12582eb 100644
+--- a/libsepol/cil/src/cil_post.c
++++ b/libsepol/cil/src/cil_post.c
+@@ -509,23 +509,14 @@ static int cil_post_genfscon_context_compare(const void *a, const void *b)
+ 		 */
+ 		if(strcmp(a_genfscon->path_str, "/devices/virtual/block/") == 0)
+ 			bypass = 1;
+-        /*
+-         * This conflict has been seen on Freebox Player Pop
+-         * - AOSP T says (genfscon proc "/sys/vm/watermark_scale_factor" (u object_r proc_watermark_scale_factor ((s0) (s0))))
+-         * - stock rom says proc_vm_writable
+-         *
+-         * Stock ROM uses it only in recovery so it's safe to ignore
+-         */
+-		if(strcmp(a_genfscon->path_str, "/sys/vm/watermark_scale_factor") == 0)
+-			bypass = 1;
+-        /*
+-         * This conflict has been seen on Samsung Galaxy A12 s
+-         * - AOSP V says (genfscon proc "/sys/vm/compaction_proactiveness" (u object_r proc_compaction_proactiveness ((s0) (s0))))
+-         * - stock rom says (genfscon proc "/sys/vm/compaction_proactiveness" (u object_r proc_compaction ((s0) (s0))))
+-         *
+-         * Stock ROM uses it only in recovery so it's safe to ignore
+-         */
+-		if(strcmp(a_genfscon->path_str, "/sys/vm/compaction_proactiveness") == 0)
++		/*
++		 * vendors (OPPO, Samsung, Freebox, etc.) frequently define their own
++		 * types for proc /sys/vm/ knobs that conflict with AOSP labels.
++		 * seen so far: watermark_scale_factor, compaction_proactiveness,
++		 * dirty_writeback_centisecs.  bypass the entire prefix rather than
++		 * playing whack-a-mole with individual paths.
++		 */
++		if(strncmp(a_genfscon->path_str, "/sys/vm/", 8) == 0)
+ 			bypass = 1;
+ 		if(strcmp(a_genfscon->fs_str, "exfat") == 0 || strcmp(a_genfscon->fs_str, "esdfs") == 0 || strcmp(a_genfscon->fs_str, "fuseblk") == 0) {
+             if(strcmp(a_genfscon->path_str, "/") == 0)
+-- 
+2.53.0
+

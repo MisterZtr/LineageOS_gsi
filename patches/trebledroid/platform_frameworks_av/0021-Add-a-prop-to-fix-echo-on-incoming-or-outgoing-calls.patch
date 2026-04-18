@@ -1,4 +1,4 @@
-From 716ae56e338c68de166172e27b9837bb66c68286 Mon Sep 17 00:00:00 2001
+From 406d1a1c4298b8f3534cc9e854a5c5740b6d1082 Mon Sep 17 00:00:00 2001
 From: Alberto Ponces <ponces26@gmail.com>
 Date: Sun, 5 Nov 2023 15:18:03 +0000
 Subject: [PATCH 21/25] Add a prop to fix echo on incoming or outgoing calls
@@ -17,7 +17,7 @@ index 26edcaa1c4..059e4adfa1 100644
 @@ -669,6 +669,9 @@ std::variant<status_t, RouteTraits::Element> PolicySerializer::deserialize<Route
      // This fixes broken mic while video record on some Exynos devices
      bool disableBackMic = property_get_bool("persist.sys.phh.disable_back_mic", false);
- 
+
 +    // This may fix echo or non-working audio on calls
 +    bool disableVoiceCallIn = property_get_bool("persist.sys.phh.disable_voice_call_in", false);
 +
@@ -42,5 +42,5 @@ index 26edcaa1c4..059e4adfa1 100644
                  if (false && !mIgnoreVendorExtensions) {
                      ALOGE("%s: no source found with name \"%s\"", __func__, devTag);
 -- 
-2.25.1
+2.52.0
 

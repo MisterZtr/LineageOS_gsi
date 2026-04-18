@@ -21,16 +21,16 @@ index 8dc6e4d397..76ddfa8601 100644
 @@ -14,6 +14,8 @@
   * limitations under the License.
   */
- 
+
 +#include <android-base/properties.h>
 +
  // clang-format off
  #include "../Macros.h"
  // clang-format on
 @@ -149,6 +151,13 @@ void MultiTouchMotionAccumulator::populateCurrentSlot(
- 
+
  // --- MultiTouchMotionAccumulator::Slot ---
- 
+
 +MultiTouchMotionAccumulator::Slot::Slot() {
 +    std::string targetDevice = android::base::GetProperty("ro.product.vendor.device", "");
 +    if (targetDevice == "meizu21" || targetDevice == "Meizu21Note") {
@@ -70,7 +70,7 @@ index 388ed82373..91d1613d0c 100644
 @@ -67,6 +69,8 @@ public:
          int32_t mAbsMtDistance = 0;
          int32_t mAbsMtToolType = 0;
- 
+
 +        int32_t mAbsMtPositionXYRatio = 1;
 +
          void clear() { *this = Slot(); }
@@ -83,14 +83,14 @@ index 4cf9243653..72d8cd3b3a 100644
 @@ -14,6 +14,8 @@
   * limitations under the License.
   */
- 
+
 +#include <android-base/properties.h>
 +
  #include "SingleTouchMotionAccumulator.h"
- 
+
  #include "EventHub.h"
 @@ -23,11 +25,16 @@ namespace android {
- 
+
  SingleTouchMotionAccumulator::SingleTouchMotionAccumulator() {
      clearAbsoluteAxes();
 +
@@ -99,7 +99,7 @@ index 4cf9243653..72d8cd3b3a 100644
 +        mAbsXYRatio = 10;
 +    }
  }
- 
+
  void SingleTouchMotionAccumulator::reset(InputDeviceContext& deviceContext) {
 -    mAbsX = deviceContext.getAbsoluteAxisValue(ABS_X).value_or(0);
 -    mAbsY = deviceContext.getAbsoluteAxisValue(ABS_Y).value_or(0);
@@ -128,12 +128,12 @@ index fb74bcaf4c..70807063d1 100644
 @@ -48,6 +48,8 @@ private:
      int32_t mAbsTiltX;
      int32_t mAbsTiltY;
- 
+
 +    int32_t mAbsXYRatio = 1;
 +
      void clearAbsoluteAxes();
  };
- 
+
 -- 
-2.25.1
+2.52.0
 

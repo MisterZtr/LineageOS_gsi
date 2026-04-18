@@ -1,0 +1,88 @@
+From d9021dafbc0dea9e704b5e4d1662d887d2eddb84 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 10 Apr 2026 00:40:21 +0100
+Subject: [PATCH 3/11] power: auto-suppress unsupported vendor HAL power modes
+
+replace the per-mode EXPENSIVE_RENDERING property check with a generic
+mechanism.  two-layer suppression:
+
+1. persist.sys.phh.blocked_power_modes (comma-separated mode IDs) --
+   logcat for vendor HALs logging "unknown type" errors.  re-read on
+   each call until the property becomes non-empty, then cached.
+
+2. runtime isUnsupported() cache -- catches HIDL HALs that correctly
+   report unsupported modes via the PowerHalWrapper layer.
+
+this eliminates repeated binder IPC to vendor HALs for modes they
+don't handle, reducing overhead and log spam.
+---
+ ...droid_server_power_PowerManagerService.cpp | 39 +++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/services/core/jni/com_android_server_power_PowerManagerService.cpp b/services/core/jni/com_android_server_power_PowerManagerService.cpp
+index a11b40ea4..eede96e6d 100644
+--- a/services/core/jni/com_android_server_power_PowerManagerService.cpp
++++ b/services/core/jni/com_android_server_power_PowerManagerService.cpp
+@@ -35,6 +35,9 @@
+ #include <hardware_legacy/power.h>
+ #include <hidl/ServiceManagement.h>
+ #include <limits.h>
++#include <android-base/properties.h>
++#include <sstream>
++#include <unordered_set>
+ #include <nativehelper/JNIHelp.h>
+ #include <nativehelper/ScopedUtfChars.h>
+ #include <powermanager/PowerHalController.h>
+@@ -83,13 +86,49 @@ static void setPowerBoost(Boost boost, int32_t durationMs) {
+     SurfaceComposerClient::notifyPowerBoost(static_cast<int32_t>(boost));
+ }
+ 
++static const std::unordered_set<int>& getBlockedPowerModes() {
++    // re-read property when it changes. the property is populated
++    // incrementally by power-mode-monitor.sh after boot -- new mode IDs
++    // may be appended over the first ~90 seconds.
++    static std::unordered_set<int> sModes;
++    static std::string sLastVal;
++    std::string val = android::base::GetProperty("persist.sys.phh.blocked_power_modes", "");
++    if (val == sLastVal) return sModes;
++    sLastVal = val;
++    sModes.clear();
++    std::istringstream ss(val);
++    std::string token;
++    while (std::getline(ss, token, ',')) {
++        if (!token.empty()) {
++            sModes.insert(std::stoi(token));
++        }
++    }
++    if (!sModes.empty()) {
++        ALOGI("blocked power modes from property: %s", val.c_str());
++    }
++    return sModes;
++}
++
+ static bool setPowerMode(Mode mode, bool enabled) {
++    // skip modes that the vendor HAL doesn't support.
++    // two-layer cache: persist property (for buggy AIDL HALs that lie about
++    // isModeSupported), and runtime detection via isUnsupported().
++    static std::unordered_set<Mode> sUnsupportedModes;
++    int modeInt = static_cast<int>(mode);
++    if (getBlockedPowerModes().count(modeInt) || sUnsupportedModes.count(mode)) {
++        return true;
++    }
+     android::base::Timer t;
+     auto result = gPowerHalController.setMode(mode, enabled);
+     if (mode == Mode::INTERACTIVE && t.duration() > 20ms) {
+         ALOGD("Excessive delay in setting interactive mode to %s while turning screen %s",
+               enabled ? "true" : "false", enabled ? "on" : "off");
+     }
++    if (result.isUnsupported()) {
++        ALOGI("power mode %d not supported by HAL, suppressing future calls", modeInt);
++        sUnsupportedModes.insert(mode);
++        return true;
++    }
+     return result.isOk();
+ }
+ 
+-- 
+2.53.0
+

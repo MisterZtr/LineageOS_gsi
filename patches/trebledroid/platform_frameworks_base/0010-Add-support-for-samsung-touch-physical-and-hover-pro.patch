@@ -1,7 +1,7 @@
 From d57a2c5696b7cc84ca6f54a3a82ea0bf56ebd8bd Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 12 Aug 2019 23:08:26 +0200
-Subject: [PATCH 10/57] Add support for samsung touch, physical and hover
+Subject: [PATCH 10/55] Add support for samsung touch, physical and hover
  proximity sensor as fallback to real proximity sensor
 
 Change-Id: I7a0f8b4665c802140d19197d850b77b2a7ac1865
@@ -63,5 +63,5 @@ index 35455c841c7b..70c6511875bb 100644
              mProximityThreshold = Math.min(mProximitySensor.getMaximumRange(),
                      TYPICAL_PROXIMITY_THRESHOLD);
 -- 
-2.25.1
+2.52.0
 

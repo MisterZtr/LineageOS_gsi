@@ -1,4 +1,4 @@
-From db239e1c5df4c3a75ed9ba0165ac91945c13d5ed Mon Sep 17 00:00:00 2001
+From 1386e7aa4f43066354072ad5264c061cf513027a Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 24 Apr 2018 00:14:28 +0200
 Subject: [PATCH 11/25] FIH devices: Fix "Earpiece" audio output
@@ -22,7 +22,7 @@ index 21d3282134..6ee076660b 100644
 @@ -416,23 +416,32 @@ std::variant<status_t, AudioGainTraits::Element> PolicySerializer::deserialize<A
      }
  }
- 
+
 +static bool fixedEarpieceChannels = false;
  template<>
  std::variant<status_t, AudioProfileTraits::Element>
@@ -32,7 +32,7 @@ index 21d3282134..6ee076660b 100644
  {
      using Attributes = AudioProfileTraits::Attributes;
 +    bool isOutput = serializingContext != nullptr;
- 
+
      std::string samplingRates = getXmlAttribute(cur, Attributes::samplingRates);
      std::string format = getXmlAttribute(cur, Attributes::format);
      std::string channels = getXmlAttribute(cur, Attributes::channelMasks);
@@ -43,7 +43,7 @@ index 21d3282134..6ee076660b 100644
 +        fixedEarpieceChannels = true;
 +        channelsMask = channelMasksFromString("AUDIO_CHANNEL_OUT_MONO", ",");
 +    }
- 
+
      if (mIgnoreVendorExtensions && maybeVendorExtension(format)) {
          ALOGI("%s: vendor extension format \"%s\" skipped", __func__, format.c_str());
          return NO_INIT;
@@ -52,11 +52,11 @@ index 21d3282134..6ee076660b 100644
 -            channelMasksFromString(channels, mChannelMasksSeparator.c_str()),
 +            channelsMask,
              samplingRatesFromString(samplingRates, mSamplingRatesSeparator.c_str()));
- 
+
      profile->setDynamicFormat(profile->getFormat() == gDynamicFormat);
 @@ -571,7 +580,11 @@ std::variant<status_t, DevicePortTraits::Element> PolicySerializer::deserialize<
              new DeviceDescriptor(type, name, address, encodedFormats);
- 
+
      AudioProfileTraits::Collection profiles;
 -    status_t status = deserializeCollection<AudioProfileTraits>(cur, &profiles, NULL);
 +    status_t status;
@@ -81,7 +81,7 @@ index 21d3282134..6ee076660b 100644
 +    }
      return module;
  }
- 
+
 -- 
-2.25.1
+2.52.0
 

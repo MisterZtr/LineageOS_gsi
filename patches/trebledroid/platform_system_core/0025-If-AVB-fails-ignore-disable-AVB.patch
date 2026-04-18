@@ -18,7 +18,7 @@ index e06a64593..960b3389c 100644
 +++ b/init/first_stage_init.cpp
 @@ -533,7 +533,11 @@ int FirstStageMain(int argc, char** argv) {
          }
- 
+
          if (!created_devices && !fsm->DoCreateDevices()) {
 -            LOG(FATAL) << "Failed to create devices required for first stage mount";
 +            LOG(ERROR) << "Failed to create devices required for first stage mount, retrying without avb";
@@ -27,7 +27,7 @@ index e06a64593..960b3389c 100644
 +                LOG(FATAL) << "Failed to create devices required for first stage mount, retrying without avb";
 +            }
          }
- 
+
          if (!fsm->DoFirstStageMount()) {
 diff --git a/init/first_stage_mount.cpp b/init/first_stage_mount.cpp
 index 5a7a78e3d..dc7f6b45e 100644
@@ -49,14 +49,14 @@ index 5a7a78e3d..dc7f6b45e 100644
 @@ -269,7 +275,9 @@ bool FirstStageMountVBootV2::DoFirstStageMount() {
          return true;
      }
- 
+
 -    if (!MountPartitions()) return false;
 +    if (!MountPartitions()) {
 +        return false;
 +    }
- 
+
      return true;
  }
 -- 
-2.25.1
+2.52.0
 

@@ -1,0 +1,104 @@
+From 8124df107decd67642941441f06cd3dda0124a8f Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 10 Apr 2026 00:38:55 +0100
+Subject: [PATCH 16/21] base: disable C2 input surface by default for GSI
+
+set debug.stagefright.c2inputsurface=-1 as a build-time default so
+camera video recording uses the more compatible OMX path.  vendor C2
+input surfaces are unreliable on GSI because the system image doesn't
+match the vendor partition.
+
+add a vndk.rc property trigger for persist.sys.phh.prefer_hw_codecs
+to re-enable vendor HW codecs for users who know theirs work.
+
+add power-mode-monitor.sh: a logcat monitor that runs for 90 seconds
+after boot to detect vendor power HAL modes that log "unknown type"
+errors.  discovered mode IDs are written to the persist property
+persist.sys.phh.blocked_power_modes so the framework can skip them
+on subsequent boots.
+---
+ base.mk               |  1 +
+ power-mode-monitor.sh | 40 ++++++++++++++++++++++++++++++++++++++++
+ vndk.rc               |  5 +++++
+ 3 files changed, 46 insertions(+)
+ create mode 100644 power-mode-monitor.sh
+
+diff --git a/base.mk b/base.mk
+index 6522d4c..571c0d6 100644
+--- a/base.mk
++++ b/base.mk
+@@ -72,6 +72,7 @@ PRODUCT_COPY_FILES += \
+ PRODUCT_COPY_FILES += \
+     device/phh/treble/rw-system.sh:system/bin/rw-system.sh \
+     device/phh/treble/phh-on-boot.sh:system/bin/phh-on-boot.sh \
++    device/phh/treble/power-mode-monitor.sh:system/bin/power-mode-monitor.sh \
+     device/phh/treble/phh-on-data.sh:system/bin/phh-on-data.sh \
+     device/phh/treble/phh-prop-handler.sh:system/bin/phh-prop-handler.sh \
+     device/phh/treble/fixSPL/getSPL.arm:system/bin/getSPL
+diff --git a/power-mode-monitor.sh b/power-mode-monitor.sh
+new file mode 100644
+index 0000000..47deea9
+--- /dev/null
++++ b/power-mode-monitor.sh
+@@ -0,0 +1,40 @@
++#!/system/bin/sh
++# discover unsupported vendor power HAL modes by watching for "unknown type"
++# errors in logcat.  runs briefly after boot and populates a persist property
++# so the framework can skip those modes on subsequent boots.
++# currently only supports MTK devices (mtkpower@impl log format).
++
++# only run on mediatek devices
++hw="$(getprop ro.hardware)"
++if ! echo "$hw" | grep -qi mt; then
++    exit 0
++fi
++PROP="persist.sys.phh.blocked_power_modes"
++TIMEOUT=90
++last_type=""
++
++existing="$(getprop "$PROP")"
++
++# monitor the main log buffer for vendor power HAL errors.
++# the pattern covers MTK's mtkpower@impl and similar vendor tags.
++timeout "$TIMEOUT" logcat -b main -v raw 2>/dev/null | while IFS= read -r line; do
++    case "$line" in
++        *"[setMode] type:"*)
++            last_type="$(echo "$line" | sed -n 's/.*type:\([0-9]*\).*/\1/p')"
++            ;;
++        *"[setMode] unknown"*|*"[setMode] unsupported"*|*"setMode: unknown"*)
++            if [ -n "$last_type" ]; then
++                if ! echo ",$existing," | grep -q ",$last_type,"; then
++                    if [ -z "$existing" ]; then
++                        existing="$last_type"
++                    else
++                        existing="$existing,$last_type"
++                    fi
++                    setprop "$PROP" "$existing"
++                    log -t power-mode-monitor "blocked unsupported power mode $last_type (prop=$existing)"
++                fi
++                last_type=""
++            fi
++            ;;
++    esac
++done
+diff --git a/vndk.rc b/vndk.rc
+index a0488e2..6af5cd4 100644
+--- a/vndk.rc
++++ b/vndk.rc
+@@ -16,8 +16,13 @@ service phh_on_boot /system/bin/phh-on-boot.sh
+     oneshot
+     disabled
+ 
++service power_mode_monitor /system/bin/power-mode-monitor.sh
++    oneshot
++    disabled
++    seclabel u:r:phhsu_daemon:s0
+ on property:sys.boot_completed=1
+     start phh_on_boot
++    start power_mode_monitor
+     chown wifi system /data/misc/wifi
+     chown system wifi /data/misc/wifi/hostapd.conf
+ 
+-- 
+2.53.0
+

@@ -1,39 +1,40 @@
-From 138803bd3933f765b1057de0391335890a5d0f44 Mon Sep 17 00:00:00 2001
+From 9c1f461a94be19226748dd1ee1dfd11f3be2192a Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sun, 18 Dec 2022 18:17:30 -0500
 Subject: [PATCH 08/16] FOD support for Samsung and Asus
 
+Change-Id: Iccef8ab5dbd39e8b5cc0f178a61bc6d0e13b51ad
 ---
- libs/gui/BLASTBufferQueue.cpp                 | 23 ++++++++++++++----
+ libs/gui/BLASTBufferQueue.cpp                 | 20 ++++++++++++++--
  libs/ui/Gralloc2.cpp                          |  1 -
  libs/ui/Gralloc3.cpp                          |  1 -
  libs/ui/Gralloc4.cpp                          |  1 -
  .../CompositionEngine/src/OutputLayer.cpp     | 24 +++++++++++++++++++
  .../DisplayHardware/AidlComposerHal.cpp       |  8 +++++++
- .../DisplayHardware/AidlComposerHal.h         |  2 ++
+ .../DisplayHardware/AidlComposerHal.h         |  3 +++
  .../DisplayHardware/ComposerHal.h             |  3 +++
- .../surfaceflinger/DisplayHardware/HWC2.cpp   |  8 +++++++
- .../surfaceflinger/DisplayHardware/HWC2.h     |  5 ++++
+ .../surfaceflinger/DisplayHardware/HWC2.cpp   | 10 ++++++++
+ .../surfaceflinger/DisplayHardware/HWC2.h     |  6 +++++
  .../DisplayHardware/HidlComposerHal.cpp       |  7 ++++++
- .../DisplayHardware/HidlComposerHal.h         |  2 ++
- 12 files changed, 78 insertions(+), 7 deletions(-)
+ .../DisplayHardware/HidlComposerHal.h         |  3 +++
+ 12 files changed, 82 insertions(+), 5 deletions(-)
 
 diff --git a/libs/gui/BLASTBufferQueue.cpp b/libs/gui/BLASTBufferQueue.cpp
-index 5b0f21de91..53a919bf7f 100644
+index 05fbc14..75792c4 100644
 --- a/libs/gui/BLASTBufferQueue.cpp
 +++ b/libs/gui/BLASTBufferQueue.cpp
 @@ -41,6 +41,7 @@
- 
+
  #include <private/gui/ComposerService.h>
  #include <private/gui/ComposerServiceAIDL.h>
 +#include <cutils/properties.h>
- 
+
  #include <android-base/thread_annotations.h>
- 
+
 @@ -49,6 +50,14 @@
  using namespace com::android::graphics::libgui;
  using namespace std::chrono_literals;
- 
+
 +static bool sCheckedProps = false;
 +static bool sSamsungFod = false;
 +static void init_fod_props() {
@@ -43,36 +44,30 @@ index 5b0f21de91..53a919bf7f 100644
 +}
 +
  namespace {
- 
- #if COM_ANDROID_GRAPHICS_LIBGUI_FLAGS(BUFFER_RELEASE_CHANNEL)
-@@ -196,15 +205,21 @@ BLASTBufferQueue::BLASTBufferQueue(const std::string& name, bool updateDestinati
-         mSyncTransaction(nullptr),
-         mUpdateDestinationFrame(updateDestinationFrame) {
+
+ template <class Mutex>
+@@ -194,10 +203,17 @@ void BLASTBufferItemConsumer::resizeFrameEventHistory(size_t newSize) {
+ void BLASTBufferQueue::initialize() {
+     std::lock_guard _lock{mMutex};
      createBufferQueue(&mProducer, &mConsumer);
 +    uint64_t usage = GraphicBuffer::USAGE_HW_COMPOSER |
 +        GraphicBuffer::USAGE_HW_TEXTURE;
 +
 +    init_fod_props();
-+    if(sSamsungFod && name.find("SurfaceView[UdfpsControllerOverlay]") != std::string::npos) {
++    if(sSamsungFod && mName.find("SurfaceView[UdfpsControllerOverlay]") != std::string::npos) {
 +           usage |= 0x400000000LL;
 +    }
 +
- #if COM_ANDROID_GRAPHICS_LIBGUI_FLAGS(WB_CONSUMER_BASE_OWNS_BQ)
-     mBufferItemConsumer = sp<BLASTBufferItemConsumer>::make(mProducer, mConsumer,
--                                                            GraphicBuffer::USAGE_HW_COMPOSER |
--                                                                    GraphicBuffer::USAGE_HW_TEXTURE,
-+                                                            usage,
-                                                             1, false, this);
- #else
-     mBufferItemConsumer = sp<BLASTBufferItemConsumer>::make(mConsumer,
--                                                            GraphicBuffer::USAGE_HW_COMPOSER |
--                                                                    GraphicBuffer::USAGE_HW_TEXTURE,
-+                                                            usage,
-                                                             1, false, this);
- #endif //  COM_ANDROID_GRAPHICS_LIBGUI_FLAGS(WB_CONSUMER_BASE_OWNS_BQ)
+     mBufferItemConsumer =
+             sp<BLASTBufferItemConsumer>::make(mProducer, mConsumer,
+-                                              GraphicBuffer::USAGE_HW_COMPOSER |
+-                                                      GraphicBuffer::USAGE_HW_TEXTURE,
++                                              usage,
+                                               1, false, wp<BLASTBufferQueue>::fromExisting(this));
      // since the adapter is in the client process, set dequeue timeout
+     // explicitly so that dequeueBuffer will block
 diff --git a/libs/ui/Gralloc2.cpp b/libs/ui/Gralloc2.cpp
-index a5aca9912f..f55ab759fb 100644
+index a5aca99..f55ab75 100644
 --- a/libs/ui/Gralloc2.cpp
 +++ b/libs/ui/Gralloc2.cpp
 @@ -108,7 +108,6 @@ status_t Gralloc2Mapper::validateBufferDescriptorInfo(
@@ -81,10 +76,10 @@ index a5aca9912f..f55ab759fb 100644
                descriptorInfo->usage & ~validUsageBits);
 -        return BAD_VALUE;
      }
- 
+
      // Gralloc2 implementations never understand non-BLOB with GPU_DATA_BUFFER
 diff --git a/libs/ui/Gralloc3.cpp b/libs/ui/Gralloc3.cpp
-index 152b35a505..5f3b258cab 100644
+index 152b35a..5f3b258 100644
 --- a/libs/ui/Gralloc3.cpp
 +++ b/libs/ui/Gralloc3.cpp
 @@ -99,7 +99,6 @@ status_t Gralloc3Mapper::validateBufferDescriptorInfo(
@@ -93,10 +88,10 @@ index 152b35a505..5f3b258cab 100644
                descriptorInfo->usage & ~validUsageBits);
 -        return BAD_VALUE;
      }
- 
+
      // Gralloc3 implementations never understand non-BLOB with GPU_DATA_BUFFER
 diff --git a/libs/ui/Gralloc4.cpp b/libs/ui/Gralloc4.cpp
-index 2a607308d1..9b185cea89 100644
+index 2a60730..9b185ce 100644
 --- a/libs/ui/Gralloc4.cpp
 +++ b/libs/ui/Gralloc4.cpp
 @@ -122,7 +122,6 @@ static status_t validateBufferDescriptorInfo(IMapper::BufferDescriptorInfo* desc
@@ -105,10 +100,10 @@ index 2a607308d1..9b185cea89 100644
                descriptorInfo->usage & ~validUsageBits);
 -        return BAD_VALUE;
      }
- 
+
      // Combinations that are only allowed with gralloc 4.1.
 diff --git a/services/surfaceflinger/CompositionEngine/src/OutputLayer.cpp b/services/surfaceflinger/CompositionEngine/src/OutputLayer.cpp
-index e4793a4cf2..2a6bf48760 100644
+index 36a9df9..9775196 100644
 --- a/services/surfaceflinger/CompositionEngine/src/OutputLayer.cpp
 +++ b/services/surfaceflinger/CompositionEngine/src/OutputLayer.cpp
 @@ -23,6 +23,7 @@
@@ -122,17 +117,17 @@ index e4793a4cf2..2a6bf48760 100644
 @@ -40,6 +41,9 @@
  // TODO(b/129481165): remove the #pragma below and fix conversion issues
  #pragma clang diagnostic pop // ignored "-Wconversion"
- 
+
 +static bool sCheckedProps = false;
 +static bool sAsusFod = false;
 +
  using aidl::android::hardware::graphics::composer3::Composition;
  using aidl::android::hardware::graphics::composer3::Luts;
- 
-@@ -552,6 +556,26 @@ void OutputLayer::writeOutputDependentGeometryStateToHWC(HWC2::Layer* hwcLayer,
+
+@@ -539,6 +543,26 @@ void OutputLayer::writeOutputDependentGeometryStateToHWC(HWC2::Layer* hwcLayer,
                                                       ->getHeight()));
      }
- 
+
 +    if(!sCheckedProps) {
 +        sCheckedProps = true;
 +        sAsusFod = property_get_bool("persist.sys.phh.fod.asus", false);
@@ -155,12 +150,12 @@ index e4793a4cf2..2a6bf48760 100644
 +
      ALOGV("Writing display frame [%d, %d, %d, %d]", displayFrame.left, displayFrame.top,
            displayFrame.right, displayFrame.bottom);
- 
+
 diff --git a/services/surfaceflinger/DisplayHardware/AidlComposerHal.cpp b/services/surfaceflinger/DisplayHardware/AidlComposerHal.cpp
-index 8ead09ca19..8b664c20c2 100644
+index 0ab9a4c..d7b608c 100644
 --- a/services/surfaceflinger/DisplayHardware/AidlComposerHal.cpp
 +++ b/services/surfaceflinger/DisplayHardware/AidlComposerHal.cpp
-@@ -1836,5 +1836,13 @@ void AidlComposer::addDisplay(Display display) {
+@@ -1883,5 +1883,13 @@ void AidlComposer::addDisplay(Display display) {
  void AidlComposer::onHotplugConnect(Display display) {
      addDisplay(display);
  }
@@ -175,82 +170,86 @@ index 8ead09ca19..8b664c20c2 100644
  } // namespace Hwc2
  } // namespace android
 diff --git a/services/surfaceflinger/DisplayHardware/AidlComposerHal.h b/services/surfaceflinger/DisplayHardware/AidlComposerHal.h
-index b84d39a2c3..4e05290c4e 100644
+index 818ca0c..30e6579 100644
 --- a/services/surfaceflinger/DisplayHardware/AidlComposerHal.h
 +++ b/services/surfaceflinger/DisplayHardware/AidlComposerHal.h
-@@ -254,6 +254,8 @@ public:
-     Error getLuts(Display, const std::vector<sp<GraphicBuffer>>&,
-                   std::vector<aidl::android::hardware::graphics::composer3::Luts>*) override;
- 
+@@ -169,6 +169,9 @@ public:
+                                 const std::vector<IComposerClient::Rect>& visible) override;
+     Error setLayerZOrder(Display display, Layer layer, uint32_t z) override;
+
 +    // Proprietary extensions
 +    Error setLayerClass(Display display, Layer layer, uint32_t layerClass) override;
- private:
-     // Many public functions above simply write a command into the command
-     // queue to batch the calls.  validateDisplay and presentDisplay will call
++
+     // Composer HAL 2.2
+     Error setLayerPerFrameMetadata(
+             Display display, Layer layer,
 diff --git a/services/surfaceflinger/DisplayHardware/ComposerHal.h b/services/surfaceflinger/DisplayHardware/ComposerHal.h
-index c55893106f..9094becc32 100644
+index 76cbcb6..22b626d 100644
 --- a/services/surfaceflinger/DisplayHardware/ComposerHal.h
 +++ b/services/surfaceflinger/DisplayHardware/ComposerHal.h
-@@ -321,6 +321,9 @@ public:
-                                        const aidl::android::hardware::drm::HdcpLevels& levels) = 0;
-     virtual Error getLuts(Display display, const std::vector<sp<GraphicBuffer>>&,
-                           std::vector<V3_0::Luts>*) = 0;
-+
+@@ -225,6 +225,9 @@ public:
+                                         const std::vector<IComposerClient::Rect>& visible) = 0;
+     virtual Error setLayerZOrder(Display display, Layer layer, uint32_t z) = 0;
+
 +    // Proprietary extensions
 +    virtual Error setLayerClass(Display display, Layer layer, uint32_t layerClass) = 0;
- };
- 
- } // namespace Hwc2
++
+     // Composer HAL 2.2
+     virtual Error setLayerPerFrameMetadata(
+             Display display, Layer layer,
 diff --git a/services/surfaceflinger/DisplayHardware/HWC2.cpp b/services/surfaceflinger/DisplayHardware/HWC2.cpp
-index fd0bf7386b..47bfe35a6a 100644
+index ecaf888..e614322 100644
 --- a/services/surfaceflinger/DisplayHardware/HWC2.cpp
 +++ b/services/surfaceflinger/DisplayHardware/HWC2.cpp
-@@ -1125,6 +1125,14 @@ Error Layer::setPictureProfileHandle(const PictureProfileHandle& handle) {
+@@ -1077,6 +1077,16 @@ Error Layer::setZOrder(uint32_t z)
      return static_cast<Error>(intError);
  }
- 
+
++// Proprietary extensions
 +Error Layer::setLayerClass(uint32_t layerClass) {
 +    if (CC_UNLIKELY(!mDisplay)) {
 +        return Error::BAD_DISPLAY;
 +    }
++
 +    auto intError = mComposer.setLayerClass(mDisplay->getId(), mId, layerClass);
 +    return static_cast<Error>(intError);
 +}
 +
- } // namespace impl
- } // namespace HWC2
- } // namespace android
+ // Composer HAL 2.3
+ Error Layer::setColorTransform(const android::mat4& matrix) {
+     if (CC_UNLIKELY(!mDisplay)) {
 diff --git a/services/surfaceflinger/DisplayHardware/HWC2.h b/services/surfaceflinger/DisplayHardware/HWC2.h
-index 3f518211c4..2c7dfacaff 100644
+index 5b2c644..9fbd60a 100644
 --- a/services/surfaceflinger/DisplayHardware/HWC2.h
 +++ b/services/surfaceflinger/DisplayHardware/HWC2.h
-@@ -394,6 +394,9 @@ public:
-             aidl::android::hardware::graphics::composer3::Luts& luts) = 0;
-     [[nodiscard]] virtual hal::Error setPictureProfileHandle(
-             const PictureProfileHandle& handle) = 0;
-+
-+    // Proprietary HAL
+@@ -393,6 +393,9 @@ public:
+     [[nodiscard]] virtual hal::Error setVisibleRegion(const android::Region& region) = 0;
+     [[nodiscard]] virtual hal::Error setZOrder(uint32_t z) = 0;
+
++    // Proprietary extensions
 +    [[nodiscard]] virtual hal::Error setLayerClass(uint32_t layerClass) = 0;
- };
- 
- namespace impl {
-@@ -447,6 +450,8 @@ public:
-     hal::Error setLuts(aidl::android::hardware::graphics::composer3::Luts&) override;
-     hal::Error setPictureProfileHandle(const PictureProfileHandle& handle) override;
- 
-+    // Proprietary HAL
++
+     // Composer HAL 2.3
+     [[nodiscard]] virtual hal::Error setColorTransform(const android::mat4& matrix) = 0;
+
+@@ -448,6 +451,9 @@ public:
+     hal::Error setVisibleRegion(const android::Region& region) override;
+     hal::Error setZOrder(uint32_t z) override;
+
++    // Proprietary extensions
 +    hal::Error setLayerClass(uint32_t layerClass) override;
- private:
-     // These are references to data owned by HWComposer, which will outlive
-     // this HWC2::Layer, so these references are guaranteed to be valid for
++
+     // Composer HAL 2.3
+     hal::Error setColorTransform(const android::mat4& matrix) override;
+
 diff --git a/services/surfaceflinger/DisplayHardware/HidlComposerHal.cpp b/services/surfaceflinger/DisplayHardware/HidlComposerHal.cpp
-index 5e03f30304..6453c5c0cd 100644
+index 0bf5ef3..cd6667a 100644
 --- a/services/surfaceflinger/DisplayHardware/HidlComposerHal.cpp
 +++ b/services/surfaceflinger/DisplayHardware/HidlComposerHal.cpp
-@@ -1478,6 +1478,13 @@ Error HidlComposer::setLayerPictureProfileId(Display, Layer, PictureProfileId) {
-     return Error::UNSUPPORTED;
+@@ -898,6 +898,13 @@ Error HidlComposer::setLayerZOrder(Display display, Layer layer, uint32_t z) {
+     return Error::NONE;
  }
- 
+
 +Error HidlComposer::setLayerClass(Display display, Layer layer, uint32_t layerClass) {
 +    mWriter.selectDisplay(display);
 +    mWriter.selectLayer(layer);
@@ -258,22 +257,23 @@ index 5e03f30304..6453c5c0cd 100644
 +    return Error::NONE;
 +}
 +
- void HidlComposer::registerCallback(ComposerCallback& callback) {
-     const bool vsyncSwitchingSupported =
-             isSupported(Hwc2::Composer::OptionalFeature::RefreshRateSwitching);
+ Error HidlComposer::execute() {
+     // prepare input command queue
+     bool queueChanged = false;
 diff --git a/services/surfaceflinger/DisplayHardware/HidlComposerHal.h b/services/surfaceflinger/DisplayHardware/HidlComposerHal.h
-index d3874e4889..d1fd9c6f5e 100644
+index 2c885dc..6633c7d 100644
 --- a/services/surfaceflinger/DisplayHardware/HidlComposerHal.h
 +++ b/services/surfaceflinger/DisplayHardware/HidlComposerHal.h
-@@ -367,6 +367,8 @@ public:
-     Error getLuts(Display, const std::vector<sp<GraphicBuffer>>&,
-                   std::vector<aidl::android::hardware::graphics::composer3::Luts>*) override;
- 
+@@ -276,6 +276,9 @@ public:
+                                 const std::vector<IComposerClient::Rect>& visible) override;
+     Error setLayerZOrder(Display display, Layer layer, uint32_t z) override;
+
 +    // Proprietary extensions
 +    Error setLayerClass(Display display, Layer layer, uint32_t layerClass) override;
- private:
-     class CommandWriter : public CommandWriterBase {
-     public:
++
+     // Composer HAL 2.2
+     Error setLayerPerFrameMetadata(
+             Display display, Layer layer,
 -- 
-2.25.1
+2.52.0
 

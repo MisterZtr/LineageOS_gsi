@@ -1,0 +1,67 @@
+From 3840d42ad6d47eebaa45e7721f8456189afc1081 Mon Sep 17 00:00:00 2001
+From: Peng Zhu <c_pzhu@codeaurora.org>
+Date: Wed, 20 Nov 2013 16:11:24 -0800
+Subject: [PATCH 3/3] Camera: Add support for manual 3A.
+
+Add manual white balance mode.
+   user can set the specific cct to lock the white balance.Just as other
+   white balance mode, it will lock the white balance once it's set, the
+   only difference it that the cct value is set from app.
+
+Add manual focus mode
+   allow app to set the focus distance with DAC value or actuator
+   step value. Once the value is set, the focus distance is locked
+   unless app switch it back to automatically mode
+
+Change-Id: I0c08ad0cea27284645e9e710c26844ca24a5c477
+Signed-off-by: Pranav Vashi <neobuddy89@gmail.com>
+Signed-off-by: dinhsan2000 <dinhsan200@gmail.com>
+---
+ camera/CameraParameters.cpp              | 2 ++
+ camera/include/camera/CameraParameters.h | 3 +++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/camera/CameraParameters.cpp b/camera/CameraParameters.cpp
+index d64a659..b0e1d21 100644
+--- a/camera/CameraParameters.cpp
++++ b/camera/CameraParameters.cpp
+@@ -107,6 +107,7 @@ const char CameraParameters::WHITE_BALANCE_DAYLIGHT[] = "daylight";
+ const char CameraParameters::WHITE_BALANCE_CLOUDY_DAYLIGHT[] = "cloudy-daylight";
+ const char CameraParameters::WHITE_BALANCE_TWILIGHT[] = "twilight";
+ const char CameraParameters::WHITE_BALANCE_SHADE[] = "shade";
++const char CameraParameters::WHITE_BALANCE_MANUAL_CCT[] = "manual-cct";
+
+ // Values for effect settings.
+ const char CameraParameters::EFFECT_NONE[] = "none";
+@@ -169,6 +170,7 @@ const char CameraParameters::FOCUS_MODE_FIXED[] = "fixed";
+ const char CameraParameters::FOCUS_MODE_EDOF[] = "edof";
+ const char CameraParameters::FOCUS_MODE_CONTINUOUS_VIDEO[] = "continuous-video";
+ const char CameraParameters::FOCUS_MODE_CONTINUOUS_PICTURE[] = "continuous-picture";
++const char CameraParameters::FOCUS_MODE_MANUAL_POSITION[] = "manual";
+
+ // Values for light fx settings
+ const char CameraParameters::LIGHTFX_LOWLIGHT[] = "low-light";
+diff --git a/camera/include/camera/CameraParameters.h b/camera/include/camera/CameraParameters.h
+index ba33ffe..88437b1 100644
+--- a/camera/include/camera/CameraParameters.h
++++ b/camera/include/camera/CameraParameters.h
+@@ -554,6 +554,7 @@ public:
+     static const char WHITE_BALANCE_CLOUDY_DAYLIGHT[];
+     static const char WHITE_BALANCE_TWILIGHT[];
+     static const char WHITE_BALANCE_SHADE[];
++    static const char WHITE_BALANCE_MANUAL_CCT[];
+
+     // Values for effect settings.
+     static const char EFFECT_NONE[];
+@@ -677,6 +678,8 @@ public:
+     // other modes.
+     static const char FOCUS_MODE_CONTINUOUS_PICTURE[];
+
++    static const char FOCUS_MODE_MANUAL_POSITION[];
++
+     // Values for light special effects
+     // Low-light enhancement mode
+     static const char LIGHTFX_LOWLIGHT[];
+-- 
+2.53.0
+

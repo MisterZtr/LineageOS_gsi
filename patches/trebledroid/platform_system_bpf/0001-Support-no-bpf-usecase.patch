@@ -1,27 +1,44 @@
-From d1244d9c9a9870ad7534cd1830cdc198c8089b43 Mon Sep 17 00:00:00 2001
+From 98dd626f7a75167164a30cb1b97767c410411382 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Wed, 13 Oct 2021 10:56:52 -0400
 Subject: [PATCH 1/3] Support no-bpf usecase
 
+Allow the boot process to continue even if BPF loading fails, rather
+than sleeping and exiting. Remove __noreturn since the function can
+now return on failure.
+
 Change-Id: I75a427a2a41aa4ab1104ad88a891bef0dc2d9c91
 ---
- loader/Loader.cpp | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ loader/Loader.cpp               | 3 +--
+ loader/include/libbpf_android.h | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/loader/Loader.cpp b/loader/Loader.cpp
-index 940ce19..883202b 100644
+index cde6447..6303d30 100644
 --- a/loader/Loader.cpp
 +++ b/loader/Loader.cpp
-@@ -991,8 +991,7 @@ void legacyBpfLoader() {
-             ALOGE("If this triggers randomly, you might be hitting some memory allocation "
-                   "problems or startup script race.");
-             ALOGE("--- DO NOT EXPECT SYSTEM TO BOOT SUCCESSFULLY ---");
--            sleep(20);
--            exit(121);
-+            return;
-         }
+@@ -689,8 +689,7 @@ void vendorBpfLoader() {
+         ALOGE("If this triggers randomly, you might be hitting some memory allocation "
+               "problems or startup script race.");
+         ALOGE("--- DO NOT EXPECT SYSTEM TO BOOT SUCCESSFULLY ---");
+-        sleep(20);
+-        exit(121);
++        return;
      }
- }
+
+     const char* args[] = {"/apex/com.android.tethering/bin/netbpfload", "done", NULL};
+diff --git a/loader/include/libbpf_android.h b/loader/include/libbpf_android.h
+index 706c0e8..d5a25bd 100644
+--- a/loader/include/libbpf_android.h
++++ b/loader/include/libbpf_android.h
+@@ -19,6 +19,6 @@
+
+ // The C++ portion of the BpfLoader is exposed as a terminal function.
+ #ifdef __cplusplus
+-extern "C" __noreturn
++extern "C"
+ #endif
+ void vendorBpfLoader();
 -- 
-2.25.1
+2.52.0
 

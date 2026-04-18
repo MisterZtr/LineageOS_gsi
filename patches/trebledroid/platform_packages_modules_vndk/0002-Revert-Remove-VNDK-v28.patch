@@ -12,7 +12,7 @@ diff --git a/apex/Android.bp b/apex/Android.bp
 index ca076b8..9151ceb 100644
 --- a/apex/Android.bp
 +++ b/apex/Android.bp
-@@ -77,3 +77,10 @@ apex_vndk {
+@@ -70,3 +70,10 @@ apex_vndk {
      vndk_version: "29",
      system_ext_specific: true,
  }
@@ -24,5 +24,5 @@ index ca076b8..9151ceb 100644
 +    system_ext_specific: true,
 +}
 -- 
-2.25.1
+2.52.0
 

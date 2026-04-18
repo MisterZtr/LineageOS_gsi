@@ -1,7 +1,7 @@
 From cf31a0b9c11054616e09ec40b3726e3a1800bbb5 Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Wed, 16 Dec 2020 21:24:12 +0800
-Subject: [PATCH 17/57] Revert "Remove unused SystemProperties.set"
+Subject: [PATCH 17/55] Revert "Remove unused SystemProperties.set"
 
 This reverts commit debb4616ef67f9ed5054eca51ec58592358ff55f.
 
@@ -17,7 +17,7 @@ index 7b2e6c2013cf..394237288c73 100644
 @@ -8694,6 +8694,75 @@ public class TelephonyManager {
          }
      }
- 
+
 +    /**
 +     * Sets a per-phone telephony property with the value specified.
 +     *
@@ -91,5 +91,5 @@ index 7b2e6c2013cf..394237288c73 100644
       * Inserts or updates a list property. Expands the list if its length is not enough.
       */
 -- 
-2.25.1
+2.52.0
 

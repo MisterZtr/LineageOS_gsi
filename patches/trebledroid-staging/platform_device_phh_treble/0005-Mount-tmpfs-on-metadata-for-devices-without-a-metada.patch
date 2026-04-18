@@ -1,0 +1,108 @@
+From 6ce5ea72753efd5defe4df3ce75d1dba68f54803 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Wed, 11 Mar 2026 17:59:16 +0000
+Subject: [PATCH 5/21] Mount tmpfs on /metadata for devices without a metadata
+ partition
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Older devices (pre-Android Q) have no metadata partition. The
+/metadata directory exists as an empty stub on the read-only rootfs,
+which breaks aconfigd and every other service that expects to write
+there.
+
+Run a shell script at early-init under the phhsu_daemon SELinux
+domain (which is permissive and has mount capabilities). The script
+checks whether /metadata is already a mount point — if a real
+partition was mounted by first-stage init, it is left alone. Only
+if /metadata is an unmounted stub is tmpfs overlaid on top.
+
+Safety analysis: tmpfs on /metadata is non-persistent (data lost on
+reboot), but this is safe here because:
+
+1. Metadata encryption (vold writing keys to /metadata/vold/
+   metadata_encryption/) requires a real metadata partition to exist.
+   Any device using metadata encryption MUST have that partition
+   mounted by first-stage init, so the mountpoint check will always
+   find it already mounted and skip the tmpfs. The encryption-key-loss
+   risk that would otherwise be catastrophic cannot occur.
+
+2. Devices that genuinely lack a metadata partition are pre-Q and do
+   not use metadata encryption, OTA virtual A/B snapshots, or APEX
+   updates -- all the consumers of /metadata that require persistence.
+   For these devices the tmpfs provides a writable stub so aconfigd
+   and similar services start cleanly without affecting correctness.
+---
+ 00-fix-metadata.rc     | 2 ++
+ 00-fix-metadata.sh     | 7 +++++++
+ base.mk                | 4 +++-
+ sepolicy/file_contexts | 1 +
+ sepolicy/su.te         | 1 +
+ 5 files changed, 14 insertions(+), 1 deletion(-)
+ create mode 100644 00-fix-metadata.rc
+ create mode 100644 00-fix-metadata.sh
+
+diff --git a/00-fix-metadata.rc b/00-fix-metadata.rc
+new file mode 100644
+index 0000000..65a3160
+--- /dev/null
++++ b/00-fix-metadata.rc
+@@ -0,0 +1,2 @@
++on early-init
++    exec u:r:phhsu_daemon:s0 root -- /system/bin/sh /system/etc/00-fix-metadata.sh
+diff --git a/00-fix-metadata.sh b/00-fix-metadata.sh
+new file mode 100644
+index 0000000..40e4616
+--- /dev/null
++++ b/00-fix-metadata.sh
+@@ -0,0 +1,7 @@
++#!/system/bin/sh
++# If no real metadata partition was mounted by first-stage init,
++# overlay the empty rootfs stub with tmpfs so aconfigd and other
++# services that write to /metadata can function.
++
++mountpoint -q /metadata || \
++    mount -t tmpfs tmpfs /metadata -o mode=0775,uid=0,gid=1000
+diff --git a/base.mk b/base.mk
+index 2d467e6..622501c 100644
+--- a/base.mk
++++ b/base.mk
+@@ -154,7 +154,9 @@ PRODUCT_PACKAGES += \
+     uevent
+
+ PRODUCT_COPY_FILES += \
+-    device/phh/treble/files/adbd.rc:system/etc/init/adbd.rc
++    device/phh/treble/files/adbd.rc:system/etc/init/adbd.rc \
++    device/phh/treble/00-fix-metadata.rc:system/etc/init/00-fix-metadata.rc \
++    device/phh/treble/00-fix-metadata.sh:system/etc/00-fix-metadata.sh
+
+ # MTK incoming SMS fix
+ PRODUCT_PACKAGES += \
+diff --git a/sepolicy/file_contexts b/sepolicy/file_contexts
+index beb639a..bd5b48d 100644
+--- a/sepolicy/file_contexts
++++ b/sepolicy/file_contexts
+@@ -4,6 +4,7 @@
+ /system/bin/rw-system.sh u:object_r:phhsu_exec:s0
+ /system/bin/phh-on-boot.sh u:object_r:phhsu_exec:s0
+ /system/bin/phh-on-data.sh u:object_r:phhsu_exec:s0
++/system/etc/00-fix-metadata.sh u:object_r:phhsu_exec:s0
+ /system/bin/asus-motor u:object_r:phhsu_exec:s0
+ /system/bin/xiaomi-touch u:object_r:phhsu_exec:s0
+
+diff --git a/sepolicy/su.te b/sepolicy/su.te
+index f8829cd..03208fc 100644
+--- a/sepolicy/su.te
++++ b/sepolicy/su.te
+@@ -7,6 +7,7 @@ permissive phhsu_daemon;
+
+ tmpfs_domain(phhsu_daemon);
+ domain_auto_trans(init, phhsu_exec, phhsu_daemon);
++domain_trans(init, shell_exec, phhsu_daemon);
+ file_type_auto_trans(phhsu_daemon, device, phhsu_daemon);
+
+ allow { appdomain shell } phhsu_daemon:unix_stream_socket { connectto write read };
+-- 
+2.53.0
+

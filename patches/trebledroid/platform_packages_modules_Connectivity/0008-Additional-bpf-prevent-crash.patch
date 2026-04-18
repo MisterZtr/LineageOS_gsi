@@ -16,7 +16,7 @@ index 408294ce6d..287116a076 100644
 @@ -271,15 +271,14 @@ public class BpfNetMapsUtils {
              return BLOCKED_REASON_NONE;
          }
- 
+
 -        final long uidRuleConfig;
 -        final long uidMatch;
 +        long uidRuleConfig = 0;
@@ -46,7 +46,7 @@ index 8bc1ff0715..981535e230 100644
 +            return new NetworkStats(1, 0);
          }
      }
- 
+
 diff --git a/service/src/com/android/server/BpfNetMaps.java b/service/src/com/android/server/BpfNetMaps.java
 index 9a29ef378b..e13c2dc67b 100644
 --- a/service/src/com/android/server/BpfNetMaps.java
@@ -60,5 +60,5 @@ index 9a29ef378b..e13c2dc67b 100644
              // Key of uid permission map is appId
              // TODO: Rename map name
 -- 
-2.25.1
+2.52.0
 

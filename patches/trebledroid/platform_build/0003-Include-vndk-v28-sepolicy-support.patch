@@ -12,7 +12,7 @@ index 38f3f5b802..8d0c201dc0 100644
 --- a/core/config.mk
 +++ b/core/config.mk
 @@ -874,6 +874,7 @@ BOARD_SEPOLICY_VERS := $(PLATFORM_SEPOLICY_VERSION)
- 
+
  # A list of SEPolicy versions, besides PLATFORM_SEPOLICY_VERSION, that the framework supports.
  PLATFORM_SEPOLICY_COMPAT_VERSIONS := \
 +    28.0 \
@@ -20,5 +20,5 @@ index 38f3f5b802..8d0c201dc0 100644
      30.0 \
      31.0 \
 -- 
-2.25.1
+2.52.0
 

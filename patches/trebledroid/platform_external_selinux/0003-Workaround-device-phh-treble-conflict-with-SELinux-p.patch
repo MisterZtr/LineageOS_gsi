@@ -23,16 +23,16 @@ index 3d920182..c1ebb12f 100644
 +++ b/libsepol/cil/src/cil_binary.c
 @@ -512,13 +512,17 @@ int cil_typealias_to_policydb(policydb_t *pdb, struct cil_alias *cil_alias)
  	type_datum_init(sepol_alias);
- 
+
  	rc = __cil_get_sepol_type_datum(pdb, DATUM(cil_alias->actual), &sepol_type);
 -	if (rc != SEPOL_OK) goto exit;
 +	if (rc != SEPOL_OK) {
 +        cil_log(CIL_ERR, "Failed at %s:%s:%d\n", __FILE__, __FUNCTION__, __LINE__);
 +        goto exit;
 +    }
- 
+
  	sepol_alias->flavor = TYPE_TYPE;
- 
+
  	key = cil_strdup(cil_alias->datum.fqn);
  	rc = symtab_insert(pdb, SYM_TYPES, key, sepol_alias, SCOPE_DECL, 0, NULL);
  	if (rc != SEPOL_OK) {
@@ -41,7 +41,7 @@ index 3d920182..c1ebb12f 100644
  	}
  	sepol_alias->s.value = sepol_type->s.value;
 @@ -4103,7 +4107,7 @@ static int __cil_node_to_policydb(struct cil_tree_node *node, void *extra_args)
- 
+
  exit:
  	if (rc != SEPOL_OK) {
 -		cil_tree_log(node, CIL_ERR, "Binary policy creation failed");
@@ -54,7 +54,7 @@ index 19fbb04e..6740b8f1 100644
 --- a/libsepol/cil/src/cil_build_ast.c
 +++ b/libsepol/cil/src/cil_build_ast.c
 @@ -161,7 +161,7 @@ int cil_add_decl_to_symtab(struct cil_db *db, symtab_t *symtab, hashtab_key_t ke
- 
+
  	rc = cil_symtab_insert(symtab, key, datum, node);
  	if (rc == SEPOL_EEXIST) {
 -		struct cil_symtab_datum *prev;
@@ -96,10 +96,10 @@ index 6c5b6338..1e0e58b6 100644
 +				rc = SEPOL_ERR;
  		goto exit;
  	}
- 
+
 @@ -562,7 +568,12 @@ static int cil_resolve_alias_to_actual(struct cil_tree_node *current, enum cil_f
  	int limit = 2;
- 
+
  	if (alias->actual == NULL) {
 -		cil_tree_log(current, CIL_ERR, "Alias declared but not used");
 +		cil_tree_log(current, CIL_ERR, "Alias %s declared but not used", a1->datum.name);
@@ -110,7 +110,7 @@ index 6c5b6338..1e0e58b6 100644
 +				return SEPOL_OK;
  		return SEPOL_ERR;
  	}
- 
+
 -- 
-2.25.1
+2.52.0
 

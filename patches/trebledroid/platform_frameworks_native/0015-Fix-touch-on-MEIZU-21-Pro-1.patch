@@ -21,7 +21,7 @@ index 76ddfa8601..da7b059d77 100644
 --- a/services/inputflinger/reader/mapper/accumulator/MultiTouchMotionAccumulator.cpp
 +++ b/services/inputflinger/reader/mapper/accumulator/MultiTouchMotionAccumulator.cpp
 @@ -153,7 +153,7 @@ void MultiTouchMotionAccumulator::populateCurrentSlot(
- 
+
  MultiTouchMotionAccumulator::Slot::Slot() {
      std::string targetDevice = android::base::GetProperty("ro.product.vendor.device", "");
 -    if (targetDevice == "meizu21" || targetDevice == "Meizu21Note") {
@@ -35,7 +35,7 @@ index 72d8cd3b3a..4c91b199c7 100644
 +++ b/services/inputflinger/reader/mapper/accumulator/SingleTouchMotionAccumulator.cpp
 @@ -27,7 +27,7 @@ SingleTouchMotionAccumulator::SingleTouchMotionAccumulator() {
      clearAbsoluteAxes();
- 
+
      std::string targetDevice = android::base::GetProperty("ro.product.vendor.device", "");
 -    if (targetDevice == "meizu21" || targetDevice == "Meizu21Note") {
 +    if (targetDevice == "meizu21" || targetDevice == "meizu21Pro" || targetDevice == "Meizu21Note") {
@@ -43,5 +43,5 @@ index 72d8cd3b3a..4c91b199c7 100644
      }
  }
 -- 
-2.25.1
+2.52.0
 

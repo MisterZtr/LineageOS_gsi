@@ -1,0 +1,188 @@
+From be18ddb1c1d78c1299e38a3d6d413cbf98bdd45c Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 27 Mar 2026 11:02:01 +0000
+Subject: [PATCH 13/21] fix VNDK version detection and guard all vndk comparisons
+
+add fallback detection via ro.vndk.version and ro.vendor.build.version.sdk
+from vendor build.prop for Android 10+ vendors without nonplat_sepolicy.cil.
+
+guard all vndk numeric comparisons with [ -n "$vndk" ] to prevent shell
+arithmetic errors when vndk-detect fails to set persist.sys.vndk.
+
+guard first_api_level assignment, focaltech sysfs search, and color
+management setprop behind appropriate checks.
+---
+ rw-system.sh | 44 +++++++++++++++++++++++---------------------
+ vndk-detect  | 11 +++++++++++
+ 2 files changed, 34 insertions(+), 21 deletions(-)
+
+diff --git a/rw-system.sh b/rw-system.sh
+index 3ac9aa5..227913f 100644
+--- a/rw-system.sh
++++ b/rw-system.sh
+@@ -350,7 +350,7 @@ if [ "$(getprop ro.product.vendor.manufacturer)" = motorola ] && getprop ro.vend
+     setprop persist.sys.overlay.devinputjack true
+ fi
+ 
+-if ! getprop ro.vendor.build.fingerprint |grep samsung/;then
++if ! getprop ro.vendor.build.fingerprint | grep -q -e samsung/;then
+     if mount -o remount,rw /system; then
+         resize2fs "$(grep ' /system ' /proc/mounts | cut -d ' ' -f 1)" || true
+     else
+@@ -382,7 +382,7 @@ mkdir /mnt/phh/empty_dir
+ touch /mnt/phh/empty
+ touch /mnt/phh/unreadable
+ chmod 0 /mnt/phh/unreadable
+-if [ "$vndk" -le 29 ]; then
++if [ -n "$vndk" ] && [ "$vndk" -le 29 ]; then
+     mount /mnt/phh/unreadable /vendor/etc/seccomp_policy/configstore@1.1.policy
+ fi
+ if ! getprop ro.product.vendor.model | grep -q -e oppo6771; then
+@@ -528,7 +528,7 @@ fi
+ if [ "$(getprop ro.vendor.product.manufacturer)" = "motorola" ] || [ "$(getprop ro.product.vendor.manufacturer)" = "motorola" ]; then
+     if getprop ro.vendor.product.device | grep -q -e nora -e ali -e hannah -e evert -e jeter -e deen -e james -e pettyl -e jater; then
+         setprop  ro.audio.ignore_effects true
+-        if [ "$vndk" -ge 28 ]; then
++        if [ -n "$vndk" ] && [ "$vndk" -ge 28 ]; then
+             f="/vendor/lib/libeffects.so"
+             # shellcheck disable=SC2010
+             ctxt="$(ls -lZ $f | grep -oE 'u:object_r:[^:]*:s0')"
+@@ -589,18 +589,18 @@ if grep -qF 'PowerVR Rogue GE8100' /vendor/lib/egl/GLESv1_CM_mtk.so ||
+ 
+     setprop debug.hwui.renderer opengl
+     setprop ro.skia.ignore_swizzle true
+-    if [ "$vndk" = 26 ] || [ "$vndk" = 27 ];then
++    if [ -n "$vndk" ] && { [ "$vndk" = 26 ] || [ "$vndk" = 27 ]; }; then
+        setprop debug.hwui.use_buffer_age false
+ 
+     fi
+ fi
+ 
+ #If we have both Samsung and AOSP power hal, take Samsung's
+-if [ -f /vendor/bin/hw/vendor.samsung.hardware.miscpower@1.0-service ] && [ "$vndk" -lt 28 ]; then
++if [ -f /vendor/bin/hw/vendor.samsung.hardware.miscpower@1.0-service ] && [ -n "$vndk" ] && [ "$vndk" -lt 28 ]; then
+     mount -o bind /mnt/phh/empty /vendor/bin/hw/android.hardware.power@1.0-service
+ fi
+ 
+-if [ "$vndk" = 27 ] || [ "$vndk" = 26 ]; then
++if [ -n "$vndk" ] && { [ "$vndk" = 27 ] || [ "$vndk" = 26 ]; }; then
+     mount -o bind /system/phh/libnfc-nci-oreo.conf /system/etc/libnfc-nci.conf
+ fi
+ 
+@@ -668,7 +668,7 @@ if getprop ro.vendor.build.fingerprint | grep -iq -E -e 'huawei|honor' || getpro
+     mount -o bind /system/phh/libnfc-nci-huawei.conf /system/etc/libnfc-nci.conf
+ fi
+ 
+-if getprop ro.vendor.build.fingerprint | grep -qE -e ".*(crown|star)[q2]*lte.*" -e ".*(SC-0[23]K|SCV3[89]).*" && [ "$vndk" -lt 28 ]; then
++if getprop ro.vendor.build.fingerprint | grep -qE -e ".*(crown|star)[q2]*lte.*" -e ".*(SC-0[23]K|SCV3[89]).*" && [ -n "$vndk" ] && [ "$vndk" -lt 28 ]; then
+     for f in /vendor/lib/libfloatingfeature.so /vendor/lib64/libfloatingfeature.so; do
+         [ ! -f "$f" ] && continue
+         # shellcheck disable=SC2010
+@@ -699,7 +699,7 @@ if getprop ro.vendor.build.fingerprint | grep -qiE '^samsung'; then
+     fi
+ 
+     if getprop ro.hardware | grep -q -e samsungexynos7870 -e qcom; then
+-        if [ "$vndk" -le 27 ]; then
++        if [ -n "$vndk" ] && [ "$vndk" -le 27 ]; then
+             setprop persist.sys.phh.sdk_override /vendor/bin/hw/rild=27
+         fi
+     fi
+@@ -742,7 +742,7 @@ if [ -n "$(getprop ro.boot.product.hardware.sku)" ] && [ -z "$(getprop ro.hw.oem
+ 	setprop ro.hw.oemName "$(getprop ro.boot.product.hardware.sku)"
+ fi
+ 
+-if getprop ro.vendor.build.fingerprint | grep -qiE '^samsung/' && [ "$vndk" -ge 28 ];then
++if getprop ro.vendor.build.fingerprint | grep -qiE '^samsung/' && [ -n "$vndk" ] && [ "$vndk" -ge 28 ];then
+ 	setprop persist.sys.phh.samsung_fingerprint 0
+ 	#obviously broken perms
+ 	if [ "$(stat -c '%U' /sys/class/sec/tsp/cmd)" == "root" ] &&
+@@ -879,7 +879,7 @@ for abi in "" 64;do
+     fi
+ done
+ 
+-setprop ro.product.first_api_level "$vndk"
++[ -n "$vndk" ] && setprop ro.product.first_api_level "$vndk"
+ 
+ if getprop ro.boot.boot_devices |grep -v , |grep -qE .;then
+     ln -s /dev/block/platform/$(getprop ro.boot.boot_devices) /dev/block/bootdevice
+@@ -938,7 +938,7 @@ if [ -e /dev/sprd-adf-dev ];then
+ fi
+ 
+ # Fix sensor services crashing on SPRD devices with Pie vendor
+-if getprop ro.hardware.keystore | grep -iq sprd && [ "$vndk" -le 28 ]; then
++if getprop ro.hardware.keystore | grep -iq sprd && [ -n "$vndk" ] && [ "$vndk" -le 28 ]; then
+     setprop persist.sys.phh.disable_sensor_direct_report true
+ fi
+ 
+@@ -981,7 +981,7 @@ if getprop ro.build.overlay.deviceid |grep -qE '^RMX';then
+     fi
+ fi
+ 
+-if [ "$vndk" -le 28 ] && getprop ro.hardware |grep -q -e mt6761 -e mt6763 -e mt6765 -e mt6785 -e mt8768 -e mt6779 -e mt6771 -e mt8766;then
++if [ -n "$vndk" ] && [ "$vndk" -le 28 ] && getprop ro.hardware |grep -q -e mt6761 -e mt6763 -e mt6765 -e mt6785 -e mt8768 -e mt6779 -e mt6771 -e mt8766;then
+     setprop debug.stagefright.ccodec 0
+ fi
+ 
+@@ -1099,7 +1099,7 @@ fi
+ resetprop_phh ro.control_privapp_permissions log
+ 
+ if [ -f /vendor/etc/init/vendor.ozoaudio.media.c2@1.0-service.rc ];then
+-    if [ "$vndk" -le 29 ]; then
++    if [ -n "$vndk" ] && [ "$vndk" -le 29 ]; then
+         mount /system/etc/seccomp_policy/mediacodec.policy /vendor/etc/seccomp_policy/codec2.vendor.base.policy
+     fi
+ fi
+@@ -1110,18 +1110,20 @@ fi
+ 
+ [ -d /mnt/vendor/persist ] && mount /mnt/vendor/persist /persist
+ 
+-for f in $(find /sys -name fts_gesture_mode);do
+-    setprop persist.sys.phh.focaltech_node "$f"
+-done
++if [ -e /sys/bus/i2c/drivers/fts_ts ] || [ -e /sys/bus/spi/drivers/fts_ts ]; then
++    for f in $(find /sys -name fts_gesture_mode 2>/dev/null);do
++        setprop persist.sys.phh.focaltech_node "$f"
++    done
++fi
+ 
+-if [ "$vndk" -le 27 ] && [ -f /vendor/bin/mnld ];then
++if [ -n "$vndk" ] && [ "$vndk" -le 27 ] && [ -f /vendor/bin/mnld ];then
+     setprop persist.sys.phh.sdk_override /vendor/bin/mnld=26
+ fi
+ 
+-if [ "$vndk" -le 30 ];then
+-	# On older vendor the default behavior was to disable color management
+-	# Don't override vendor value, merely add a fallback
+-	setprop ro.surface_flinger.use_color_management false
++if [ -n "$vndk" ] && [ "$vndk" -le 30 ];then
++	# on older vendors color management was disabled by default; use -n so
++	# we only set a fallback and never override a value already present
++	resetprop_phh -n ro.surface_flinger.use_color_management false
+ fi
+ 
+ if [ "$(stat -c '%U'  /dev/nxp_smartpa_dev)" == "root" ] &&
+diff --git a/vndk-detect b/vndk-detect
+index db19f19..417b1e9 100644
+--- a/vndk-detect
++++ b/vndk-detect
+@@ -9,6 +9,17 @@ while read version;do
+ 	setprop persist.sys.vndk $version
+ done
+ 
++# fallback for Android 10+ vendors without nonplat_sepolicy.cil
++if [ -z "$(getprop persist.sys.vndk)" ]; then
++	vndk_version=$(grep -m1 '^ro\.vndk\.version=' /vendor/build.prop 2>/dev/null | cut -d= -f2)
++	if [ -z "$vndk_version" ]; then
++		vndk_version=$(grep -m1 '^ro\.vendor\.build\.version\.sdk=' /vendor/build.prop 2>/dev/null | cut -d= -f2)
++	fi
++	if [ -n "$vndk_version" ]; then
++		setprop persist.sys.vndk "$vndk_version"
++	fi
++fi
++
+ if [ -d /sys/module/five ];then
+ 	if mount -o bind /mnt/phh/empty /sbin/adbd;then
+ 		setprop sys.phh.five true
+-- 
+2.53.0
+

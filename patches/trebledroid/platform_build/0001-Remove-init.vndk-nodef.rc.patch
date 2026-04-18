@@ -25,7 +25,7 @@ index 8c200a1dcb..5d6fb66283 100644
 @@ -55,13 +55,6 @@ prebuilt_etc {
      relative_install_path: "init",
  }
- 
+
 -prebuilt_etc {
 -    name: "init.vndk-nodef.rc",
 -    src: "init.vndk-nodef.rc",
@@ -73,9 +73,9 @@ index 115b355920..a4319babc4 100644
      init.gsi.rc \
 -    init.vndk-nodef.rc \
 -
- 
+
  # Overlay the GSI specific setting for framework and SystemUI
  ifneq ($(PRODUCT_IS_AUTOMOTIVE),true)
 -- 
-2.25.1
+2.52.0
 

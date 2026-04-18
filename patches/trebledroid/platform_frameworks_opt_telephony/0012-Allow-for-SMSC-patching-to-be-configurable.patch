@@ -1,0 +1,74 @@
+From 284192d850aad10f4a79972e28e19cc941b68786 Mon Sep 17 00:00:00 2001
+From: mytja <mitja@severkar.eu>
+Date: Sun, 30 Mar 2025 17:38:53 +0200
+Subject: [PATCH 12/12] Allow for SMSC patching to be configurable
+
+This is required on my Samsung Galaxy A53 to be able to send messages.
+---
+ .../internal/telephony/MessagingResponse.java   | 17 +++++++++++------
+ .../internal/telephony/RadioResponse.java       | 17 +++++++++++------
+ 2 files changed, 22 insertions(+), 12 deletions(-)
+
+diff --git a/src/java/com/android/internal/telephony/MessagingResponse.java b/src/java/com/android/internal/telephony/MessagingResponse.java
+index 2e625994e5..e8e0b6b5ab 100644
+--- a/src/java/com/android/internal/telephony/MessagingResponse.java
++++ b/src/java/com/android/internal/telephony/MessagingResponse.java
+@@ -172,14 +172,19 @@ public class MessagingResponse extends IRadioMessagingResponse.Stub {
+     public void getSmscAddressResponse(RadioResponseInfo responseInfo, String smsc) {
+         if(smsc.contains("\"") || smsc.contains(",")) {
+             android.util.Log.e("PHH", "Got weird SMSC: " + smsc);
+-            try {
+-                String[] a = smsc.split("\"");
+-                smsc = a[1];
+-            } catch(Throwable t) {
+-                android.util.Log.e("PHH", "Failed parsing weird smsc", t);
++            if (android.os.SystemProperties.getBoolean("persist.sys.phh.patch_smsc", true)) {
++                try {
++                    String[] a = smsc.split("\"");
++                    smsc = a[1];
++                } catch(Throwable t) {
++                    android.util.Log.e("PHH", "Failed parsing weird smsc", t);
++                    smsc = "";
++                }
++                android.util.Log.e("PHH", "Patched smsc " + smsc);
++            } else {
++                android.util.Log.e("PHH", "Skipping patching smsc");
+                 smsc = "";
+             }
+-            android.util.Log.e("PHH", "Patched smsc " + smsc);
+         }
+         RadioResponse.responseString(HAL_SERVICE_MESSAGING, mRil, responseInfo, smsc);
+     }
+diff --git a/src/java/com/android/internal/telephony/RadioResponse.java b/src/java/com/android/internal/telephony/RadioResponse.java
+index e470e68ac0..f4043791e7 100644
+--- a/src/java/com/android/internal/telephony/RadioResponse.java
++++ b/src/java/com/android/internal/telephony/RadioResponse.java
+@@ -1239,14 +1239,19 @@ public class RadioResponse extends IRadioResponse.Stub {
+     public void getSmscAddressResponse(RadioResponseInfo responseInfo, String smsc) {
+         if(smsc.contains("\"") || smsc.contains(",")) {
+             android.util.Log.e("PHH", "Got weird SMSC: " + smsc);
+-            try {
+-                String[] a = smsc.split("\"");
+-                smsc = a[1];
+-            } catch(Throwable t) {
+-                android.util.Log.e("PHH", "Failed parsing weird smsc", t);
++            if (android.os.SystemProperties.getBoolean("persist.sys.phh.patch_smsc", true)) {
++                try {
++                    String[] a = smsc.split("\"");
++                    smsc = a[1];
++                } catch(Throwable t) {
++                    android.util.Log.e("PHH", "Failed parsing weird smsc", t);
++                    smsc = "";
++                }
++                android.util.Log.e("PHH", "Patched smsc " + smsc);
++            } else {
++                android.util.Log.e("PHH", "Skipping patching smsc");
+                 smsc = "";
+             }
+-            android.util.Log.e("PHH", "Patched smsc " + smsc);
+         }
+         responseString(responseInfo, smsc);
+     }
+-- 
+2.52.0
+

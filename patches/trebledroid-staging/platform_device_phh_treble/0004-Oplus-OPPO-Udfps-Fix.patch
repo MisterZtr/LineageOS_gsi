@@ -1,0 +1,54 @@
+From d9ff153888ef172ba66c51510f1e78d13b47603e Mon Sep 17 00:00:00 2001
+From: Nazar Bilinskyi <nbilinskyi@gmail.com>
+Date: Fri, 6 Feb 2026 14:13:24 +0200
+Subject: [PATCH 4/21] Oplus/OPPO Udfps Fix
+
+---
+ phh-prop-handler.sh | 16 ++++++++++++++++
+ vndk.rc             |  3 +++
+ 2 files changed, 19 insertions(+)
+
+diff --git a/phh-prop-handler.sh b/phh-prop-handler.sh
+index d036f24..cae90d6 100644
+--- a/phh-prop-handler.sh
++++ b/phh-prop-handler.sh
+@@ -118,6 +118,22 @@ if [ "$1" == "persist.sys.phh.oppo.gaming_mode" ]; then
+     exit
+ fi
+
++if [ "$1" == "sys.phh.oplus.fppress" ]; then
++    prop_value=$(getprop sys.phh.oplus.fppress)
++
++    nodes=(
++        "/sys/kernel/oplus_display/oplus_notify_fppress"
++        "/sys/kernel/oppo_display/oppo_notify_fppress"
++    )
++
++    for node in "${nodes[@]}"; do
++        if [ -e "$node" ]; then
++            echo "$prop_value" > "$node"
++        fi
++    done
++    exit
++fi
++
+ if [ "$1" == "persist.sys.phh.oppo.usbotg" ]; then
+     if [[ "$prop_value" != "0" && "$prop_value" != "1" ]]; then
+         exit 1
+diff --git a/vndk.rc b/vndk.rc
+index 2f56680..960e47f 100644
+--- a/vndk.rc
++++ b/vndk.rc
+@@ -36,6 +36,9 @@ on property:persist.sys.phh.oppo.dt2w=*
+ on property:persist.sys.phh.oppo.gaming_mode=*
+     exec u:r:phhsu_daemon:s0 root -- /system/bin/phh-prop-handler.sh "persist.sys.phh.oppo.gaming_mode"
+
++on property:sys.phh.oplus.fppress=*
++    exec u:r:phhsu_daemon:s0 root -- /system/bin/phh-prop-handler.sh "sys.phh.oplus.fppress"
++
+ on property:persist.sys.phh.oppo.usbotg=*
+     exec u:r:phhsu_daemon:s0 root -- /system/bin/phh-prop-handler.sh "persist.sys.phh.oppo.usbotg"
+
+-- 
+2.53.0
+

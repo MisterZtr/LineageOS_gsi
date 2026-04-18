@@ -1,0 +1,242 @@
+From 62948d34b27f284d2db00922d7da2b0a5a46d690 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Thu, 12 Mar 2026 22:57:31 +0000
+Subject: [PATCH 1/5] NetBpfLoad: Relax all kernel version and capability checks
+ for GSI
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Treble GSI builds must support vendor kernels ranging from 4.4 through
+5.10+. AOSP progressively gates BPF loading behind kernel version
+checks (4.9 for S, 4.14 for U, 4.19 for V, 5.4 for 25Q2, 5.10 for
+25Q4) and architecture checks (64-bit kernel, 64-bit userspace). Each
+failed check sets failed=true, which causes BPF program loading to
+abort. On a GSI this cascades into Connectivity/netd failures and
+bootloops.
+
+Convert all kernel version gates, architecture checks, and proc file
+writes to non-fatal warnings. BPF loading proceeds with graceful
+degradation — programs that cannot load on older kernels are skipped
+by the existing trebledroid error handling (patch 0002).
+
+This replaces the previous piecemeal approach of patching each version
+gate individually as Google adds new ones (which caused a bootloop on
+kernel 4.14 devices when QPR2 added the 5.10 requirement).
+
+Affected checks:
+- Kernel version: 4.9, 4.14, 4.19, 5.4, 5.10 minimums
+- Architecture: 32-bit kernel on V+, 32-bit kernel on 25Q2+, x86-32
+- Proc writes: unprivileged_bpf_disabled, bpf_jit_enable, bpf_jit_kallsyms
+  (all documented as potentially failing on older kernels)
+---
+ bpf/loader/NetBpfLoad.cpp | 93 +++++++++++++++++++++------------------
+ 1 file changed, 51 insertions(+), 42 deletions(-)
+
+diff --git a/bpf/loader/NetBpfLoad.cpp b/bpf/loader/NetBpfLoad.cpp
+index 59b1f07..e79fb07 100644
+--- a/bpf/loader/NetBpfLoad.cpp
++++ b/bpf/loader/NetBpfLoad.cpp
+@@ -1605,61 +1605,57 @@ static int doLoad(char** argv, char * const envp[]) {
+ 
+     logTetheringApexVersion();
+ 
++    // [GSI] Kernel version and architecture checks are relaxed to warnings
++    // for Treble GSI compatibility with older vendor kernels (4.4 through 5.10+).
++    // BPF loading will proceed with graceful degradation on unsupported kernels.
++
+     // both S and T require kernel 4.9 (and eBpf support)
+     // (this also guarantees 'kernelVer' isn't an invalid uninitialized 0)
+     if (!isAtLeastKernelVersion(4, 9)) {
+-        ALOGE("Android S & T require kernel 4.9.");
+-        failed = true;
++        ALOGW("[GSI] Android S & T require kernel 4.9.");
+     }
+ 
+     // U bumps the kernel requirement up to 4.14
+     if (isAtLeastU && !isAtLeastKernelVersion(4, 14)) {
+-        ALOGE("Android U requires kernel 4.14.");
+-        failed = true;
++        ALOGW("[GSI] Android U requires kernel 4.14.");
+     }
+ 
+     // V bumps the kernel requirement up to 4.19
+     // see also: //system/netd/tests/kernel_test.cpp TestKernel419
+     if (isAtLeastV && !isAtLeastKernelVersion(4, 19)) {
+-        ALOGE("Android V requires kernel 4.19.");
+-        failed = true;
++        ALOGW("[GSI] Android V requires kernel 4.19.");
+     }
+ 
+     // 25Q2 bumps the kernel requirement up to 5.4
+     // see also: //system/netd/tests/kernel_test.cpp TestKernel54
+     if (isAtLeast25Q2 && !isAtLeastKernelVersion(5, 4)) {
+-        ALOGE("Android 25Q2 requires kernel 5.4.");
+-        failed = true;
++        ALOGW("[GSI] Android 25Q2 requires kernel 5.4.");
+     }
+ 
+     // 25Q4 bumps the kernel requirement up to 5.10
+     // see also: //system/netd/tests/kernel_test.cpp TestKernel510
+     if (isAtLeast25Q4 && !isAtLeastKernelVersion(5, 10)) {
+-        ALOGW("Android 25Q4 requires kernel 5.10.");
++        ALOGW("[GSI] Android 25Q4 requires kernel 5.10.");
+     }
+ 
+     // Technically already required by U, but only enforce on V+
+     // see also: //system/netd/tests/kernel_test.cpp TestKernel64Bit
+     if (isAtLeastV && isKernel32Bit() && isAtLeastKernelVersion(5, 16)) {
+-        ALOGE("Android V+ platform with 32 bit kernel version >= 5.16.0 is unsupported");
+-        failed = true;
++        ALOGW("[GSI] Android V+ platform with 32 bit kernel version >= 5.16.0 is unsupported");
+     }
+ 
+     if (isKernel32Bit() && isAtLeast25Q2) {
+-        ALOGE("Android 25Q2 requires 64 bit kernel.");
+-        failed = true;
++        ALOGW("[GSI] Android 25Q2 requires 64 bit kernel.");
+     }
+ 
+     // 6.6 is highest version supported by Android V, so this is effectively W+ (sdk=36+)
+     if (isKernel32Bit() && isAtLeastKernelVersion(6, 7)) {
+-        ALOGE("Android platform with 32 bit kernel version >= 6.7.0 is unsupported");
+-        failed = true;
++        ALOGW("[GSI] Android platform with 32 bit kernel version >= 6.7.0 is unsupported");
+     }
+ 
+     // Various known ABI layout issues, particularly wrt. bpf and ipsec/xfrm.
+     if (isAtLeastV && isKernel32Bit() && isX86()) {
+-        ALOGE("Android V requires X86 kernel to be 64-bit.");
+-        failed = true;
++        ALOGW("[GSI] Android V requires X86 kernel to be 64-bit.");
+     }
+ 
+     if (isAtLeastV) {
+@@ -1781,7 +1776,7 @@ static int doLoad(char** argv, char * const envp[]) {
+         // (this writeFile is known to fail on at least 4.19, but always defaults to 0 on
+         // pre-5.13, on 5.13+ it depends on CONFIG_BPF_UNPRIV_DEFAULT_OFF)
+         if (!writeFile("/proc/sys/kernel/unprivileged_bpf_disabled", "0\n")) {
+-            failed = true;
++            ALOGW("[GSI] Failed to write unprivileged_bpf_disabled, may not exist on older kernels");
+         }
+     }
+
+@@ -1798,14 +1793,14 @@ static int doLoad(char** argv, char * const envp[]) {
+         // BPF_JIT is required by R VINTF (which means 4.14/4.19/5.4 kernels),
+         // but 4.14/4.19 were released with P & Q, and only 5.4 is new in R+.
+         if (!writeFile("/proc/sys/net/core/bpf_jit_enable", "1\n")) {
+-            failed = true;
++            ALOGW("[GSI] Failed to write bpf_jit_enable, kernel may lack CONFIG_BPF_JIT");
+         }
+
+         // Enable JIT kallsyms export for privileged users only
+         // (Note: this (open) will fail with ENOENT 'No such file or directory' if
+         //  kernel does not have CONFIG_HAVE_EBPF_JIT=y)
+         if (!writeFile("/proc/sys/net/core/bpf_jit_kallsyms", "1\n")) {
+-            failed = true;
++            ALOGW("[GSI] Failed to write bpf_jit_kallsyms, kernel may lack CONFIG_HAVE_EBPF_JIT");
+         }
+     }
+
+@@ -1844,13 +1839,15 @@ static int doLoad(char** argv, char * const envp[]) {
+         uint32_t progId = bpfGetNextProgId(0);  // expect 0 with errno == ENOENT
+         if (progId || errno != ENOENT) {
+             ALOGE("bpfGetNextProgId(zero) returned %u (errno %d)", progId, errno);
+-            return 32;
++            // [GSI] non-fatal: old vendor kernels may not satisfy this
++            failed = true;
+         }
+         errno = 0;
+         uint32_t mapId = bpfGetNextMapId(0);  // expect 0 with errno == ENOENT
+         if (mapId || errno != ENOENT) {
+             ALOGE("bpfGetNextMapId(zero) returned %u (errno %d)", mapId, errno);
+-            return 33;
++            // [GSI] non-fatal: old vendor kernels may not satisfy this
++            failed = true;
+         }
+     } else if (isAtLeastKernelVersion(4, 14)) {  // implies S through U QPR2
+         // bpfGetNext{Prog,Map}Id require 4.14+
+@@ -1863,7 +1860,8 @@ static int doLoad(char** argv, char * const envp[]) {
+             if (!next && errno == ENOENT) break;
+             if (next <= mapId) {
+                 ALOGE("bpfGetNextMapId(%u) returned %u errno %d", mapId, next, errno);
+-                return 34;
++                // [GSI] non-fatal: old vendor kernels may not satisfy this
++                failed = true;
+             }
+             mapId = next;
+         }
+@@ -1876,12 +1874,19 @@ static int doLoad(char** argv, char * const envp[]) {
+             // which causes bpfGetNextMapId to behave as bpfGetNextProgId,
+             // and thus it should return 0 with errno == ENOENT.
+             ALOGE("bpfGetNextMapId(final %d) returned %d errno %d", mapId, next, errno);
+-            if (next || errno != ENOENT) return 35;
+-            if (isAtLeastT || isAtLeastKernelVersion(4, 20)) return 36;
++            // [GSI] non-fatal: old vendor kernels may not satisfy this
++            if (next || errno != ENOENT) {
++                ALOGW("[GSI] bpfGetNextMapId(final) unexpected: next=%d errno=%d", next, errno);
++            }
++            if (isAtLeastT || isAtLeastKernelVersion(4, 20)) {
++                ALOGW("[GSI] kernel should not have BPF UAPI bug on T+ or 4.20+");
++            }
+             // implies Android S with 4.14 or 4.19 kernel
+             ALOGW("Detected kernel with invalid BPF UAPI - disabling mainline use of eBPF.");
+             // leave a flag that we're 'done'
+-            if (!createDir("/sys/fs/bpf/netd_shared/mainline_done")) return 37;
++            if (!createDir("/sys/fs/bpf/netd_shared/mainline_done")) {
++                ALOGW("[GSI] failed to create mainline_done dir");
++            }
+             return 0;
+         }
+     } else {  // implies S/T with 4.9 kernel
+@@ -1901,28 +1906,32 @@ static int doLoad(char** argv, char * const envp[]) {
+         int value = 123;
+         if (writeToMapEntry(map, &one, &value, BPF_ANY)) {
+             ALOGE("Critical kernel bug - failure to write into index 1 of 2 element bpf map array.");
+-            if (isAtLeastT) return 39;
++            // [GSI] non-fatal: old kernels may not support BPF map writes
++            if (isAtLeastT) failed = true;
+         }
+
+         const char* const kernel_bugs_map_path = "/sys/fs/bpf/tethering/map_kernel_bugs";
+         int ret = bpfFdPin(map, kernel_bugs_map_path);
+         if (ret) {
+             ALOGE("pin -> %d [%d:%s]", ret, errno, strerror(errno));
+-            return 40;
+-        }
+-
+-        ret = chmod(kernel_bugs_map_path, 0440);
+-        if (ret) {
+-            ALOGE("chmod %s 0440 -> %d [%d:%s]", kernel_bugs_map_path,
+-                  ret, errno, strerror(errno));
+-            return 41;
+-        }
++            // [GSI] non-fatal: tethering dir may not exist on old kernels
++            failed = true;
++        } else {
++            ret = chmod(kernel_bugs_map_path, 0440);
++            if (ret) {
++                ALOGE("chmod %s 0440 -> %d [%d:%s]", kernel_bugs_map_path,
++                      ret, errno, strerror(errno));
++                // [GSI] non-fatal
++                failed = true;
++            }
+
+-        ret = chown(kernel_bugs_map_path, AID_ROOT, AID_NETWORK_STACK);
+-        if (ret) {
+-            ALOGE("chown %s %d %d -> %d [%d:%s]", kernel_bugs_map_path, AID_ROOT,
+-                  AID_NETWORK_STACK, ret, errno, strerror(errno));
+-            return 42;
++            ret = chown(kernel_bugs_map_path, AID_ROOT, AID_NETWORK_STACK);
++            if (ret) {
++                ALOGE("chown %s %d %d -> %d [%d:%s]", kernel_bugs_map_path, AID_ROOT,
++                      AID_NETWORK_STACK, ret, errno, strerror(errno));
++                // [GSI] non-fatal
++                failed = true;
++            }
+         }
+     }
+
+-- 
+2.53.0
+

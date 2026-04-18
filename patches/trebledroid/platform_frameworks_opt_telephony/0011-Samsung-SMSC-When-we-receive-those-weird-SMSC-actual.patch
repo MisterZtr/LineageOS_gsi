@@ -1,7 +1,7 @@
 From 38875d012869555c700f8f1b942d5d7722635730 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 11 Jan 2025 12:06:12 -0500
-Subject: [PATCH 11/11] Samsung SMSC: When we receive those weird SMSC,
+Subject: [PATCH 11/12] Samsung SMSC: When we receive those weird SMSC,
  actually parse it because even in 2025 we still need SMSC for some carriers
 
 ---
@@ -32,7 +32,7 @@ index 3ddf6762dd..2e625994e5 100644
 +        }
          RadioResponse.responseString(HAL_SERVICE_MESSAGING, mRil, responseInfo, smsc);
      }
- 
+
 diff --git a/src/java/com/android/internal/telephony/RadioResponse.java b/src/java/com/android/internal/telephony/RadioResponse.java
 index 5663dc816b..e470e68ac0 100644
 --- a/src/java/com/android/internal/telephony/RadioResponse.java
@@ -56,7 +56,7 @@ index 5663dc816b..e470e68ac0 100644
 +        }
          responseString(responseInfo, smsc);
      }
- 
+
 -- 
-2.25.1
+2.52.0
 

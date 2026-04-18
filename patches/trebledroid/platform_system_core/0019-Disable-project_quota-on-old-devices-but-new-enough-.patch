@@ -15,7 +15,7 @@ index b4ea91172..8b6785c99 100644
 @@ -381,6 +381,14 @@ static void tune_quota(const std::string& blk_device, const FstabEntry& entry,
          want_quota = false;
      }
- 
+
 +    struct utsname uts;
 +    unsigned int major, minor;
 +
@@ -28,5 +28,5 @@ index b4ea91172..8b6785c99 100644
          LERROR << "Unable to " << (want_quota ? "enable" : "disable") << " quotas on " << blk_device
                 << " because " TUNE2FS_BIN " is missing";
 -- 
-2.25.1
+2.52.0
 

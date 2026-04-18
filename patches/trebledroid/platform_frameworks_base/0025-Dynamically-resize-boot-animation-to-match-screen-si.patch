@@ -1,7 +1,7 @@
 From 1e4a4aecaf137869731e2b4cd8d566845c1ca959 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 20 Dec 2021 15:01:41 -0500
-Subject: [PATCH 25/57] Dynamically resize boot animation to match screen size
+Subject: [PATCH 25/55] Dynamically resize boot animation to match screen size
 
 Change-Id: I54e49fc6b8c670103852e212d1416e27ff976205
 ---
@@ -15,7 +15,7 @@ index b0070c5faa36..af3afa7668a0 100644
 @@ -578,6 +578,28 @@ status_t BootAnimation::initDisplaysAndSurfaces() {
          display.initHeight = display.height = h;
          mTargetInset = -1;
- 
+
 +        if ( mAnimation != nullptr ) {
 +            SLOGE("Got screen size %d, animation size %d", display.width, mAnimation->width);
 +            int origWidth = mAnimation->width;
@@ -42,5 +42,5 @@ index b0070c5faa36..af3afa7668a0 100644
          // ro.bootanim.set_orientation_<display_id>. Four values are supported: ORIENTATION_0,
          // ORIENTATION_90, ORIENTATION_180 and ORIENTATION_270.
 -- 
-2.25.1
+2.52.0
 

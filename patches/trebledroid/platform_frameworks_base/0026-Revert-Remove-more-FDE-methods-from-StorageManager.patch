@@ -1,7 +1,7 @@
 From 7597211fb1b15195c89428df98b568bb337b31a8 Mon Sep 17 00:00:00 2001
 From: Andy CrossGate Yan <GeForce8800Ultra@gmail.com>
 Date: Sat, 15 Oct 2022 09:33:56 +0000
-Subject: [PATCH 26/57] Revert "Remove more FDE methods from StorageManager"
+Subject: [PATCH 26/55] Revert "Remove more FDE methods from StorageManager"
 
 This reverts commit bd13f84152449a3ead6fa8604fd31f48c0224676.
 
@@ -12,13 +12,13 @@ Change-Id: Ic394934ec27b1a486c60123130825d44dad73412
  2 files changed, 78 insertions(+)
 
 diff --git a/core/java/android/os/storage/StorageManager.java b/core/java/android/os/storage/StorageManager.java
-index 24f8672c1e7c..0cc380b54469 100644
+index e2ef800b5..b39f2a549 100644
 --- a/core/java/android/os/storage/StorageManager.java
 +++ b/core/java/android/os/storage/StorageManager.java
-@@ -1755,6 +1755,15 @@ public class StorageManager {
-         return false;
+@@ -1713,6 +1713,80 @@ public class StorageManager {
+         return RoSystemProperties.CRYPTO_FILE_ENCRYPTED;
      }
- 
+
 +    /** {@hide}
 +     * Is this device encryptable or already encrypted?
 +     * @return true for encryptable or encrypted
@@ -28,13 +28,6 @@ index 24f8672c1e7c..0cc380b54469 100644
 +        return RoSystemProperties.CRYPTO_ENCRYPTABLE;
 +    }
 +
-     /**
-      * {@hide}
-      * Is this device encrypted?
-@@ -1782,6 +1791,71 @@ public class StorageManager {
-         return RoSystemProperties.CRYPTO_FILE_ENCRYPTED;
-     }
- 
 +    /** {@hide}
 +     * @deprecated Use {@link #isFileEncrypted} instead, since emulated FBE is no longer supported.
 +     */
@@ -100,11 +93,11 @@ index 24f8672c1e7c..0cc380b54469 100644
 +        return false;
 +    }
 +
-     /** {@hide} */
+     /** @hide */
      public static boolean hasAdoptable() {
          switch (SystemProperties.get(PROP_ADOPTABLE)) {
 diff --git a/core/java/com/android/internal/os/RoSystemProperties.java b/core/java/com/android/internal/os/RoSystemProperties.java
-index 40d5c4761dff..66288706b0f1 100644
+index 40d5c4761..66288706b 100644
 --- a/core/java/com/android/internal/os/RoSystemProperties.java
 +++ b/core/java/com/android/internal/os/RoSystemProperties.java
 @@ -68,10 +68,14 @@ public class RoSystemProperties {
@@ -119,9 +112,9 @@ index 40d5c4761dff..66288706b0f1 100644
              CRYPTO_TYPE == CryptoProperties.type_values.FILE;
 +    public static final boolean CRYPTO_BLOCK_ENCRYPTED =
 +            CRYPTO_TYPE == CryptoProperties.type_values.BLOCK;
- 
+
      public static final boolean CONTROL_PRIVAPP_PERMISSIONS_LOG =
              "log".equalsIgnoreCase(CONTROL_PRIVAPP_PERMISSIONS);
 -- 
-2.25.1
+2.52.0
 

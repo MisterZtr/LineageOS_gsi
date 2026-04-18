@@ -35,9 +35,9 @@ index ab66336738..32cc39b76b 100644
  #include <android/hardware/power/1.2/IPower.h>
  #include <android/hardware/power/1.3/IPower.h>
 +#include <vendor/samsung/hardware/miscpower/2.0/ISehMiscPower.h>
- 
+
  namespace android {
- 
+
 @@ -36,6 +37,7 @@ public:
      static sp<hardware::power::V1_1::IPower> loadHidlV1_1();
      static sp<hardware::power::V1_2::IPower> loadHidlV1_2();
@@ -45,13 +45,13 @@ index ab66336738..32cc39b76b 100644
 +    static sp<vendor::samsung::hardware::miscpower::V2_0::ISehMiscPower> loadHidlSeh();
      // Returns aidl interface version, or 0 if AIDL is not used
      static int32_t getAidlVersion();
- 
+
 @@ -46,6 +48,7 @@ private:
      static sp<hardware::power::V1_1::IPower> gHalHidlV1_1 GUARDED_BY(gHalMutex);
      static sp<hardware::power::V1_2::IPower> gHalHidlV1_2 GUARDED_BY(gHalMutex);
      static sp<hardware::power::V1_3::IPower> gHalHidlV1_3 GUARDED_BY(gHalMutex);
 +    static sp<vendor::samsung::hardware::miscpower::V2_0::ISehMiscPower> gHalHidlSeh GUARDED_BY(gHalMutex);
- 
+
      static sp<hardware::power::V1_0::IPower> loadHidlV1_0Locked()
              EXCLUSIVE_LOCKS_REQUIRED(gHalMutex);
 diff --git a/include/powermanager/PowerHalWrapper.h b/include/powermanager/PowerHalWrapper.h
@@ -60,12 +60,12 @@ index 17a4cd4eff..e7b12d922f 100644
 +++ b/include/powermanager/PowerHalWrapper.h
 @@ -32,6 +32,7 @@
  #include <powermanager/PowerHintSessionWrapper.h>
- 
+
  #include <binder/Status.h>
 +#include <vendor/samsung/hardware/miscpower/2.0/ISehMiscPower.h>
- 
+
  #include <utility>
- 
+
 @@ -153,7 +154,10 @@ protected:
  // Wrapper for the AIDL Power HAL.
  class AidlHalWrapper : public EmptyHalWrapper {
@@ -76,7 +76,7 @@ index 17a4cd4eff..e7b12d922f 100644
 +          : mHandle(std::move(handle)),
 +            mHandleSeh(std::move(sehHandle)) {}
      ~AidlHalWrapper() override = default;
- 
+
      HalResult<void> setBoost(hal::Boost boost, int32_t durationMs) override;
 @@ -180,12 +184,44 @@ private:
      std::mutex mBoostMutex;
@@ -92,7 +92,7 @@ index 17a4cd4eff..e7b12d922f 100644
      std::array<HalSupport, static_cast<int32_t>(*(ndk::enum_range<hal::Mode>().end() - 1)) + 1>
              mModeSupportedArray GUARDED_BY(mModeMutex) = {HalSupport::UNKNOWN};
  };
- 
+
 +class HidlHalWrapperSeh : public EmptyHalWrapper {
 +public:
 +    explicit HidlHalWrapperSeh(sp<vendor::samsung::hardware::miscpower::V2_0::ISehMiscPower> hal1,
@@ -122,7 +122,7 @@ index 17a4cd4eff..e7b12d922f 100644
 +};
 +
  }; // namespace power
- 
+
  }; // namespace android
 diff --git a/services/powermanager/Android.bp b/services/powermanager/Android.bp
 index 78f8f7bd96..ef01e136d0 100644
@@ -134,7 +134,7 @@ index 78f8f7bd96..ef01e136d0 100644
          "android.hardware.power@1.3",
 +        "vendor.samsung.hardware.miscpower@2.0",
      ],
- 
+
      export_shared_lib_headers: [
 @@ -49,6 +50,7 @@ cc_library_shared {
          "android.hardware.power@1.1",
@@ -142,7 +142,7 @@ index 78f8f7bd96..ef01e136d0 100644
          "android.hardware.power@1.3",
 +        "vendor.samsung.hardware.miscpower@2.0",
      ],
- 
+
      whole_static_libs: [
 diff --git a/services/powermanager/PowerHalController.cpp b/services/powermanager/PowerHalController.cpp
 index a817a7bf2e..ac1f88c59f 100644
@@ -158,7 +158,7 @@ index a817a7bf2e..ac1f88c59f 100644
  #include <utils/Log.h>
 @@ -33,19 +34,25 @@ namespace power {
  // -------------------------------------------------------------------------------------------------
- 
+
  std::unique_ptr<HalWrapper> HalConnector::connect() {
 +    sp<vendor::samsung::hardware::miscpower::V2_0::ISehMiscPower> halHidlSeh = PowerHalLoader::loadHidlSeh();
      if (std::shared_ptr<aidl::android::hardware::power::IPower> halAidl =
@@ -203,12 +203,12 @@ index ea284c36d8..2f5a857a18 100644
  sp<V1_3::IPower> PowerHalLoader::gHalHidlV1_3 = nullptr;
 +sp<vendor::samsung::hardware::miscpower::V2_0::ISehMiscPower> PowerHalLoader::gHalHidlSeh = nullptr;
  int32_t PowerHalLoader::gAidlInterfaceVersion = 0;
- 
+
  void PowerHalLoader::unloadAll() {
 @@ -125,10 +127,23 @@ sp<V1_3::IPower> PowerHalLoader::loadHidlV1_3() {
      return loadHal<V1_3::IPower>(gHalExists, gHalHidlV1_3, loadFn, "HIDL v1.3");
  }
- 
+
 +sp<vendor::samsung::hardware::miscpower::V2_0::ISehMiscPower> PowerHalLoader::loadHidlSeh() {
 +    std::lock_guard<std::mutex> lock(gHalMutex);
 +    static bool gHalExists = true;
@@ -228,7 +228,7 @@ index ea284c36d8..2f5a857a18 100644
 +        hal = loadHal<V1_0::IPower>(gHalExists, gHalHidlV1_0, loadFn, "HIDL v1.0");
 +    return hal;
  }
- 
+
  int32_t PowerHalLoader::getAidlVersion() {
 diff --git a/services/powermanager/PowerHalWrapper.cpp b/services/powermanager/PowerHalWrapper.cpp
 index 9c83bf5af3..7973386d4a 100644
@@ -237,7 +237,7 @@ index 9c83bf5af3..7973386d4a 100644
 @@ -238,6 +238,10 @@ HalResult<void> AidlHalWrapper::setMode(Aidl::Mode mode, bool enabled) {
      std::unique_lock<std::mutex> lock(mModeMutex);
      size_t idx = static_cast<size_t>(mode);
- 
+
 +    if (mHandleSeh != nullptr && mode == Aidl::Mode::INTERACTIVE) {
 +        mHandleSeh->setInteractiveAsync(enabled, false);
 +    }
@@ -248,7 +248,7 @@ index 9c83bf5af3..7973386d4a 100644
 @@ -314,6 +318,72 @@ const char* AidlHalWrapper::getUnsupportedMessage() {
      return "Power HAL doesn't support it";
  }
- 
+
 +HalResult<void> HidlHalWrapperSeh::setBoost(Aidl::Boost boost, int32_t durationMs) {
 +    if (boost == Aidl::Boost::INTERACTION) {
 +        return sendPowerHint(V1_0::PowerHint::INTERACTION, durationMs);
@@ -316,7 +316,7 @@ index 9c83bf5af3..7973386d4a 100644
 +}
 +
  // -------------------------------------------------------------------------------------------------
- 
+
  } // namespace power
 diff --git a/services/surfaceflinger/CompositionEngine/Android.bp b/services/surfaceflinger/CompositionEngine/Android.bp
 index 2d0f874ad0..504fe0b6b8 100644
@@ -331,5 +331,5 @@ index 2d0f874ad0..504fe0b6b8 100644
      static_libs: [
          "libguiflags",
 -- 
-2.25.1
+2.52.0
 

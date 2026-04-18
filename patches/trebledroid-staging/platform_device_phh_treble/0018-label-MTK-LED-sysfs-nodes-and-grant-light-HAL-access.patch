@@ -1,0 +1,50 @@
+From 084f68d133636f987a1a24c2c952921f8d6a128f Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 31 Mar 2026 20:00:16 +0100
+Subject: [PATCH 18/21] label MTK LED sysfs nodes and grant light HAL access
+
+MTK vendors expose backlight controls at
+/sys/devices/platform/soc/soc:mtk_leds/leds/ which the kernel labels
+as generic sysfs:s0.  AOSP's genfscon only covers /class/leds (the
+symlink directory), so the real device path is unlabelled.
+
+This causes three cascading failures on MTK devices:
+  1. init denied setattr on brightness nodes (cannot chmod)
+  2. mtk_hal_light denied read/write on brightness (backlight stuck off)
+  3. PowerManagerService blocks waiting on the light HAL, triggering a
+     watchdog kill of system_server and a crash loop
+
+Add a genfscon entry to relabel the MTK LED device path as sysfs_leds,
+and declare mtk_hal_light with the hal_light_server attribute so it
+inherits the standard AOSP sysfs_leds permissions.  No broad allow
+rules are needed -- existing AOSP policy for init and hal_light
+already covers sysfs_leds access.
+---
+ sepolicy/genfs_contexts | 1 +
+ sepolicy/mediatek.te    | 3 +++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/sepolicy/genfs_contexts b/sepolicy/genfs_contexts
+index 56e8950..1f8e663 100644
+--- a/sepolicy/genfs_contexts
++++ b/sepolicy/genfs_contexts
+@@ -1 +1,2 @@
+ genfscon sysfs /board_properties u:object_r:sysfs_board_properties:s0
++genfscon sysfs /devices/platform/soc/soc:mtk_leds/leds u:object_r:sysfs_leds:s0
+diff --git a/sepolicy/mediatek.te b/sepolicy/mediatek.te
+index 2b24965..6c74e75 100644
+--- a/sepolicy/mediatek.te
++++ b/sepolicy/mediatek.te
+@@ -10,6 +10,9 @@ allow mtk_hal_audio audioserver:fifo_file write;
+ allow mtk_hal_audio untrusted_app:fifo_file write;
+ allow hal_audio_sysbta untrusted_app:fifo_file write;
+ 
++type mtk_hal_light, domain;
++typeattribute mtk_hal_light hal_light_server;
++
+ type mtk_hal_power, domain;
+ allow mtk_hal_power system_data_root_file:file create_file_perms;
+ allow zygote ashmem_device:chr_file execute;
+-- 
+2.53.0
+

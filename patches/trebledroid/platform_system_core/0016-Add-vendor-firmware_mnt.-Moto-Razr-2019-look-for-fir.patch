@@ -15,12 +15,12 @@ index d0ab3f7bb..39e8fe9eb 100644
 @@ -1,7 +1,7 @@
  import /vendor/etc/ueventd.rc
  import /odm/etc/ueventd.rc
- 
+
 -firmware_directories /etc/firmware/ /odm/firmware/ /vendor/firmware/ /firmware/image/
 +firmware_directories /etc/firmware/ /odm/firmware/ /vendor/firmware/ /firmware/image/ /vendor/firmware_mnt/image/
  uevent_socket_rcvbuf_size 16M
- 
+
  subsystem graphics
 -- 
-2.25.1
+2.52.0
 

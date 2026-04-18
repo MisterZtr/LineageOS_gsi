@@ -1,4 +1,4 @@
-From c8bc416d338be8ab43be66504b679b12957ee8c8 Mon Sep 17 00:00:00 2001
+From 06d5e2b21ef5d4e1e3ba384100f1c648221e7e0c Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 16 Apr 2022 14:30:14 -0400
 Subject: [PATCH 17/25] Add a prop to change Samsung flash strength
@@ -31,7 +31,7 @@ index a6189fd02f..5da6a32e59 100644
  #include <vendor/samsung/hardware/camera/provider/4.0/ISehCameraProvider.h>
 +#include <vendor/samsung/hardware/camera/device/5.0/ISehCameraDevice.h>
 +#include <vendor/samsung/hardware/camera/device/4.0/ISehCameraDevice.h>
- 
+
  namespace {
  const bool kEnableLazyHal(property_get_bool("ro.camera.enableLazyHal", false));
 @@ -831,7 +833,23 @@ HidlProviderInfo::HidlDeviceInfo3::HidlDeviceInfo3(
@@ -58,7 +58,7 @@ index a6189fd02f..5da6a32e59 100644
 +
      return mapToStatusT(s);
  }
- 
+
 -- 
-2.25.1
+2.52.0
 

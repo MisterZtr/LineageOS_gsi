@@ -1,0 +1,72 @@
+From 935574f3b413e9a4a73d8f43b37741ab89f178bb Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Sat, 28 Mar 2026 19:00:33 +0000
+Subject: [PATCH] remove PHH's /cache/phh-adb USB gadget hack from
+ rw-system.sh
+
+the /cache/phh-adb block tears down the entire USB gadget and
+rebuilds it from scratch with hardcoded huawei VID/PID, spawns
+adbd outside init's service lifecycle, and uses the wrong configfs
+layout (c.1 instead of AOSP's b.1).  it conflicts with vendor USB
+HALs and breaks on devices that reclaim the gadget after rw-system
+runs.  remove it from release builds entirely.
+---
+ rw-system.sh | 42 ------------------------------------------
+ 1 file changed, 42 deletions(-)
+
+diff --git a/rw-system.sh b/rw-system.sh
+index 6e6337c..c99e327 100644
+--- a/rw-system.sh
++++ b/rw-system.sh
+@@ -10,48 +10,6 @@ else
+     chmod 0644 /cache/phh/logs
+ fi
+ 
+-if [ -f /cache/phh-adb ];then
+-    setprop ctl.stop adbd
+-    setprop ctl.stop adbd_apex
+-    mount -t configfs none /config
+-    rm -Rf /config/usb_gadget
+-    mkdir -p /config/usb_gadget/g1
+-
+-    echo 0x12d1 > /config/usb_gadget/g1/idVendor
+-    echo 0x103A > /config/usb_gadget/g1/idProduct
+-    mkdir -p /config/usb_gadget/g1/strings/0x409
+-    echo phh > /config/usb_gadget/g1/strings/0x409/serialnumber
+-    echo phh > /config/usb_gadget/g1/strings/0x409/manufacturer
+-    echo phh > /config/usb_gadget/g1/strings/0x409/product
+-
+-    mkdir /config/usb_gadget/g1/functions/ffs.adb
+-    mkdir /config/usb_gadget/g1/functions/mtp.gs0
+-    mkdir /config/usb_gadget/g1/functions/ptp.gs1
+-
+-    mkdir /config/usb_gadget/g1/configs/c.1/
+-    mkdir /config/usb_gadget/g1/configs/c.1/strings/0x409
+-    echo 'ADB MTP' > /config/usb_gadget/g1/configs/c.1/strings/0x409/configuration
+-
+-    mkdir /dev/usb-ffs
+-    chmod 0770 /dev/usb-ffs
+-    chown shell:shell /dev/usb-ffs
+-    mkdir /dev/usb-ffs/adb/
+-    chmod 0770 /dev/usb-ffs/adb
+-    chown shell:shell /dev/usb-ffs/adb
+-
+-    mount -t functionfs -o uid=2000,gid=2000 adb /dev/usb-ffs/adb
+-
+-    /apex/com.android.adbd/bin/adbd &
+-
+-    sleep 1
+-    echo none > /config/usb_gadget/g1/UDC
+-    ln -s /config/usb_gadget/g1/functions/ffs.adb /config/usb_gadget/g1/configs/c.1/f1
+-    ls /sys/class/udc |head -n 1 > /config/usb_gadget/g1/UDC
+-
+-    sleep 2
+-    echo 2 > /sys/devices/virtual/android_usb/android0/port_mode
+-fi
+-
+ vndk="$(getprop persist.sys.vndk)"
+ [ -z "$vndk" ] && vndk="$(getprop ro.vndk.version |grep -oE '^[0-9]+')"
+ 
+-- 
+2.53.0
+

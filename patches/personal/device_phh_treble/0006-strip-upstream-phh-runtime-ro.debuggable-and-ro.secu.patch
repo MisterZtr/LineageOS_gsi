@@ -1,0 +1,32 @@
+From d377c492878c57272e86526b5b6f4eae01b189c2 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 7 Apr 2026 22:28:53 +0100
+Subject: [PATCH] strip upstream phh runtime ro.debuggable and ro.secure
+ spoofing
+
+upstream phh rw-system.sh resetprops ro.debuggable=0 and ro.secure=1
+inside the securize block so every build looks locked at runtime.
+move that decision out of the shared base so it is no longer
+implicit. release-builds re-asserts both props via the securize
+rework patch; debug builds keep the real userdebug values and
+therefore support 'adb root' without further patching.
+---
+ rw-system.sh | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/rw-system.sh b/rw-system.sh
+index c99e327..085edf7 100644
+--- a/rw-system.sh
++++ b/rw-system.sh
+@@ -801,8 +801,6 @@ if [ -f /system/phh/secure ] || [ -f /metadata/phh/secure ];then
+     resetprop_phh ro.boot.veritymode enforcing
+     resetprop_phh ro.boot.warranty_bit 0
+     resetprop_phh ro.warranty_bit 0
+-    resetprop_phh ro.debuggable 0
+-    resetprop_phh ro.secure 1
+     resetprop_phh ro.build.type user
+     resetprop_phh ro.product.build.type user
+     resetprop_phh ro.system.build.type user
+-- 
+2.53.0
+

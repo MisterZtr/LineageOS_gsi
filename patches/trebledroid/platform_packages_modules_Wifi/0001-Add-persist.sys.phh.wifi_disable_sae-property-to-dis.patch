@@ -23,5 +23,5 @@ index 1c4e549cf1..193b317541 100644
                  .getBoolean(R.bool.config_wifiSaeUpgradeEnabled);
      }
 -- 
-2.25.1
+2.52.0
 

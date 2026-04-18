@@ -1,0 +1,49 @@
+From b4c53330ac8a3a25a5c37e89c6be446d78e2991b Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 17 Feb 2026 23:02:24 +0000
+Subject: [PATCH 1/2] Allow fingerprint HAL to read serialno_prop
+
+GrapheneOS restricts access to serialno_prop as a privacy hardening
+measure. However, many vendor fingerprint HALs (including Agold/
+Chipsailing on 8849 and Unihertz devices) read the device serial
+number to bind fingerprint templates to the device. Without this
+access, the HAL cannot initialize properly and fingerprint enrollment
+fails silently.
+
+Add hal_fingerprint_server to the neverallow exception list and grant
+it get_prop access to serialno_prop.
+---
+ private/domain.te          | 1 +
+ private/hal_fingerprint.te | 4 ++++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/private/domain.te b/private/domain.te
+index 77097d2..ea0206d 100644
+--- a/private/domain.te
++++ b/private/domain.te
+@@ -870,6 +870,7 @@ neverallow {
+   -hal_camera_server
+   -hal_cas_server
+   -hal_drm_server
++  -hal_fingerprint_server
+   -hal_keymint_server
+   userdebug_or_eng(`-incidentd')
+   -init
+diff --git a/private/hal_fingerprint.te b/private/hal_fingerprint.te
+index 3295cc7..cc4b127 100644
+--- a/private/hal_fingerprint.te
++++ b/private/hal_fingerprint.te
+@@ -7,6 +7,10 @@ hal_attribute_service(hal_fingerprint, hal_fingerprint_service)
+
+ binder_use(hal_fingerprint_server)
+
++# Many vendor fingerprint HALs read the device serial number to bind
++# fingerprint templates to the device via the TEE.
++get_prop(hal_fingerprint_server, serialno_prop)
++
+ # For memory allocation
+ allow hal_fingerprint ion_device:chr_file r_file_perms;
+
+-- 
+2.52.0
+

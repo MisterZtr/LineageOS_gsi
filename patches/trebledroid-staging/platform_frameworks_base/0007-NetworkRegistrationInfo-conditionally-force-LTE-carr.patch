@@ -1,0 +1,42 @@
+From 0e29becaa18cb73e1505dac90e5c5eaa08d3bdbc Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Mon, 16 Feb 2026 09:45:15 +0000
+Subject: [PATCH 7/11] NetworkRegistrationInfo: conditionally force LTE
+ carrier aggregation
+
+Add persist.sys.radio.force_lte_ca property to force the carrier
+aggregation indicator when connected to LTE. When enabled, any LTE
+connection will show as LTE+ (LTE-CA) in the status bar.
+
+This is useful on devices/carriers where carrier aggregation is active
+but not reported correctly by the baseband.
+---
+ .../java/android/telephony/NetworkRegistrationInfo.java      | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/telephony/java/android/telephony/NetworkRegistrationInfo.java b/telephony/java/android/telephony/NetworkRegistrationInfo.java
+index db5ebde37..87d7d023c 100644
+--- a/telephony/java/android/telephony/NetworkRegistrationInfo.java
++++ b/telephony/java/android/telephony/NetworkRegistrationInfo.java
+@@ -27,6 +27,7 @@ import android.compat.annotation.EnabledSince;
+ import android.os.Build;
+ import android.os.Parcel;
+ import android.os.Parcelable;
++import android.os.SystemProperties;
+ import android.telephony.AccessNetworkConstants.TransportType;
+ import android.telephony.Annotation.NetworkType;
+ import android.text.TextUtils;
+@@ -639,6 +640,10 @@ public final class NetworkRegistrationInfo implements Parcelable {
+      * @hide
+      */
+     public void setAccessNetworkTechnology(@NetworkType int tech) {
++        if (SystemProperties.getBoolean("persist.sys.radio.force_lte_ca", false)
++                && tech == TelephonyManager.NETWORK_TYPE_LTE) {
++            mIsUsingCarrierAggregation = true;
++        }
+         if (tech == TelephonyManager.NETWORK_TYPE_LTE_CA) {
+             // For old device backward compatibility support
+             tech = TelephonyManager.NETWORK_TYPE_LTE;
+-- 
+2.53.0
+

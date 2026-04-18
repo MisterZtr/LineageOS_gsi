@@ -1,4 +1,4 @@
-From b322736a21d4e5444899f1afa8cc9786b5f99c65 Mon Sep 17 00:00:00 2001
+From 5624fa13fe5eb8195f68b23b764064fe526707ec Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 19 May 2020 14:01:14 +0200
 Subject: [PATCH 10/25] Add a property to force camera timestamp source
@@ -39,7 +39,7 @@ index 4da892fae2..4c42bc5840 100644
 +    if (timestampSourceValue == 1) {
          mDeviceTimeBaseIsRealtime = true;
      }
- 
+
 -- 
-2.25.1
+2.52.0
 

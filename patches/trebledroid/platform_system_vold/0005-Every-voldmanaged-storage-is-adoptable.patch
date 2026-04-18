@@ -1,0 +1,25 @@
+From 06bafd35c48569f53ca0bfaabd74a5e9f43c9441 Mon Sep 17 00:00:00 2001
+From: Pierre-Hugues Husson <phh@phh.me>
+Date: Wed, 11 Mar 2020 14:02:35 +0100
+Subject: [PATCH 5/6] Every voldmanaged storage is adoptable
+
+---
+ main.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/main.cpp b/main.cpp
+index 8bcc3f9..908f4bc 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -241,7 +241,7 @@ static int process_config(VolumeManager* vm, VoldConfigs* configs) {
+     }
+
+     /* Loop through entries looking for ones that vold manages */
+-    configs->has_adoptable = false;
++    configs->has_adoptable = true;
+     configs->has_quota = false;
+     configs->has_reserved = false;
+     configs->has_compress = false;
+-- 
+2.52.0
+

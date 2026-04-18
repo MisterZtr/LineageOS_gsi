@@ -1,0 +1,31 @@
+From 54c428c9cd83fef936f79abd0b0241b369f7769f Mon Sep 17 00:00:00 2001
+From: Christopher A. Williamson <contact@chrisaw.io>
+Date: Tue, 10 Feb 2026 00:00:00 +0000
+Subject: [PATCH] Define __BIONIC_ALIGN if missing
+
+The macro was removed from bionic headers. Define it locally to
+fix the build.
+
+Change-Id: I0000000000000000000000000000000000000007
+---
+ Magisk/native/jni/systemproperties/prop_area.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Magisk/native/jni/systemproperties/prop_area.cpp b/Magisk/native/jni/systemproperties/prop_area.cpp
+index b834935..0aa2a64 100644
+--- a/Magisk/native/jni/systemproperties/prop_area.cpp
++++ b/Magisk/native/jni/systemproperties/prop_area.cpp
+@@ -37,6 +37,10 @@
+
+ #include <new>
+
++#ifndef __BIONIC_ALIGN
++#define __BIONIC_ALIGN(__value, __alignment) (((__value) + (__alignment) - 1) & ~((__alignment) - 1))
++#endif
++
+ #include <async_safe/log.h>
+
+ #include "system_properties/prop_area.h"
+-- 
+2.52.0
+

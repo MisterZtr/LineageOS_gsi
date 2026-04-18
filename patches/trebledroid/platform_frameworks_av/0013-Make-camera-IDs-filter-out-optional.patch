@@ -1,4 +1,4 @@
-From de743319025feb902937163a2c663c8a5794dae4 Mon Sep 17 00:00:00 2001
+From a36b1995fc9143dc05a1583c54003ff67f675bea Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 21 Dec 2020 20:19:11 +0100
 Subject: [PATCH 13/25] Make camera IDs filter-out optional
@@ -26,7 +26,7 @@ index 6d6c52f8ca..434f3d1da1 100644
      }
      auto sortFunc =
 @@ -1155,10 +1157,12 @@ SystemCameraKind CameraProviderManager::ProviderInfo::DeviceInfo3::getSystemCame
- 
+
      // Go through the capabilities and check if it has
      // ANDROID_REQUEST_AVAILABLE_CAPABILITIES_SYSTEM_CAMERA
 -    for (size_t i = 0; i < entryCap.count; ++i) {
@@ -43,5 +43,5 @@ index 6d6c52f8ca..434f3d1da1 100644
      }
      return SystemCameraKind::PUBLIC;
 -- 
-2.25.1
+2.52.0
 

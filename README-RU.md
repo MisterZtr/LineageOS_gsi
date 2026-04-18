@@ -1,5 +1,5 @@
 Русский | [English](README.md)
-### Чтобы приступить к компиляции LineageOS 23.0 GSI,
+### Чтобы приступить к компиляции LineageOS 23.2 GSI,
 Вам нужно будет ознакомиться с [Git and Repo](https://source.android.com/source/using-repo.html), [Как собрать GSI](https://github.com/phhusson/treble_experimentations/wiki/How-to-build-a-GSI%3F), а также с темой на 4pda по [Сборке Android из исходников](https://4pda.to/forum/index.php?showtopic=209610&view=findpost&p=6112304)
 
 ### Создайте директорию
@@ -15,12 +15,12 @@ cd LineageOS
 ### Чтобы инициализировать локальный репозиторий, выполните эту команду:
 
 ```bash
-repo init -u https://github.com/LineageOS/android.git -b lineage-23.0 --git-lfs
+repo init -u https://github.com/LineageOS/android.git -b lineage-23.2 --git-lfs
 ```
 
 ### Склонируйте манифест, чтобы добавить необходимые зависимости для gsi:
 
-    git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests -b lineage-23.0
+    git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests -b lineage-23.2
 
 ### После этого синхронизируйте исходный код, выполнив эту команду:
 
@@ -49,7 +49,7 @@ export CCACHE_MAXSIZE=50G # 50 GB
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-breakfast lineage_arm64_bvNE-bp2a-userdebug
+breakfast lineage_arm64_bvNE-bp4a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
@@ -58,7 +58,7 @@ make systemimage -j$(nproc --all)
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-breakfast lineage_arm64_bvN4-bp2a-userdebug
+breakfast lineage_arm64_bvN4-bp4a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
@@ -67,7 +67,7 @@ make systemimage -j$(nproc --all)
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-breakfast lineage_arm64_bgNE-bp2a-userdebug
+breakfast lineage_arm64_bgNE-bp4a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
@@ -76,7 +76,7 @@ make systemimage -j$(nproc --all)
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-breakfast lineage_arm64_bgN4-bp2a-userdebug
+breakfast lineage_arm64_bgN4-bp4a-userdebug
 make systemimage -j$(nproc --all)
  ```
 

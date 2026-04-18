@@ -1,0 +1,103 @@
+From f1ea90d6da16f0ccbbe2c62e501f2ac9f14e4350 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Wed, 25 Mar 2026 21:50:04 +0000
+Subject: [PATCH 2/3] make property area init failures non-fatal for old vendors
+
+on old vendor kernels (e.g. 4.14 with VNDK 30) fsetxattr on tmpfs
+fails with ENOTSUP for property area files because the SELinux
+context doesn't exist in the vendor's policy.  this caused
+__system_property_area_init() to return -1, which made init call
+LOG(FATAL) and reboot to recovery.
+
+the fsetxattr failures cascade through multiple layers:
+- prop_area::map_prop_area_rw sets fsetxattr_failed flag
+- ContextNode::Open succeeds (returns valid pa) but the flag is set
+- ContextsSerialized::Initialize checks open_failed which may be
+  true due to fsetxattr cascading, and returns false
+- SystemProperties::AreaInit returns false
+- __system_property_area_init returned -1
+
+make __system_property_area_init always return 0 -- log errors and
+warnings but never abort.  the property system may be partially
+functional without SELinux labels; a degraded boot is better than
+a boot loop into recovery.
+
+also decouple appcompat_override's fsetxattr result from the caller
+in SystemProperties::AreaInit so that override area failures don't
+affect the primary area initialisation.
+---
+ libc/bionic/system_property_api.cpp          | 18 ++++++++++++++++-
+ libc/system_properties/system_properties.cpp | 21 ++++++++++++++++----
+ 2 files changed, 34 insertions(+), 5 deletions(-)
+
+diff --git a/libc/bionic/system_property_api.cpp b/libc/bionic/system_property_api.cpp
+index ed30fc2..21cdd92 100644
+--- a/libc/bionic/system_property_api.cpp
++++ b/libc/bionic/system_property_api.cpp
+@@ -29,6 +29,7 @@
+ #include <sys/system_properties.h>
+ 
+ #include <async_safe/CHECK.h>
++#include <async_safe/log.h>
+ #include <system_properties/prop_area.h>
+ #include <system_properties/system_properties.h>
+ 
+@@ -56,7 +57,22 @@ int __system_property_set_filename(const char*) {
+ __BIONIC_WEAK_FOR_NATIVE_BRIDGE
+ int __system_property_area_init() {
+   bool fsetxattr_fail = false;
+-  return system_properties.AreaInit(PROP_DIRNAME, &fsetxattr_fail) && !fsetxattr_fail ? 0 : -1;
++  if (!system_properties.AreaInit(PROP_DIRNAME, &fsetxattr_fail)) {
++    // on old vendor kernels (e.g. 4.14) fsetxattr failures inside AreaInit
++    // can cascade: context_node Open() succeeds but sets fsetxattr_failed,
++    // which causes ContextsSerialized::Initialize to report open_failed and
++    // return false.  the property system may still be partially functional
++    // -- try to continue rather than letting init abort into recovery.
++    async_safe_format_log(ANDROID_LOG_ERROR, "libc",
++                          "property area init AreaInit failed, "
++                          "continuing anyway to avoid boot loop");
++  }
++  if (fsetxattr_fail) {
++    async_safe_format_log(ANDROID_LOG_WARN, "libc",
++                          "fsetxattr failed during property area init, "
++                          "continuing without SELinux property labels");
++  }
++  return 0;
+ }
+ 
+ __BIONIC_WEAK_FOR_NATIVE_BRIDGE
+diff --git a/libc/system_properties/system_properties.cpp b/libc/system_properties/system_properties.cpp
+index 5f9b971..b5af20d 100644
+--- a/libc/system_properties/system_properties.cpp
++++ b/libc/system_properties/system_properties.cpp
+@@ -205,10 +205,23 @@ bool SystemProperties::AreaInit(const char* filename, bool* fsetxattr_failed,
+   appcompat_override_contexts_ = nullptr;
+   if (access(appcompat_filename_.c_str(), F_OK) != -1) {
+     auto* appcompat_contexts = new (appcompat_override_contexts_data_) ContextsSerialized();
+-    if (!appcompat_contexts->Initialize(true, appcompat_filename_.c_str(), fsetxattr_failed,
+-                                        load_default_path)) {
+-      // The appcompat folder exists, but initializing it failed
+-      return false;
++    // on old vendor kernels (e.g. 4.14 with VNDK 30) fsetxattr on tmpfs may
++    // fail with ENOTSUP for the appcompat_override property area because the
++    // SELinux context doesn't exist in the vendor's policy.  this is non-fatal
++    // -- all callsites already null-check appcompat_override_contexts_.
++    bool appcompat_fsetxattr_failed = false;
++    if (!appcompat_contexts->Initialize(true, appcompat_filename_.c_str(),
++                                        &appcompat_fsetxattr_failed, load_default_path)) {
++      // the appcompat folder exists, but initialising it failed -- continue
++      // without appcompat override support rather than aborting init
++      async_safe_format_log(ANDROID_LOG_WARN, "libc",
++                            "Failed to initialise appcompat_override property area, continuing without it");
++    } else if (appcompat_fsetxattr_failed) {
++      // initialisation succeeded but SELinux labelling failed -- still usable
++      // but don't propagate the failure to the caller as fatal
++      async_safe_format_log(ANDROID_LOG_WARN, "libc",
++                            "appcompat_override fsetxattr failed, continuing without SELinux labels");
++      appcompat_override_contexts_ = appcompat_contexts;
+     } else {
+       appcompat_override_contexts_ = appcompat_contexts;
+     }
+-- 
+2.53.0
+

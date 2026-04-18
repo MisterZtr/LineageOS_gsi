@@ -1,7 +1,7 @@
 From 28b3073ccb470799f4cf2cba650aeddb37603d5e Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Fri, 2 Jun 2023 19:19:31 -0400
-Subject: [PATCH 30/57] Try catch around constrainNitsAndBacklightArrays, and
+Subject: [PATCH 30/55] Try catch around constrainNitsAndBacklightArrays, and
  falls back to dumb curve. It crashes on Xperia 1 IV.
 
 ---
@@ -15,7 +15,7 @@ index 90b98f6b360f..ccc785d676a0 100644
 @@ -2057,37 +2057,43 @@ public class DisplayDeviceConfig {
              return;
          }
- 
+
 -        // Use the (preferred) display device config mapping
 -        final List<Point> points = map.getPoint();
 -        final int size = points.size();
@@ -53,7 +53,7 @@ index 90b98f6b360f..ccc785d676a0 100644
 +                                + " of configuration. Nits: " + nits[i] + " < " + nits[i - 1]);
 +                        return;
 +                    }
- 
+
 -                if (backlight[i] < backlight[i - 1]) {
 -                    Slog.e(TAG, "screenBrightnessMap must be non-decreasing, ignoring rest "
 -                            + " of configuration. Value: " + backlight[i] + " < "
@@ -81,8 +81,8 @@ index 90b98f6b360f..ccc785d676a0 100644
 -        mRawBacklight = backlight;
 -        constrainNitsAndBacklightArrays();
      }
- 
+
      private void loadThermalThrottlingConfig(DisplayConfiguration config) {
 -- 
-2.25.1
+2.52.0
 

@@ -26,7 +26,7 @@ index 44a2f226..83bfedcc 100644
 +#include <sys/utsname.h>
  #include <unistd.h>
  #include <utils/Trace.h>
- 
+
 @@ -394,7 +395,20 @@ static Result<LoopbackDeviceUniqueFd> ConfigureLoopDevice(
     * condition is now met.
     */
@@ -50,5 +50,5 @@ index 44a2f226..83bfedcc 100644
      struct statfs stbuf;
      int saved_errno = errno;
 -- 
-2.25.1
+2.52.0
 

@@ -1,5 +1,5 @@
 English | [Русский](README-RU.md)
-### To get started with building LineageOS 23.0 GSI,
+### To get started with building LineageOS 23.2 GSI,
 You'll need to get familiar with [Git and Repo](https://source.android.com/source/using-repo.html) as well as [How to build a GSI](https://github.com/phhusson/treble_experimentations/wiki/How-to-build-a-GSI%3F).
 
 ### Create the directories
@@ -15,12 +15,12 @@ cd LineageOS
 ### To initialize your local repository, run this command:
 
 ```bash
-repo init -u https://github.com/LineageOS/android.git -b lineage-23.0 --git-lfs
+repo init -u https://github.com/LineageOS/android.git -b lineage-23.2 --git-lfs
 ```
 
 ### Clone the Manifest to add necessary dependencies for gsi:
  
-    git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests -b lineage-23.0
+    git clone https://github.com/MisterZtr/treble_manifest.git .repo/local_manifests -b lineage-23.2
   
 ### Afterwards, sync the source by running this command:
 
@@ -52,7 +52,7 @@ VANILLA version with erofs:
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-breakfast lineage_arm64_bvNE-bp2a-userdebug
+breakfast lineage_arm64_bvNE-bp4a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
@@ -61,7 +61,7 @@ VANILLA version with ext4:
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-breakfast lineage_arm64_bvN4-bp2a-userdebug
+breakfast lineage_arm64_bvN4-bp4a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
@@ -70,7 +70,7 @@ GAPPS version with erofs:
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-breakfast lineage_arm64_bgNE-bp2a-userdebug
+breakfast lineage_arm64_bgNE-bp4a-userdebug
 make systemimage -j$(nproc --all)
  ```
  
@@ -79,7 +79,7 @@ GAPPS version with ext4:
  ```
 . build/envsetup.sh
 ccache -M 50G -F 0
-breakfast lineage_arm64_bgN4-bp2a-userdebug
+breakfast lineage_arm64_bgN4-bp4a-userdebug
 make systemimage -j$(nproc --all)
  ```
  

@@ -21,7 +21,7 @@ index 622de5b7a..e580190e9 100644
 +#include <android-base/properties.h>
  #include <android-base/stringprintf.h>
  #include <android-base/strings.h>
- 
+
 @@ -103,11 +104,12 @@ static bool sdcardfs_setup(const std::string& source_path, const std::string& de
                             mode_t mask, bool derive_gid, bool default_normal, bool unshared_obb,
                             bool use_esdfs) {
@@ -39,5 +39,5 @@ index 622de5b7a..e580190e9 100644
      // handle older kernels that aren't updated yet.
      for (int i = 0; i <= new_opts_list.size(); ++i) {
 -- 
-2.25.1
+2.52.0
 

@@ -1,7 +1,7 @@
 From 029c63575ff808f36a9729168cb4515e6373bf3e Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 20 Mar 2021 14:31:01 +0100
-Subject: [PATCH 20/57] Automatically detect pick up sensor, so that an overlay
+Subject: [PATCH 20/55] Automatically detect pick up sensor, so that an overlay
  is required for the sole purpose of enabling pulse doze on pick up sensor
 
 ---
@@ -15,15 +15,15 @@ index 063f5545dd71..79e72f48f7f2 100644
 @@ -28,6 +28,9 @@ import android.text.TextUtils;
  import android.util.ArrayMap;
  import android.util.SparseArray;
- 
+
 +import android.hardware.SensorManager;
 +import android.hardware.Sensor;
 +
  import com.android.internal.R;
  import com.android.internal.util.ArrayUtils;
- 
+
 @@ -111,8 +114,20 @@ public class AmbientDisplayConfiguration {
- 
+
      /** @hide */
      public boolean dozePickupSensorAvailable() {
 -        return mContext.getResources().getBoolean(R.bool.config_dozePulsePickup);
@@ -42,9 +42,9 @@ index 063f5545dd71..79e72f48f7f2 100644
 +            }
 +        }
 +        return mContext.getResources().getBoolean(R.bool.config_dozePulsePickup) || found;    }
- 
+
      /** @hide */
      public boolean tapGestureEnabled(int user) {
 -- 
-2.25.1
+2.52.0
 

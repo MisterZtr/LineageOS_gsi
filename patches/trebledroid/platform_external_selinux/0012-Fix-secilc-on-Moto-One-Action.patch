@@ -14,9 +14,9 @@ index 27e1a51a..42f6157c 100644
 --- a/libsepol/cil/src/cil_build_ast.c
 +++ b/libsepol/cil/src/cil_build_ast.c
 @@ -250,6 +250,14 @@ int cil_gen_ordered(struct cil_db *db, struct cil_tree_node *parse_current, stru
- 
+
  	int rc = SEPOL_ERR;
- 
+
 +        {
 +            const char* path = cil_tree_get_cil_path(parse_current);
 +            if(strstr(path, "vendor/")) {
@@ -29,5 +29,5 @@ index 27e1a51a..42f6157c 100644
  		goto exit;
  	}
 -- 
-2.25.1
+2.52.0
 

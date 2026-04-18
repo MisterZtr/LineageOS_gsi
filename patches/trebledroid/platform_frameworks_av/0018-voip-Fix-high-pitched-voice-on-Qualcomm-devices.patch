@@ -1,4 +1,4 @@
-From 3f9e8de8d0278bbaad50aa5110b5d3a1dbb6417d Mon Sep 17 00:00:00 2001
+From 3805ebcf3760a4c57c9a1d23d7a7b9a9d2be822b Mon Sep 17 00:00:00 2001
 From: ponces <ponces26@gmail.com>
 Date: Mon, 24 Oct 2022 09:38:34 +0100
 Subject: [PATCH 18/25] voip: Fix high pitched voice on Qualcomm devices
@@ -16,13 +16,13 @@ index 146c78b8f6..b9f71cc42b 100644
      std::string mSamplingRatesSeparator = ",";
      std::string mFlagsSeparator = "|";
 +    std::string mMixPortName = "";
- 
+
      // Children: ModulesTraits, VolumeTraits, SurroundSoundTraits (optional)
  };
 @@ -436,6 +437,13 @@ PolicySerializer::deserialize<AudioProfileTraits>(
          channelsMask = channelMasksFromString("AUDIO_CHANNEL_OUT_MONO", ",");
      }
- 
+
 +    // This breaks in-game voice chat and audio in some messaging apps causing it to play with a higher pitch and speed
 +    bool disableStereoVoip = property_get_bool("persist.sys.phh.disable_stereo_voip", false);
 +    if (disableStereoVoip && mMixPortName == "voip_rx") {
@@ -35,12 +35,12 @@ index 146c78b8f6..b9f71cc42b 100644
          return NO_INIT;
 @@ -458,6 +466,7 @@ std::variant<status_t, MixPortTraits::Element> PolicySerializer::deserialize<Mix
      using Attributes = MixPortTraits::Attributes;
- 
+
      std::string name = getXmlAttribute(child, Attributes::name);
 +    mMixPortName = name;
      if (name.empty()) {
          ALOGE("%s: No %s found", __func__, Attributes::name);
          return BAD_VALUE;
 -- 
-2.25.1
+2.52.0
 

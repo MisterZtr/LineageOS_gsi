@@ -1,0 +1,51 @@
+From eb38bb8b5c72c19be8abc06686df608f8ce0d0c1 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Wed, 25 Mar 2026 09:12:44 +0000
+Subject: [PATCH 2/2] make dnsmasq communication failures non-fatal for tethering
+
+on GSI builds the modern tethering stack (NetworkStackService) provides its
+own DHCP server and DNS resolver. dnsmasq may not be running or may have
+crashed, but its absence should not prevent tethering from functioning.
+
+demote the dnsmasq send failures in setDnsForwarders and applyDnsInterfaces
+from fatal errors (which cause tethering teardown) to warnings. the DNS
+forwarder state is still stored so that if dnsmasq recovers, subsequent
+calls will succeed.
+---
+ server/TetherController.cpp | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/server/TetherController.cpp b/server/TetherController.cpp
+index bdc10e9..2ee70af 100644
+--- a/server/TetherController.cpp
++++ b/server/TetherController.cpp
+@@ -406,9 +406,10 @@ int TetherController::setDnsForwarders(unsigned netId, char **servers, int numSe
+     mDnsmasqState.update_dns_cmd = std::move(daemonCmd);
+     if (mDaemonFd != -1) {
+         if (mDnsmasqState.sendAllState(mDaemonFd) != 0) {
+-            mDnsForwarders.clear();
+-            errno = EREMOTEIO;
+-            return -errno;
++            // on GSI builds dnsmasq may not be running; the modern tethering
++            // stack (NetworkStackService) provides its own DHCP/DNS server,
++            // so a dnsmasq communication failure is not fatal.
++            ALOGW("Failed to send DNS state to dnsmasq (non-fatal on GSI)");
+         }
+     }
+     return 0;
+@@ -446,7 +447,11 @@ bool TetherController::applyDnsInterfaces() {
+         mDnsmasqState.update_ifaces_cmd.clear();
+     } else {
+         mDnsmasqState.update_ifaces_cmd = std::move(daemonCmd);
+-        if (mDaemonFd != -1) return (mDnsmasqState.sendAllState(mDaemonFd) == 0);
++        if (mDaemonFd != -1) {
++            if (mDnsmasqState.sendAllState(mDaemonFd) != 0) {
++                ALOGW("Failed to send iface state to dnsmasq (non-fatal on GSI)");
++            }
++        }
+     }
+     return true;
+ }
+-- 
+2.53.0
+

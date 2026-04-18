@@ -9,19 +9,19 @@ Subject: [PATCH 6/9] More bpf errors ignore -- there are some 4.14 without the
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/bpf/loader/NetBpfLoad.cpp b/bpf/loader/NetBpfLoad.cpp
-index 6fcfb942d2..b88b3bf56a 100644
+index 4c81a07..59b1f07 100644
 --- a/bpf/loader/NetBpfLoad.cpp
 +++ b/bpf/loader/NetBpfLoad.cpp
-@@ -1850,8 +1850,7 @@ static int doLoad(char** argv, char * const envp[]) {
+@@ -1779,8 +1779,7 @@ static int doLoad(char** argv, char * const envp[]) {
          // but we need 0 (enabled)
          // (this writeFile is known to fail on at least 4.19, but always defaults to 0 on
          // pre-5.13, on 5.13+ it depends on CONFIG_BPF_UNPRIV_DEFAULT_OFF)
--        if (writeProcSysFile("/proc/sys/kernel/unprivileged_bpf_disabled", "0\n") &&
--            isAtLeastKernelVersion(5, 13, 0)) {
-+        if (writeProcSysFile("/proc/sys/kernel/unprivileged_bpf_disabled", "0\n")) {
+-        if (!writeFile("/proc/sys/kernel/unprivileged_bpf_disabled", "0\n") &&
+-            isAtLeastKernelVersion(5, 13)) {
++        if (!writeFile("/proc/sys/kernel/unprivileged_bpf_disabled", "0\n")) {
              failed = true;
          }
      }
 -- 
-2.25.1
+2.52.0
 

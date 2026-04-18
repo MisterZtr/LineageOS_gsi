@@ -1,0 +1,74 @@
+From 005373ead1f17593cba61924cd82fcc336c719d9 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Thu, 19 Mar 2026 16:56:39 +0000
+Subject: [PATCH 02/7] SurfaceFlinger: Restore mPropagateBackpressure for HWC
+ backpressure control
+
+Restore the mPropagateBackpressure member variable that existed in
+AOSP until Android 11, adapted for the modern FrameTargeter-based
+backpressure code.
+
+The trebledroid patch (0013) replaced wouldBackpressureHwc() with a
+per-frame GetBoolProperty call gating isFramePending(). This has two
+problems:
+1. Reading a system property on every frame is wasteful
+2. The default of true (backpressure enabled) causes a livelock on
+   devices with broken HWC present fence signaling (e.g. MediaTek
+   MT6765, MT6789), where every commit() is rejected and composite()
+   is never reached -- resulting in a permanently black screen
+
+This patch replaces the per-frame property read with a member variable
+initialized once at startup from persist.sys.phh.enable_sf_hwc_backpressure
+(defaulting to false for GSI compatibility). The outer isFramePending()
+check is preserved from the corrected 0013, while the inner guard uses
+mPropagateBackpressure to prevent the livelock on broken HWC devices.
+
+The Treble App toggle for this property continues to work -- users on
+devices with properly functioning HWC can enable backpressure by
+setting the property to true and rebooting.
+---
+ services/surfaceflinger/SurfaceFlinger.cpp | 8 +++++---
+ services/surfaceflinger/SurfaceFlinger.h   | 1 +
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/services/surfaceflinger/SurfaceFlinger.cpp b/services/surfaceflinger/SurfaceFlinger.cpp
+index ca904f6b00..6965cf9a11 100644
+--- a/services/surfaceflinger/SurfaceFlinger.cpp
++++ b/services/surfaceflinger/SurfaceFlinger.cpp
+@@ -525,6 +525,9 @@ SurfaceFlinger::SurfaceFlinger(Factory& factory) : SurfaceFlinger(factory, SkipI
+     mBackpressureGpuComposition = base::GetBoolProperty("debug.sf.enable_gl_backpressure"s, true);
+     ALOGI_IF(mBackpressureGpuComposition, "Enabling backpressure for GPU composition");
+
++    mPropagateBackpressure = base::GetBoolProperty("persist.sys.phh.enable_sf_hwc_backpressure"s, false);
++    ALOGI_IF(!mPropagateBackpressure, "Disabling backpressure propagation");
++
+     property_get("ro.surface_flinger.supports_background_blur", value, "0");
+     bool supportsBlurs = atoi(value);
+     mSupportsBlur = supportsBlurs;
+@@ -2891,9 +2894,8 @@ bool SurfaceFlinger::commit(PhysicalDisplayId pacesetterId,
+         }
+     }
+
+-    if (base::GetBoolProperty("persist.sys.phh.enable_sf_hwc_backpressure"s, true)
+-            && pacesetterFrameTarget.isFramePending()) {
+-        if (mBackpressureGpuComposition || pacesetterFrameTarget.didMissHwcFrame()) {
++    if (pacesetterFrameTarget.isFramePending()) {
++        if (mPropagateBackpressure && (mBackpressureGpuComposition || pacesetterFrameTarget.didMissHwcFrame())) {
+             mScheduler->getVsyncSchedule()->getTracker().onFrameMissed(
+                     pacesetterFrameTarget.expectedPresentTime());
+             const Duration slack = TimePoint::now() - pacesetterFrameTarget.frameBeginTime();
+diff --git a/services/surfaceflinger/SurfaceFlinger.h b/services/surfaceflinger/SurfaceFlinger.h
+index 3fa85eaeb0..fb72754f60 100644
+--- a/services/surfaceflinger/SurfaceFlinger.h
++++ b/services/surfaceflinger/SurfaceFlinger.h
+@@ -1508,6 +1508,7 @@ private:
+     std::atomic_bool mForceFullDamage = false;
+
+     bool mLayerCachingEnabled = false;
++    bool mPropagateBackpressure = false;
+     bool mBackpressureGpuComposition = false;
+
+     LayerTracing mLayerTracing;
+-- 
+2.53.0
+

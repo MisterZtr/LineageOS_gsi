@@ -1,0 +1,139 @@
+From 39cbfa53c13bbeef121491d481435b32bcd3f469 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Thu, 10 Apr 2025 22:48:35 +0100
+Subject: [PATCH 01/8] Rework securize and remove remote control toggle
+
+Replace the old securize click-action (which ran shell commands to remove
+root via phh-securize.sh) with a simple on/off SwitchPreference that sets
+the persist.sys.phh.securize system property.
+
+Also remove the "Allow takeover of the device by phh for debugging"
+remote control toggle.
+---
+ app/src/main/java/me/phh/treble/app/Misc.kt   |  8 ++---
+ .../java/me/phh/treble/app/MiscSettings.kt    | 34 -------------------
+ app/src/main/res/values/strings.xml           |  1 -
+ app/src/main/res/xml/pref_misc.xml            | 11 +++---
+ 4 files changed, 9 insertions(+), 45 deletions(-)
+
+diff --git a/app/src/main/java/me/phh/treble/app/Misc.kt b/app/src/main/java/me/phh/treble/app/Misc.kt
+index 6ae2449..6497567 100644
+--- a/app/src/main/java/me/phh/treble/app/Misc.kt
++++ b/app/src/main/java/me/phh/treble/app/Misc.kt
+@@ -205,10 +205,6 @@ object Misc: EntryStartup {
+                 val value = sp.getBoolean(key, false)
+                 SystemProperties.set("persist.sys.phh.dynamic_fps", if (value) "1" else "0")
+             }
+-            MiscSettings.remotectl -> {
+-                val value = sp.getBoolean(key, false)
+-                SystemProperties.set("persist.sys.phh.remote", if (value) "true" else "false")
+-            }
+             MiscSettings.disableAudioEffects -> {
+                 val value = sp.getBoolean(key, false)
+                 SystemProperties.set("persist.sys.phh.disable_audio_effects", if (value) "1" else "0")
+@@ -340,6 +336,10 @@ object Misc: EntryStartup {
+                 val value = sp.getString(key, "0")
+                 SystemProperties.set("persist.sys.bt.esco_transport_unit_size", value)
+             }
++            MiscSettings.securize -> {
++                val value = sp.getBoolean(key, false)
++                SystemProperties.set("persist.sys.phh.securize", if (value) "1" else "0")
++            }
+             MiscSettings.secureAdb -> {
+                 val value = sp.getBoolean(key, false)
+                 SystemProperties.set("persist.sys.phh.adb_secure", if (value) "1" else "0")
+diff --git a/app/src/main/java/me/phh/treble/app/MiscSettings.kt b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
+index 030494b..58612c6 100644
+--- a/app/src/main/java/me/phh/treble/app/MiscSettings.kt
++++ b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
+@@ -24,7 +24,6 @@ object MiscSettings : Settings {
+     val securize = "key_misc_securize"
+     val secureAdb = "key_misc_secure_adb"
+     val removeTelephony = "key_misc_removetelephony"
+-    val remotectl = "key_misc_remotectl"
+     val disableAudioEffects = "key_misc_disable_audio_effects"
+     val disableFastAudio = "key_misc_disable_fast_audio"
+     val cameraTimestampOverride = "key_misc_camera_timestamp"
+@@ -61,39 +60,6 @@ class MiscSettingsFragment : SettingsFragment() {
+     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+         super.onCreatePreferences(savedInstanceState, rootKey)
+
+-        val securizePref = findPreference<Preference>(MiscSettings.securize)
+-        securizePref!!.setOnPreferenceClickListener {
+-                val builder = AlertDialog.Builder( this.getActivity() )
+-                builder.setTitle(getString(R.string.remove_root))
+-                builder.setMessage(getString(R.string.continue_question))
+-
+-                builder.setPositiveButton(android.R.string.yes) { dialog, which ->
+-
+-                var cmds = listOf(
+-                    arrayOf("/sbin/su", "-c", "/system/bin/phh-securize.sh"),
+-                    arrayOf("/system/xbin/su", "-c", "/system/bin/phh-securize.sh"),
+-                    arrayOf("/system/xbin/phh-su", "-c", "/system/bin/phh-securize.sh"),
+-                    arrayOf("/sbin/su", "0", "/system/bin/phh-securize.sh"),
+-                    arrayOf("/system/xbin/su", "0", "/system/bin/phh-securize.sh"),
+-                    arrayOf("/system/xbin/phh-su", "0", "/system/bin/phh-securize.sh")
+-                )
+-                for (cmd in cmds) {
+-                    try {
+-                        Runtime.getRuntime().exec(cmd).waitFor()
+-                        break
+-                    } catch (t: Throwable) {
+-                        Log.d("PHH", "Failed to exec \"" + cmd.joinToString(separator = " ") + "\", skipping")
+-                    }
+-                }
+-            }
+-
+-            builder.setNegativeButton(android.R.string.no) { dialog, which ->
+-            }
+-
+-            builder.show()
+-            return@setOnPreferenceClickListener true
+-        }
+-
+         val removeTelephonyPref = findPreference<Preference>(MiscSettings.removeTelephony)
+         removeTelephonyPref!!.setOnPreferenceClickListener {
+
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+index 875a08f..4d264a9 100644
+--- a/app/src/main/res/values/strings.xml
++++ b/app/src/main/res/values/strings.xml
+@@ -4,7 +4,6 @@
+     <string name="title_activity_top_level">TrebleDroid Settings</string>
+     <string name="desc_activity_top_level">Device specific settings</string>
+     <string name="remove_telephony_subsystem">Remove Telephony Subsystem</string>
+-    <string name="remove_root">Remove Root</string>
+     <string name="continue_question">Continue?</string>
+     <string name="title_activity_updater">Updater</string>
+     <string name="update_not_found_title">Your system is up to date</string>
+diff --git a/app/src/main/res/xml/pref_misc.xml b/app/src/main/res/xml/pref_misc.xml
+index bb46832..2016122 100644
+--- a/app/src/main/res/xml/pref_misc.xml
++++ b/app/src/main/res/xml/pref_misc.xml
+@@ -208,8 +208,11 @@
+             android:entryValues="@array/pref_misc_fod_color_values"
+             android:key="key_misc_fod_color"
+             android:title="Under-display fp color" />
+-        <Preference android:title="Securize"
+-            android:key="key_misc_securize" />
++        <SwitchPreference
++            android:defaultValue="true"
++            android:key="key_misc_securize"
++            android:title="Enable Securize"
++            android:summary="Disabling may fix play services on uncertified devices" />
+         <SwitchPreference
+             android:defaultValue="false"
+             android:key="key_misc_secure_adb"
+@@ -228,9 +231,5 @@
+                 android:targetPackage="me.phh.treble.app"
+                 android:targetClass="me.phh.treble.app.DebugSensors" />
+         </Preference>
+-        <SwitchPreference
+-            android:defaultValue="false"
+-            android:key="key_misc_remotectl"
+-            android:title="Allow takeover of the device by phh for debugging" />
+     </PreferenceCategory>
+ </PreferenceScreen>
+-- 
+2.53.0
+

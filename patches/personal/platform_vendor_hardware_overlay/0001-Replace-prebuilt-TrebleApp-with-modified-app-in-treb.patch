@@ -1,0 +1,29 @@
+From 2b748cb98dbdb204d731f4e61a8e9db30b8f28d3 Mon Sep 17 00:00:00 2001
+From: mytja <mitja@severkar.eu>
+Date: Fri, 11 Oct 2024 21:33:24 +0200
+Subject: [PATCH] Replace prebuilt TrebleApp with modified app in treble_app
+
+This commit replaces the path to Treble app from the prebuilt included with TrebleDroid/vendor_hardware_overlay to PROJECT_ROOT/treble_app.
+
+Inside /treble_app directory, Treble app needs to be built beforehand, using `./build.sh release`. All personal patches to Treble app point to /treble_app directory.
+
+Change-Id: I43cd0402c0093615528ae556bace831622810635
+---
+ TrebleApp/Android.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/TrebleApp/Android.mk b/TrebleApp/Android.mk
+index d302519..1627f2d 100644
+--- a/TrebleApp/Android.mk
++++ b/TrebleApp/Android.mk
+@@ -3,7 +3,7 @@ LOCAL_PATH := $(my-dir)
+ include $(CLEAR_VARS)
+
+ LOCAL_MODULE := TrebleApp
+-LOCAL_SRC_FILES := app.apk
++LOCAL_SRC_FILES := ../../../treble_app/TrebleApp.apk
+ LOCAL_MODULE_CLASS := APPS
+ LOCAL_MODULE_SUFFIX := .apk
+ LOCAL_BUILT_MODULE_STEM := package.apk
+-- 
+2.34.1

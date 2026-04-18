@@ -1,4 +1,4 @@
-From e3ca2544c89ba626ec2d80372ef46eea07d63156 Mon Sep 17 00:00:00 2001
+From 0679144c2889b283afe7faaa844740876c98de0f Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Mon, 5 Aug 2019 18:09:50 +0200
 Subject: [PATCH 02/25] Fix BT in-call on CAF devices
@@ -22,7 +22,7 @@ index 6f19a7a145..1ab472f396 100644
 @@ -667,6 +667,98 @@ std::variant<status_t, RouteTraits::Element> PolicySerializer::deserialize<Route
      return route;
  }
- 
+
 +static void fixupQualcommBtScoRoute(RouteTraits::Collection& routes, DevicePortTraits::Collection& devicePorts, HwModule* ctx) {
 +    // On many Qualcomm devices, there is a BT SCO Headset Mic => primary input mix
 +    // But Telephony Rx => BT SCO Headset route is missing
@@ -124,8 +124,8 @@ index 6f19a7a145..1ab472f396 100644
      }
 +    fixupQualcommBtScoRoute(routes, devicePorts, module.get());
      module->setRoutes(routes);
- 
+
      for (const xmlNode *children = cur->xmlChildrenNode; children != NULL;
 -- 
-2.25.1
+2.52.0
 

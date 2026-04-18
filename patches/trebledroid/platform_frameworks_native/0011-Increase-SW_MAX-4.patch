@@ -1,4 +1,4 @@
-From 0305a56ab33693e230926e4495b34c292961fd71 Mon Sep 17 00:00:00 2001
+From aefcfd1c5babb724627002c0c20db89e3a1a73a2 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 3 Feb 2024 07:38:33 -0500
 Subject: [PATCH 11/16] Increase SW_MAX *= 4
@@ -14,21 +14,21 @@ We increase the size of SW_MAX for two reasons:
  2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/services/inputflinger/reader/EventHub.cpp b/services/inputflinger/reader/EventHub.cpp
-index c45497229c..cc7c7765f2 100644
+index 4dfc5ec..e8be76f 100644
 --- a/services/inputflinger/reader/EventHub.cpp
 +++ b/services/inputflinger/reader/EventHub.cpp
-@@ -1142,7 +1142,7 @@ int32_t EventHub::getKeyCodeForKeyLocation(int32_t deviceId, int32_t locationKey
+@@ -1160,7 +1160,7 @@ int32_t EventHub::getKeyCodeForKeyLocation(RawDeviceId deviceId, int32_t locatio
  }
- 
- int32_t EventHub::getSwitchState(int32_t deviceId, int32_t sw) const {
+
+ int32_t EventHub::getSwitchState(RawDeviceId deviceId, int32_t sw) const {
 -    if (sw < 0 || sw > SW_MAX) {
-+    if (sw < 0 || sw > (SW_MAX*4)) {
++    if (sw < 0 || sw > (SW_MAX * 4)) {
          return AKEY_STATE_UNKNOWN;
      }
      std::scoped_lock _l(mLock);
-@@ -2500,7 +2500,7 @@ void EventHub::openDeviceLocked(const std::string& devicePath) {
+@@ -2546,7 +2546,7 @@ void EventHub::openDeviceLocked(const std::string& devicePath) {
      }
- 
+
      // Check whether this device has switches.
 -    for (int i = 0; i <= SW_MAX; i++) {
 +    for (int i = 0; i <= (SW_MAX * 4); i++) {
@@ -36,10 +36,10 @@ index c45497229c..cc7c7765f2 100644
              device->classes |= InputDeviceClass::SWITCH;
              break;
 diff --git a/services/inputflinger/reader/include/EventHub.h b/services/inputflinger/reader/include/EventHub.h
-index 9f3a57c265..dd8aba700c 100644
+index 582c681..3587757 100644
 --- a/services/inputflinger/reader/include/EventHub.h
 +++ b/services/inputflinger/reader/include/EventHub.h
-@@ -656,8 +656,8 @@ private:
+@@ -657,8 +657,8 @@ private:
          BitArray<KEY_CNT> keyBitmask;
          BitArray<KEY_CNT> keyState;
          BitArray<REL_CNT> relBitmask;
@@ -51,5 +51,5 @@ index 9f3a57c265..dd8aba700c 100644
          BitArray<FF_CNT> ffBitmask;
          BitArray<INPUT_PROP_CNT> propBitmask;
 -- 
-2.25.1
+2.52.0
 

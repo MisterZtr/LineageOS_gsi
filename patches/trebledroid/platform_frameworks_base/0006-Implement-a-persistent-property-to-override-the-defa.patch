@@ -1,7 +1,7 @@
 From 48f956ab9933075fc328e441826989226ed79d37 Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Wed, 1 Jun 2022 16:56:20 -0400
-Subject: [PATCH 06/57] Implement a persistent property to override the default
+Subject: [PATCH 06/55] Implement a persistent property to override the default
  primary camera (0)
 
 Change-Id: I49b45d00bf71d7932591b3516d49a680e1b6568b
@@ -44,8 +44,8 @@ index 6a61c4263d4c..724c6c37e991 100644
 +                cameraIds[altPrimaryCamera] = origPrimary;
 +            }
          }
- 
+
          private boolean shouldHideCamera(int currentDeviceId, int devicePolicy,
 -- 
-2.25.1
+2.52.0
 

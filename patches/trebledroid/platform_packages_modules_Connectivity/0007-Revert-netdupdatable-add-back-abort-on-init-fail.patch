@@ -13,7 +13,7 @@ index 3b15916398..8b9e5a759c 100644
 --- a/bpf/netd/NetdUpdatable.cpp
 +++ b/bpf/netd/NetdUpdatable.cpp
 @@ -31,8 +31,8 @@ int libnetd_updatable_init(const char* cg2_path) {
- 
+
      android::netdutils::Status ret = sBpfHandler.init(cg2_path);
      if (!android::netdutils::isOk(ret)) {
 -        LOG(ERROR) << __func__ << ": Failed: (" << ret.code() << ") " << ret.msg();
@@ -24,5 +24,5 @@ index 3b15916398..8b9e5a759c 100644
      return 0;
  }
 -- 
-2.25.1
+2.52.0
 

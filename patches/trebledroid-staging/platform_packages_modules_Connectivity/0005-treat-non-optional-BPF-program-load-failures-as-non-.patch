@@ -1,0 +1,45 @@
+From 02a93f1e00e2d68dd364bed1332b5d7b5241ea23 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 3 Apr 2026 00:37:25 +0100
+Subject: [PATCH 5/5] treat non-optional BPF program load failures as non-fatal for
+ GSI
+
+kernels that spoof their version string (e.g. 4.19 reporting as 5.4
+via KernelSU) pass the kver gate in the BPF loader but lack the
+actual BPF features needed by the program.  the TC classifier
+programs for IPv6 tether offload (schedcls_tether_downstream6_ether
+et al.) are marked non-optional and require real 5.4+ BPF support.
+when they fail to load on a spoofed 4.19 kernel, the loader aborts
+the entire offload.o object, leaving tethering broken.
+
+convert the non-optional failure path from a fatal abort to a
+warning-and-continue, matching the existing optional program
+behaviour.  tethering falls back to the iptables path when the BPF
+offload programs are unavailable.
+---
+ bpf/loader/NetBpfLoad.cpp | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/bpf/loader/NetBpfLoad.cpp b/bpf/loader/NetBpfLoad.cpp
+index e79fb07..ce113d8 100644
+--- a/bpf/loader/NetBpfLoad.cpp
++++ b/bpf/loader/NetBpfLoad.cpp
+@@ -1135,7 +1135,14 @@ static int loadCodeSections(ElfObject& elfObj, vector<codeSection>& cs, const st
+                           cs[i].prog_def->name());
+                     continue;
+                 }
+-                ALOGE("non-optional program %s failed to load.", cs[i].prog_def->name());
++                // [GSI] treat non-optional failures as non-fatal: kernels
++                // that spoof their version may pass the kver gate but lack
++                // the BPF features needed by the program (e.g. 4.19 spoofing
++                // 5.4 fails TC classifier programs).  warn and continue so
++                // tethering can fall back to iptables.
++                ALOGW("[GSI] non-optional program %s failed to load -- continuing anyway",
++                      cs[i].prog_def->name());
++                continue;
+             }
+         }
+ 
+-- 
+2.53.0
+

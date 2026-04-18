@@ -15,12 +15,12 @@ index bc61d15bc..83766adbf 100644
 +++ b/fs_mgr/libfiemap/image_manager.cpp
 @@ -156,7 +156,7 @@ bool ImageManager::MetadataDirIsTest() const {
  }
- 
+
  bool ImageManager::IsUnreliablePinningAllowed() const {
 -    return IsSubdir(data_dir_, "/data/gsi/dsu/") || MetadataDirIsTest();
 +    return IsSubdir(data_dir_, "/data/gsi/dsu/") || MetadataDirIsTest() || IsSubdir(data_dir_, "/data/gsi/phh/");
  }
- 
+
  FiemapStatus ImageManager::CreateBackingImage(
 diff --git a/init/selinux.cpp b/init/selinux.cpp
 index 03fd2d2bf..668c857af 100644
@@ -33,7 +33,7 @@ index 03fd2d2bf..668c857af 100644
 +#include <fcntl.h>
 +#include <strings.h>
 +#include <sys/sysmacros.h>
- 
+
  #include <android-base/chrono_utils.h>
  #include <android-base/file.h>
 @@ -75,6 +78,9 @@
@@ -43,7 +43,7 @@ index 03fd2d2bf..668c857af 100644
 +#include <sys/mount.h>
 +#include <libfiemap/image_manager.h>
 +#include <liblp/partition_opener.h>
- 
+
  #include "block_dev_initializer.h"
  #include "debug_ramdisk.h"
 @@ -82,6 +88,7 @@
@@ -51,21 +51,21 @@ index 03fd2d2bf..668c857af 100644
  #include "snapuserd_transition.h"
  #include "util.h"
 +#include "switch_root.h"
- 
+
  using namespace std::string_literals;
- 
+
 @@ -90,6 +97,7 @@ using android::base::Timer;
  using android::base::unique_fd;
  using android::fs_mgr::AvbHandle;
  using android::snapshot::SnapshotManager;
 +using android::fiemap::IImageManager;
- 
+
  namespace android {
  namespace init {
 @@ -661,6 +669,60 @@ void LoadSelinuxPolicyMicrodroid() {
      LoadSelinuxPolicy(policy);
  }
- 
+
 +static void setupPhhOta() {
 +	setenv("PHH_STEP2", (char*)"1", 1);
 +	if(getenv("PHH_OTA")) return;
@@ -130,8 +130,8 @@ index 03fd2d2bf..668c857af 100644
 +    setenv("PHH_STEP1", (char*)"1", 1);
 +    setupPhhOta();
      MountMissingSystemPartitions();
- 
+
      LOG(INFO) << "Opening SELinux policy";
 -- 
-2.25.1
+2.52.0
 

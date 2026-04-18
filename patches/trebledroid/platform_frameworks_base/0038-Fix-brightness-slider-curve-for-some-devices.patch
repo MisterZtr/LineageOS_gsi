@@ -1,7 +1,7 @@
-From 2ab898bb8c6e28575823bc5540ca7e299eabb7cb Mon Sep 17 00:00:00 2001
+From 430b80a11889e94c4c1f954cc4dd785778038dc0 Mon Sep 17 00:00:00 2001
 From: ChonDoit <thphantomblog@gmail.com>
 Date: Thu, 24 Aug 2023 15:58:15 -0300
-Subject: [PATCH 38/57] Fix brightness slider curve for some devices
+Subject: [PATCH 38/55] Fix brightness slider curve for some devices
 
 Some devices report max brightness as 2047 or 4095
 ---
@@ -13,7 +13,7 @@ diff --git a/packages/SettingsLib/DisplayUtils/src/com/android/settingslib/displ
 index 66ed10433459..f6820b4436fc 100644
 --- a/packages/SettingsLib/DisplayUtils/src/com/android/settingslib/display/BrightnessUtils.java
 +++ b/packages/SettingsLib/DisplayUtils/src/com/android/settingslib/display/BrightnessUtils.java
-@@ -19,14 +19,18 @@ package com.android.settingslib.display;
+@@ -19,14 +19,19 @@ package com.android.settingslib.display;
  import android.os.SystemProperties;
  import android.util.MathUtils;
  
@@ -25,7 +25,8 @@ index 66ed10433459..f6820b4436fc 100644
      public static final boolean sDisableGammaConversion =
              SystemProperties.getBoolean("sys.brightness.disable_gamma_conversion", false);
  
-+    public static final boolean LowGammaBrightness = Boolean.parseBoolean(SystemProperties.get("persist.sys.phh.low_gamma_brightness", "false"));
++    public static final boolean LowGammaBrightness =
++            SystemProperties.getBoolean("persist.sys.phh.low_gamma_brightness", false);
 +
      public static final int GAMMA_SPACE_MIN = 0;
 -    public static final int GAMMA_SPACE_MAX = 65535;
@@ -33,19 +34,17 @@ index 66ed10433459..f6820b4436fc 100644
  
      // Hybrid Log Gamma constant values
      private static final float R = 0.5f;
-@@ -102,9 +106,8 @@ public class BrightnessUtils {
-         // it shouldn't be out of bounds.
-         final float normalizedRet = MathUtils.constrain(ret, 0, 12);
+@@ -104,7 +109,8 @@ public class BrightnessUtils {
  
--        // Re-normalize to the range [0, 1]
--        // in order to derive the correct setting value.
+         // Re-normalize to the range [0, 1]
+         // in order to derive the correct setting value.
 -        return MathUtils.lerp(min, max, normalizedRet / 12);
 +        return LowGammaBrightness ? MathUtils.constrain(BrightnessSynchronizer.brightnessIntToFloat(val),
 +                         min, max) : MathUtils.lerp(min, max, normalizedRet / 12);
      }
  
      /**
-@@ -156,6 +159,7 @@ public class BrightnessUtils {
+@@ -156,6 +162,7 @@ public class BrightnessUtils {
              ret = A * MathUtils.log(normalizedVal - B) + C;
          }
  
@@ -58,27 +57,33 @@ diff --git a/packages/SystemUI/src/com/android/systemui/brightness/shared/model/
 index 7eba6268869c..b7a9d5f535b4 100644
 --- a/packages/SystemUI/src/com/android/systemui/brightness/shared/model/GammaBrightness.kt
 +++ b/packages/SystemUI/src/com/android/systemui/brightness/shared/model/GammaBrightness.kt
-@@ -23,13 +23,13 @@ import com.android.systemui.util.kotlin.pairwiseBy
- import kotlinx.coroutines.flow.Flow
+@@ -16,7 +16,6 @@
+ 
+ package com.android.systemui.brightness.shared.model
+ 
+-import androidx.annotation.IntRange
+ import com.android.settingslib.display.BrightnessUtils
+ import com.android.systemui.log.table.TableLogBuffer
+ import com.android.systemui.util.kotlin.pairwiseBy
+@@ -24,10 +23,12 @@
  
  @JvmInline
--value class GammaBrightness(
+ value class GammaBrightness(
 -    @IntRange(
 -        from = BrightnessUtils.GAMMA_SPACE_MIN.toLong(),
 -        to = BrightnessUtils.GAMMA_SPACE_MAX.toLong()
 -    )
--    val value: Int
+     val value: Int
 -)
-+value class GammaBrightness(val value: Int) {
++) {
 +    init {
-+        require(value in BrightnessUtils.GAMMA_SPACE_MIN..BrightnessUtils.GAMMA_SPACE_MAX) {
++        require(value == -1 || value in BrightnessUtils.GAMMA_SPACE_MIN..BrightnessUtils.GAMMA_SPACE_MAX) {
 +            "Value must be in range ${BrightnessUtils.GAMMA_SPACE_MIN} to ${BrightnessUtils.GAMMA_SPACE_MAX}"
 +        }
 +    }
 +}
  
  internal fun Flow<GammaBrightness>.logDiffForTable(
-     tableLogBuffer: TableLogBuffer,
 -- 
-2.25.1
+2.52.0
 

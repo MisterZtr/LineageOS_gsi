@@ -13,16 +13,16 @@ Not yet legacy bluetooth stack
 Change-Id: Id25dac186628e933185bdfd640498004459b375a
 ---
  system/btif/src/btif_a2dp_sink.cc   |  2 +-
- system/btif/src/btif_a2dp_source.cc |  2 +-
+ system/btif/src/btif_a2dp_source.cc |  4 ++--
  system/osi/src/alarm.cc             | 12 +++++++++++-
  system/stack/btu/main_thread.cc     |  2 +-
- 4 files changed, 14 insertions(+), 4 deletions(-)
+ 4 files changed, 15 insertions(+), 5 deletions(-)
 
 diff --git a/system/btif/src/btif_a2dp_sink.cc b/system/btif/src/btif_a2dp_sink.cc
-index e2258d35f2..d0a2879c9a 100644
+index d20be9d..c07249e 100644
 --- a/system/btif/src/btif_a2dp_sink.cc
 +++ b/system/btif/src/btif_a2dp_sink.cc
-@@ -204,7 +204,7 @@ bool btif_a2dp_sink_init() {
+@@ -203,7 +203,7 @@ bool btif_a2dp_sink_init() {
    /* Schedule the rest of the operations */
    if (!btif_a2dp_sink_cb.worker_thread.EnableRealTimeScheduling()) {
  #if defined(__ANDROID__)
@@ -32,11 +32,20 @@ index e2258d35f2..d0a2879c9a 100644
    }
    btif_a2dp_sink_cb.worker_thread.DoInThread(base::BindOnce(btif_a2dp_sink_init_delayed));
 diff --git a/system/btif/src/btif_a2dp_source.cc b/system/btif/src/btif_a2dp_source.cc
-index 5bf2ef0d87..ddd48b4621 100644
+index ae00fa4..b64405f 100644
 --- a/system/btif/src/btif_a2dp_source.cc
 +++ b/system/btif/src/btif_a2dp_source.cc
-@@ -438,7 +438,7 @@ static void btif_a2dp_source_startup_delayed() {
-   log::info("state={}", btif_a2dp_source_cb.StateStr());
+@@ -335,7 +335,7 @@ bool btif_a2dp_source_init(void) {
+   if (com_android_bluetooth_flags_a2dp_source_null_fixed_queue()) {
+     if (!btif_a2dp_source_thread.EnableRealTimeScheduling()) {
+ #if defined(__ANDROID__)
+-      log::fatal("unable to enable real time scheduling");
++      log::error("unable to enable real time scheduling");
+ #endif
+     }
+   }
+@@ -457,7 +457,7 @@ static void btif_a2dp_source_startup_delayed() {
+
    if (!btif_a2dp_source_thread.EnableRealTimeScheduling()) {
  #if defined(__ANDROID__)
 -    log::fatal("unable to enable real time scheduling");
@@ -45,10 +54,10 @@ index 5bf2ef0d87..ddd48b4621 100644
    }
    if (!bluetooth::audio::a2dp::init(get_main_thread(), &a2dp_stream_callbacks,
 diff --git a/system/osi/src/alarm.cc b/system/osi/src/alarm.cc
-index 6aaf4354ae..17712d557d 100644
+index ee62645..4b18385 100644
 --- a/system/osi/src/alarm.cc
 +++ b/system/osi/src/alarm.cc
-@@ -679,7 +679,17 @@ static bool timer_create_internal(const clockid_t clock_id, timer_t* timer) {
+@@ -687,7 +687,17 @@ static bool timer_create_internal(const clockid_t clock_id, timer_t* timer) {
    sigevent.sigev_notify = SIGEV_THREAD;
    sigevent.sigev_notify_function = timer_callback;
    sigevent.sigev_notify_attributes = &thread_attr;
@@ -68,7 +77,7 @@ index 6aaf4354ae..17712d557d 100644
      if (clock_id == CLOCK_BOOTTIME_ALARM) {
        log::error(
 diff --git a/system/stack/btu/main_thread.cc b/system/stack/btu/main_thread.cc
-index 6364f81e8b..bbc7ae1e5f 100644
+index b24041a..ac5a320 100644
 --- a/system/stack/btu/main_thread.cc
 +++ b/system/stack/btu/main_thread.cc
 @@ -69,7 +69,7 @@ void main_thread_start_up() {
@@ -81,5 +90,5 @@ index 6364f81e8b..bbc7ae1e5f 100644
      log::error("unable to enable real time scheduling");
  #endif
 -- 
-2.25.1
+2.52.0
 

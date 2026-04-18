@@ -1,0 +1,183 @@
+From ea02f0a05370a1479943dbd9094385d6acae6cc5 Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Wed, 25 Mar 2026 23:09:40 +0000
+Subject: [PATCH 9/11] add performance activity animation override for low-end MTK
+ devices
+
+on MTK and other low-end devices running android 16, the stock AOSP
+activity transition animations (XML-based fixed-dp translate + fade)
+cause visible lag in Settings and during app open/close.
+
+when persist.sys.activity_anim_perf_override is true, replace the
+four activity transition animations (open enter/exit, close enter/exit)
+with programmatically-built equivalents that:
+- scale translate distances proportionally to screen size (sw/420dp)
+- use a shorter 133ms duration with linear_out_slow_in interpolator
+- cache animation objects as static singletons to avoid repeated XML
+  parsing and object allocation
+
+based on AxionAOSP commit f89e8fa by rmp22.
+---
+ .../view/animation/AnimationUtils.java        | 127 ++++++++++++++++++
+ 1 file changed, 127 insertions(+)
+
+diff --git a/core/java/android/view/animation/AnimationUtils.java b/core/java/android/view/animation/AnimationUtils.java
+index dbb68372a..ad19b8033 100644
+--- a/core/java/android/view/animation/AnimationUtils.java
++++ b/core/java/android/view/animation/AnimationUtils.java
+@@ -30,13 +30,17 @@ import android.content.res.Resources.NotFoundException;
+ import android.content.res.Resources.Theme;
+ import android.content.res.XmlResourceParser;
+ import android.os.SystemClock;
++import android.os.SystemProperties;
+ import android.ravenwood.annotation.RavenwoodIgnore;
+ import android.ravenwood.annotation.RavenwoodKeepPartialClass;
+ import android.util.AttributeSet;
++import android.util.DisplayMetrics;
+ import android.util.TimeUtils;
+ import android.util.Xml;
+ import android.view.InflateException;
+ 
++import com.android.internal.R;
++
+ import org.xmlpull.v1.XmlPullParser;
+ import org.xmlpull.v1.XmlPullParserException;
+ 
+@@ -224,6 +228,20 @@ public class AnimationUtils {
+     public static Animation loadAnimation(Context context, @AnimRes int id)
+             throws NotFoundException {
+ 
++        if (SystemProperties.getBoolean("persist.sys.activity_anim_perf_override", false)) {
++            ActivityAnimations.maybeInit(context);
++            switch (id) {
++                case R.anim.activity_open_enter:
++                    return ActivityAnimations.getOpenEnter();
++                case R.anim.activity_open_exit:
++                    return ActivityAnimations.getOpenExit();
++                case R.anim.activity_close_enter:
++                    return ActivityAnimations.getCloseEnter();
++                case R.anim.activity_close_exit:
++                    return ActivityAnimations.getCloseExit();
++            }
++        }
++
+         XmlResourceParser parser = null;
+         try {
+             parser = context.getResources().getAnimation(id);
+@@ -504,4 +522,113 @@ public class AnimationUtils {
+         }
+         return interpolator;
+     }
++
++    /** @hide */
++    public static final class ActivityAnimations {
++
++        private static Animation sOpenEnter;
++        private static Animation sOpenExit;
++        private static Animation sCloseEnter;
++        private static Animation sCloseExit;
++
++        private static Interpolator sLinearOutSlowInInterpolator;
++        private static float sScaleRatio;
++        private static float sDensity;
++
++        private static final long DEFAULT_DURATION = 133L;
++
++        private ActivityAnimations() {}
++
++        /** @hide */
++        public static void maybeInit(Context context) {
++            if (sLinearOutSlowInInterpolator == null) {
++                sLinearOutSlowInInterpolator = AnimationUtils.loadInterpolator(
++                        context, R.interpolator.linear_out_slow_in);
++            }
++            if (sDensity == 0f) {
++                DisplayMetrics dm = context.getResources().getDisplayMetrics();
++                float sw = Math.min(dm.widthPixels, dm.heightPixels) / dm.density;
++                sScaleRatio = sw / 420f;
++                sDensity = dm.density;
++            }
++        }
++
++        private static float scaledDp(float dp) {
++            return dp * sDensity * sScaleRatio;
++        }
++
++        private static class ActivityAnimFactory {
++            private float fromX, toX;
++            private long duration = DEFAULT_DURATION;
++            private Interpolator interpolator = sLinearOutSlowInInterpolator;
++
++            public ActivityAnimFactory fromX(float dp) {
++                this.fromX = scaledDp(dp);
++                return this;
++            }
++
++            public ActivityAnimFactory toX(float dp) {
++                this.toX = scaledDp(dp);
++                return this;
++            }
++
++            public Animation build() {
++                TranslateAnimation slide = new TranslateAnimation(
++                        Animation.ABSOLUTE, fromX,
++                        Animation.ABSOLUTE, toX,
++                        Animation.ABSOLUTE, 0f,
++                        Animation.ABSOLUTE, 0f
++                );
++                slide.setDuration(duration);
++                slide.setInterpolator(interpolator);
++                AnimationSet set = new AnimationSet(false);
++                set.addAnimation(slide);
++                return set;
++            }
++        }
++
++        /** @hide */
++        public static Animation getOpenEnter() {
++            if (sOpenEnter == null) {
++                sOpenEnter = new ActivityAnimFactory()
++                        .fromX(48)
++                        .toX(0)
++                        .build();
++            }
++            return sOpenEnter;
++        }
++
++        /** @hide */
++        public static Animation getOpenExit() {
++            if (sOpenExit == null) {
++                sOpenExit = new ActivityAnimFactory()
++                        .fromX(0)
++                        .toX(-48)
++                        .build();
++            }
++            return sOpenExit;
++        }
++
++        /** @hide */
++        public static Animation getCloseEnter() {
++            if (sCloseEnter == null) {
++                sCloseEnter = new ActivityAnimFactory()
++                        .fromX(-48)
++                        .toX(0)
++                        .build();
++            }
++            return sCloseEnter;
++        }
++
++        /** @hide */
++        public static Animation getCloseExit() {
++            if (sCloseExit == null) {
++                sCloseExit = new ActivityAnimFactory()
++                        .fromX(0)
++                        .toX(48)
++                        .build();
++            }
++            return sCloseExit;
++        }
++    }
+ }
+-- 
+2.53.0
+

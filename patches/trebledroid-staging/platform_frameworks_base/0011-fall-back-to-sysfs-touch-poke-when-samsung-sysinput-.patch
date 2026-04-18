@@ -1,0 +1,98 @@
+From 43d3258e6194e30f057d78a4fe38572dda2a961c Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Wed, 1 Apr 2026 14:33:09 +0100
+Subject: [PATCH 11/11] fall back to sysfs touch poke when samsung sysinput HAL is
+ missing
+
+on samsung devices where the sysinput HIDL HAL
+(vendor.samsung.hardware.sysinput@1.1) is not declared in the VINTF
+manifest, the existing setTspEnable() call silently no-ops.  this
+leaves the novatek (and other sec_input) touch controller stuck in
+its suspended state after a display power cycle, permanently killing
+touch input until reboot.
+
+when the HAL lookup fails, fall back to two sysfs operations on
+display wake (STATE_ON):
+
+  1. write 'check_connection' to /sys/class/sec/tsp/cmd and read
+     cmd_result to complete the command.  the samsung sec_input cmd
+     interface is a request/response protocol -- both sides of the
+     pair must be accessed.  this forces the touch driver to
+     re-establish communication with the touch IC.
+
+  2. write '1' to /sys/class/sec/tsp/input/enabled to explicitly
+     re-enable the input device.  the HAL that normally toggles this
+     node on display state changes is absent.
+
+both sysfs nodes are guarded by existence checks and wrapped in
+try/catch, so this is a no-op on non-samsung devices or devices
+where the HAL works normally.
+
+rw-system.sh already chowns these nodes to system and relabels them
+to sysfs_ss_writable on samsung devices.
+---
+ .../server/display/LocalDisplayAdapter.java   | 48 +++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/services/core/java/com/android/server/display/LocalDisplayAdapter.java b/services/core/java/com/android/server/display/LocalDisplayAdapter.java
+index 6865a23a7..16159a693 100644
+--- a/services/core/java/com/android/server/display/LocalDisplayAdapter.java
++++ b/services/core/java/com/android/server/display/LocalDisplayAdapter.java
+@@ -1004,6 +1004,54 @@ final class LocalDisplayAdapter extends DisplayAdapter {
+                             }
+                         }
+ 
++                        // fallback: when the samsung sysinput HAL is missing (not
++                        // declared in the device VINTF manifest), poke the touch
++                        // controller via sysfs to re-establish communication after
++                        // waking from suspend.  without this, touch input dies
++                        // permanently on exynos 850 and similar samsung SoCs.
++                        //
++                        // the cmd/cmd_result pair must both be accessed: writing
++                        // cmd queues the command, reading cmd_result completes it.
++                        // we also re-enable the input node explicitly since the
++                        // HAL that normally toggles it is absent.
++                        if (samsungSysinput == null
++                                && state == Display.STATE_ON
++                                && triedSamsungHal) {
++                            try {
++                                java.io.File tspCmd =
++                                        new java.io.File("/sys/class/sec/tsp/cmd");
++                                if (tspCmd.exists()) {
++                                    java.io.FileOutputStream fos =
++                                            new java.io.FileOutputStream(tspCmd);
++                                    fos.write("check_connection".getBytes());
++                                    fos.close();
++                                    // read cmd_result to complete the command
++                                    java.io.FileInputStream fis =
++                                            new java.io.FileInputStream(
++                                                    "/sys/class/sec/tsp/cmd_result");
++                                    fis.read(new byte[64]);
++                                    fis.close();
++                                    Log.d("PHH", "Sent check_connection to "
++                                            + "sec/tsp/cmd (sysinput HAL unavailable)");
++                                }
++                            } catch (Throwable t) {
++                                Log.d("PHH", "Failed to poke sec/tsp/cmd", t);
++                            }
++                            try {
++                                java.io.File inputEnabled =
++                                        new java.io.File(
++                                                "/sys/class/sec/tsp/input/enabled");
++                                if (inputEnabled.exists()) {
++                                    java.io.FileOutputStream fos =
++                                            new java.io.FileOutputStream(inputEnabled);
++                                    fos.write("1".getBytes());
++                                    fos.close();
++                                }
++                            } catch (Throwable t) {
++                                Log.d("PHH", "Failed to re-enable tsp input", t);
++                            }
++                        }
++
+                         setCommittedState(state);
+ 
+                         // If we're entering a suspended (but not OFF) power state and we
+-- 
+2.53.0
+

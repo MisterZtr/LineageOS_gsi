@@ -1,0 +1,41 @@
+From 5e953b88ed25800c948681cc10e031d72c92ce91 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Sat, 28 Mar 2026 20:28:58 +0000
+Subject: [PATCH 7/21] allow health HAL to access vendor-defined sysfs_battery nodes
+
+some vendors label all power_supply sysfs nodes (battery, charger,
+fuelgauge, etc.) under a vendor-defined sysfs_battery type instead
+of AOSP's sysfs_batteryinfo. the GSI's hal_health_default domain
+has no rule granting access to this type, so SELinux blocks every
+read attempt and healthd reports no battery devices.
+
+declare hal_health_default and sysfs_battery in system_ext sepolicy
+(they are vendor-side types not visible to system_ext by default)
+and grant the minimum permissions to enumerate and read power_supply
+attributes.
+---
+ sepolicy/hal.te | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/sepolicy/hal.te b/sepolicy/hal.te
+index cb44422..1ddc612 100644
+--- a/sepolicy/hal.te
++++ b/sepolicy/hal.te
+@@ -1,3 +1,14 @@
++# allow health HAL to read vendor-labelled battery/charger/power_supply sysfs.
++# some vendors (samsung, others) label all power_supply nodes under a
++# vendor-defined sysfs_battery type instead of AOSP's sysfs_batteryinfo.
++# without this rule the health HAL is denied access and healthd reports
++# no battery devices.
++type hal_health_default, domain;
++type sysfs_battery, fs_type, sysfs_type;
++allow hal_health_default sysfs_battery:dir { getattr open read search };
++allow hal_health_default sysfs_battery:file { getattr open read };
++allow hal_health_default sysfs_battery:lnk_file { getattr read };
++
+ type hal_fingerprint_oppo_compat, domain;
+ hal_client_domain(hal_fingerprint_oppo_compat, hal_fingerprint)
+ hal_server_domain(hal_fingerprint_oppo_compat, hal_fingerprint)
+-- 
+2.53.0
+

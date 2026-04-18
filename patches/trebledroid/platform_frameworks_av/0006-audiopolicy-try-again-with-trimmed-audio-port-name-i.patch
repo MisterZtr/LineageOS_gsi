@@ -1,4 +1,4 @@
-From a694a617ae7af9ea6491f0de8fc30bb872312de1 Mon Sep 17 00:00:00 2001
+From 92928f81af4e5ec621fc68f830d9335eb7a90bf0 Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Thu, 23 Jan 2020 11:13:43 +0800
 Subject: [PATCH 06/25] audiopolicy: try again with trimmed audio port name if
@@ -25,7 +25,7 @@ index 839974b9d3..21d3282134 100644
 @@ -593,6 +593,17 @@ std::variant<status_t, DevicePortTraits::Element> PolicySerializer::deserialize<
      return deviceDesc;
  }
- 
+
 +char* trim(char * s) {
 +    int l = strlen(s);
 +
@@ -51,5 +51,5 @@ index 839974b9d3..21d3282134 100644
                  if (!mIgnoreVendorExtensions) {
                      ALOGE("%s: no source found with name \"%s\"", __func__, devTag);
 -- 
-2.25.1
+2.52.0
 

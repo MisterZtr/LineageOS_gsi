@@ -1,4 +1,4 @@
-From 5b6ae66d13d38f1448e1fb380bde681bc67b9138 Mon Sep 17 00:00:00 2001
+From f6ba4b8c2c00cb69302e406e02be2213ab0f4b24 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Thu, 14 May 2020 19:54:55 +0200
 Subject: [PATCH 09/25] Add persist.sys.phh.samsung.camera_ids property to
@@ -28,10 +28,10 @@ index 27ae766e1b..663eaf22ed 100644
 +++ b/services/camera/libcameraservice/common/hidl/HidlProviderInfo.cpp
 @@ -29,6 +29,7 @@
  #include <utils/Utils.h>
- 
+
  #include <android/hardware/camera/device/3.7/ICameraDevice.h>
 +#include <vendor/samsung/hardware/camera/provider/3.0/ISehCameraProvider.h>
- 
+
  namespace {
  const bool kEnableLazyHal(property_get_bool("ro.camera.enableLazyHal", false));
 @@ -137,6 +138,7 @@ status_t HidlProviderInfo::initializeHidlProvider(
@@ -45,7 +45,7 @@ index 27ae766e1b..663eaf22ed 100644
 @@ -173,6 +175,9 @@ status_t HidlProviderInfo::initializeHidlProvider(
          return mapToStatusT(status);
      }
- 
+
 +    auto samsungCast = vendor::samsung::hardware::camera::provider::V3_0::ISehCameraProvider::castFrom(interface);
 +    auto samsungProvider = samsungCast.isOk() ? static_cast<sp<vendor::samsung::hardware::camera::provider::V3_0::ISehCameraProvider>>(samsungCast) : nullptr;
 +
@@ -53,7 +53,7 @@ index 27ae766e1b..663eaf22ed 100644
      if (!linked.isOk()) {
          ALOGE("%s: Transaction error in linking to camera provider '%s' death: %s",
 @@ -203,7 +208,7 @@ status_t HidlProviderInfo::initializeHidlProvider(
- 
+
      // Get initial list of camera devices, if any
      std::vector<std::string> devices;
 -    hardware::Return<void> ret = interface->getCameraIdList([&status, this, &devices](
@@ -76,5 +76,5 @@ index 27ae766e1b..663eaf22ed 100644
          ALOGE("%s: Transaction error in getting camera ID list from provider '%s': %s",
                  __FUNCTION__, mProviderName.c_str(), linked.description().c_str());
 -- 
-2.25.1
+2.52.0
 

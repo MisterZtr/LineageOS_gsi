@@ -10,14 +10,14 @@ F DEBUG   : Abort message: 'assertion 'op_code == OpCode::NONE' failed - Receive
 
 It means this command isn't in the command_queue_, we can just ignore it.
 ---
- system/gd/hci/hci_layer.cc | 4 ++++
- 1 file changed, 4 insertions(+)
+ system/gd/hci/hci_layer.cc | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/system/gd/hci/hci_layer.cc b/system/gd/hci/hci_layer.cc
-index 06677cb7c9..e4950f2789 100644
+index 7c1e773..ee3b791 100644
 --- a/system/gd/hci/hci_layer.cc
 +++ b/system/gd/hci/hci_layer.cc
-@@ -456,6 +456,10 @@ struct HciLayer::impl {
+@@ -466,6 +466,10 @@ struct HciLayer::impl {
          auto view = CommandCompleteView::Create(event);
          log::assert_that(view.IsValid(), "assert failed: view.IsValid()");
          auto op_code = view.GetCommandOpCode();
@@ -28,6 +28,17 @@ index 06677cb7c9..e4950f2789 100644
          log::assert_that(op_code == OpCode::NONE,
                           "Received {} event with OpCode {} without a waiting command(is the HAL "
                           "sending commands, but not handling the events?)",
+@@ -475,6 +479,10 @@ struct HciLayer::impl {
+         auto view = CommandStatusView::Create(event);
+         log::assert_that(view.IsValid(), "assert failed: view.IsValid()");
+         auto op_code = view.GetCommandOpCode();
++        if (op_code == OpCode::READ_REMOTE_VERSION_INFORMATION) {
++            log::warn("OpCode 0x%02hx (%s) is not in the command queue, skipped.", op_code, OpCodeText(op_code).c_str());
++            return;
++        }
+         log::assert_that(op_code == OpCode::NONE,
+                          "Received {} event with OpCode {} without a waiting command(is the HAL "
+                          "sending commands, but not handling the events?)",
 -- 
-2.25.1
+2.52.0
 

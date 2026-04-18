@@ -1,4 +1,4 @@
-From fbf58325db024cae18cbbc1d50f6fec3c669c495 Mon Sep 17 00:00:00 2001
+From e84a6e0e8637d7a157a75c0f14bb3eee8f71f8d4 Mon Sep 17 00:00:00 2001
 From: Alberto Ponces <ponces26@gmail.com>
 Date: Sun, 20 Oct 2024 21:15:08 +0100
 Subject: [PATCH 27/28] Revert "init: remove session keyring workaround for old
@@ -15,10 +15,10 @@ This reverts commit 5d7c35ce205f1b4afadd6a1725c0b5e03962a97c.
  6 files changed, 28 insertions(+)
 
 diff --git a/init/Android.bp b/init/Android.bp
-index ed8123e38..f1836db57 100644
+index 6f50c09..ab000cb 100644
 --- a/init/Android.bp
 +++ b/init/Android.bp
-@@ -188,6 +188,7 @@ libinit_cc_defaults {
+@@ -205,6 +205,7 @@ libinit_cc_defaults {
          "libext4_utils",
          "libfs_mgr",
          "libgsi",
@@ -27,7 +27,7 @@ index ed8123e38..f1836db57 100644
          "liblogwrap",
          "liblp",
 diff --git a/init/builtins.cpp b/init/builtins.cpp
-index a5222bb0d..2d100e733 100644
+index ede2fcd..4a89c45 100644
 --- a/init/builtins.cpp
 +++ b/init/builtins.cpp
 @@ -597,6 +597,9 @@ static Result<void> queue_fs_event(int code) {
@@ -38,10 +38,10 @@ index a5222bb0d..2d100e733 100644
 +            return Error() << "FscryptInstallKeyring() failed";
 +        }
          SetProperty("ro.crypto.state", "encrypted");
- 
+
          // Although encrypted, vold has already set the device up, so we do not need to
 diff --git a/init/fscrypt_init_extensions.cpp b/init/fscrypt_init_extensions.cpp
-index 6a561e54c..fbd818957 100644
+index 6a561e5..fbd8189 100644
 --- a/init/fscrypt_init_extensions.cpp
 +++ b/init/fscrypt_init_extensions.cpp
 @@ -34,12 +34,28 @@
@@ -50,11 +50,11 @@ index 6a561e54c..fbd818957 100644
  #include <fscrypt/fscrypt.h>
 +#include <keyutils.h>
  #include <logwrap/logwrap.h>
- 
+
  #define TAG "fscrypt"
- 
+
  using namespace android::fscrypt;
- 
+
 +bool FscryptInstallKeyring() {
 +    if (keyctl_search(KEY_SPEC_SESSION_KEYRING, "keyring", "fscrypt", 0) != -1) {
 +        LOG(INFO) << "Keyring is already created";
@@ -74,18 +74,18 @@ index 6a561e54c..fbd818957 100644
  static void delete_dir_contents(const std::string& dir) {
      char* const paths[2] = {const_cast<char*>(dir.c_str()), nullptr};
 diff --git a/init/fscrypt_init_extensions.h b/init/fscrypt_init_extensions.h
-index 5e0269a3b..d357bb2fd 100644
+index 5e0269a..d357bb2 100644
 --- a/init/fscrypt_init_extensions.h
 +++ b/init/fscrypt_init_extensions.h
 @@ -25,5 +25,6 @@ enum class FscryptAction {
      kDeleteIfNecessary,
  };
- 
+
 +bool FscryptInstallKeyring();
  bool FscryptSetDirectoryPolicy(const std::string& ref_basename, FscryptAction action,
                                 const std::string& dir);
 diff --git a/init/fuzzer/Android.bp b/init/fuzzer/Android.bp
-index 8cfd597d9..cb3700a7f 100644
+index 8cfd597..cb3700a 100644
 --- a/init/fuzzer/Android.bp
 +++ b/init/fuzzer/Android.bp
 @@ -30,6 +30,7 @@ cc_defaults {
@@ -97,21 +97,21 @@ index 8cfd597d9..cb3700a7f 100644
          "libprocessgroup",
          "libselinux",
 diff --git a/init/init.cpp b/init/init.cpp
-index f6b294136..de80807e0 100644
+index 08e7c66..7de53f9 100644
 --- a/init/init.cpp
 +++ b/init/init.cpp
-@@ -52,6 +52,7 @@
- #include <android-base/thread_annotations.h>
+@@ -53,6 +53,7 @@
+ #include <com_android_apex_flags.h>
  #include <fs_avb/fs_avb.h>
  #include <fs_mgr_vendor_overlay.h>
 +#include <keyutils.h>
  #include <libavb/libavb.h>
+ #include <libdm/loop_control.h>
  #include <libgsi/libgsi.h>
- #include <libsnapshot/snapshot.h>
-@@ -1000,6 +1001,11 @@ int SecondStageMain(int argc, char** argv) {
+@@ -1088,6 +1089,11 @@ int SecondStageMain(int argc, char** argv) {
                     << " to /proc/1/oom_score_adj: " << result.error();
      }
- 
+
 +    // Set up a session keyring that all processes will have access to. It
 +    // will hold things like FBE encryption keys. No process should override
 +    // its session keyring.
@@ -119,7 +119,7 @@ index f6b294136..de80807e0 100644
 +
      // Indicate that booting is in progress to background fw loaders, etc.
      close(open("/dev/.booting", O_WRONLY | O_CREAT | O_CLOEXEC, 0000));
- 
+
 -- 
-2.25.1
+2.52.0
 

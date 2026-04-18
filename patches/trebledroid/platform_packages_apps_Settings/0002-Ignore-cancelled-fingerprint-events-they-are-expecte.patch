@@ -14,7 +14,7 @@ index 2cbf8d089ff..da5200ba463 100644
 --- a/src/com/android/settings/biometrics/fingerprint/FingerprintEnrollEnrolling.java
 +++ b/src/com/android/settings/biometrics/fingerprint/FingerprintEnrollEnrolling.java
 @@ -860,6 +860,9 @@ public class FingerprintEnrollEnrolling extends BiometricsEnrollEnrolling {
- 
+
      @Override
      public void onEnrollmentError(int errMsgId, CharSequence errString) {
 +        android.util.Log.e("PHH-Enroll", "heyo " + errMsgId + ", " + errString , new Exception());
@@ -28,7 +28,7 @@ index aeb0dac97c4..82d1e9c07d6 100644
 --- a/src/com/android/settings/biometrics/fingerprint/FingerprintEnrollFindSensor.java
 +++ b/src/com/android/settings/biometrics/fingerprint/FingerprintEnrollFindSensor.java
 @@ -371,6 +371,7 @@ public class FingerprintEnrollFindSensor extends BiometricEnrollBase implements
- 
+
      @Override
      public void onEnrollmentError(int errMsgId, CharSequence errString) {
 +	android.util.Log.e("PHH-Enroll", "heyo " + errMsgId + ", " + errString + ", " + mNextClicked, new Exception());
@@ -36,5 +36,5 @@ index aeb0dac97c4..82d1e9c07d6 100644
              proceedToEnrolling(false /* cancelEnrollment */);
          } else {
 -- 
-2.25.1
+2.52.0
 

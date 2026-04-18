@@ -9,20 +9,20 @@ Change-Id: I4d4abbacd6b9589260de06663e2143bc37d8ea0f
  1 file changed, 10 deletions(-)
 
 diff --git a/bpf/netd/BpfHandler.cpp b/bpf/netd/BpfHandler.cpp
-index d4dfdca701..954e48500a 100644
+index f320058..09d6159 100644
 --- a/bpf/netd/BpfHandler.cpp
 +++ b/bpf/netd/BpfHandler.cpp
 @@ -81,16 +81,6 @@ static Status initPrograms(const char* cg2_path) {
      // This code was mainlined in T, so this should be trivially satisfied.
      if (!isAtLeastT) return Status("S- platform is unsupported");
- 
+
 -    // S requires eBPF support which was only added in 4.9, so this should be satisfied.
--    if (!isAtLeastKernelVersion(4, 9, 0)) {
+-    if (!isAtLeastKernelVersion(4, 9)) {
 -        return Status("kernel version < 4.9.0 is unsupported");
 -    }
 -
 -    // U bumps the kernel requirement up to 4.14
--    if (isAtLeastU && !isAtLeastKernelVersion(4, 14, 0)) {
+-    if (isAtLeastU && !isAtLeastKernelVersion(4, 14)) {
 -        return Status("U+ platform with kernel version < 4.14.0 is unsupported");
 -    }
 -
@@ -30,5 +30,5 @@ index d4dfdca701..954e48500a 100644
      if (isAtLeastU && !!strcmp(cg2_path, "/sys/fs/cgroup")) {
          return Status("U+ platform with cg2_path != /sys/fs/cgroup is unsupported");
 -- 
-2.25.1
+2.52.0
 

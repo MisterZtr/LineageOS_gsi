@@ -1,7 +1,7 @@
 From f4b8b15e8552c498d2b20a252bc5fb5cb3ea8f1c Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Tue, 17 Oct 2023 11:08:06 -0400
-Subject: [PATCH 07/11] When logging UiccSlot, ignore error if we cant print
+Subject: [PATCH 07/12] When logging UiccSlot, ignore error if we cant print
  IccIds
 
 ---
@@ -9,24 +9,25 @@ Subject: [PATCH 07/11] When logging UiccSlot, ignore error if we cant print
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/src/java/com/android/internal/telephony/uicc/UiccSlot.java b/src/java/com/android/internal/telephony/uicc/UiccSlot.java
-index eef42fa283..bb56a8af56 100644
+index 110e953..9f8c09f 100644
 --- a/src/java/com/android/internal/telephony/uicc/UiccSlot.java
 +++ b/src/java/com/android/internal/telephony/uicc/UiccSlot.java
-@@ -700,7 +700,13 @@ public class UiccSlot extends Handler {
+@@ -791,8 +791,14 @@ public class UiccSlot extends Handler {
      @NonNull
      @Override
      public String toString() {
--        return "[UiccSlot: mActive=" + mActive + ", mIccId=" + getPrintableIccIds() + ", mIsEuicc="
 +        Map<Integer,String> printableIccIds = null;
 +        try {
 +            printableIccIds = getPrintableIccIds();
 +        } catch(Throwable t) {
 +            android.util.Log.e("PHH", "getPrintableIccIds failed", t);
 +        }
-+        return "[UiccSlot: mActive=" + mActive + ", mIccId=" + printableIccIds + ", mIsEuicc="
-                 + mIsEuicc + ", MEP=" + isMultipleEnabledProfileSupported() + ", mPortIdxToPhoneId="
+         StringBuilder sb = new StringBuilder("[UiccSlot: mActive=" + mActive
+-                + ", mIccId=" + getPrintableIccIds() + ", mIsEuicc=" + mIsEuicc
++                + ", mIccId=" + printableIccIds + ", mIsEuicc=" + mIsEuicc
+                 + ", MEP=" + isMultipleEnabledProfileSupported() + ", mPortIdxToPhoneId="
                  + mPortIdxToPhoneId + ", mEid=" + Rlog.pii(TelephonyUtils.IS_DEBUGGABLE, mEid)
-                 + ", mCardState=" + mCardState + " mSupportedMepMode=" + mSupportedMepMode + "]";
+                 + ", mCardState=" + mCardState + " mSupportedMepMode=" + mSupportedMepMode);
 -- 
-2.25.1
+2.52.0
 

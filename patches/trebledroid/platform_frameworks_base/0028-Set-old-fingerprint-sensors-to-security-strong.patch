@@ -1,7 +1,7 @@
 From 9a3192c6723b6bb8d51fa7c39beb49604e538862 Mon Sep 17 00:00:00 2001
 From: Pierre-Hugues Husson <phh@phh.me>
 Date: Sat, 3 Dec 2022 17:13:24 -0500
-Subject: [PATCH 28/57] Set old fingerprint sensors to security "strong"
+Subject: [PATCH 28/55] Set old fingerprint sensors to security "strong"
 
 This allows removing config_biometric_sensors from overlays, which led
 to Pixels not booting, because they are using AIDL biometric sensor, and
@@ -33,5 +33,5 @@ index b6768c9c087a..bc9684974fca 100644
          for (int i = 0; i < modalities.size(); ++i) {
              final String id = String.valueOf(i);
 -- 
-2.25.1
+2.52.0
 

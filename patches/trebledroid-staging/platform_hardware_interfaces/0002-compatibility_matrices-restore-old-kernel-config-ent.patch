@@ -1,0 +1,47 @@
+From dbee3ba4a8698af1ed00afa079e3b0611907ff61 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 17 Mar 2026 23:23:49 +0000
+Subject: [PATCH 2/2] compatibility_matrices: restore old kernel config entries
+
+Add old kernel version configs to the compatibility matrices so they
+accept devices with older kernels:
+
+Matrix 5: add kernel_config_p_4.4, kernel_config_q_4.9,
+kernel_config_r_4.14, kernel_config_r_4.19
+Matrix 6: add kernel_config_q_4.9, kernel_config_s_4.14
+
+These entries reference the kernel config sets restored in
+platform_kernel_configs and allow the VTS compatibility check to pass
+on devices with 4.4 through 4.19 kernels.
+
+Change-Id: Ia97eb64871b596933aa78964c0810bcc6ea702da
+---
+ compatibility_matrices/Android.bp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/compatibility_matrices/Android.bp b/compatibility_matrices/Android.bp
+index 1628cbc..a1c2323 100644
+--- a/compatibility_matrices/Android.bp
++++ b/compatibility_matrices/Android.bp
+@@ -94,6 +94,10 @@ vintf_compatibility_matrix {
+         "compatibility_matrix.5.xml",
+     ],
+     kernel_configs: [
++        "kernel_config_p_4.4",
++        "kernel_config_q_4.9",
++        "kernel_config_r_4.14",
++        "kernel_config_r_4.19",
+         "kernel_config_r_5.4",
+     ],
+ }
+@@ -105,6 +109,7 @@ vintf_compatibility_matrix {
+         "compatibility_matrix.6.xml",
+     ],
+     kernel_configs: [
++        "kernel_config_q_4.9",
+         "kernel_config_s_4.14",
+         "kernel_config_s_4.19",
+         "kernel_config_s_5.4",
+-- 
+2.53.0
+

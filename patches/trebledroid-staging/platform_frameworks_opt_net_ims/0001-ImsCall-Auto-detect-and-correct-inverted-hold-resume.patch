@@ -1,0 +1,98 @@
+From f66178c280ee33be27dd99381a135931915ba6b9 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Thu, 12 Mar 2026 23:59:40 +0000
+Subject: [PATCH] ImsCall: Auto-detect and correct inverted hold/resume
+ callbacks
+
+Some vendor IMS implementations (notably MediaTek) fire
+callSessionHeld() and callSessionResumed() with inverted semantics,
+causing the UI to show 'on hold' when the call is active and vice
+versa, while the actual hold/resume audio functionality works
+correctly.
+
+Detect this on the first callback: if callSessionHeld() fires when
+no hold was requested (mUpdateRequest is not UPDATE_HOLD or
+UPDATE_HOLD_MERGE), the call cannot legitimately be held -- this
+indicates inverted callbacks from the vendor blob. Once detected,
+all subsequent held/resumed callbacks are swapped for the lifetime
+of that ImsCall instance.
+
+No system property required -- the detection is fully automatic and
+only activates on buggy vendor blobs. Normal IMS implementations
+are unaffected since their first callback will always match the
+pending request state.
+
+Change-Id: Ie250be156ce1362dae99414922d34c70996ff6ba
+---
+ src/java/com/android/ims/ImsCall.java | 41 +++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+
+diff --git a/src/java/com/android/ims/ImsCall.java b/src/java/com/android/ims/ImsCall.java
+index c076f7c..bb2b8ff 100755
+--- a/src/java/com/android/ims/ImsCall.java
++++ b/src/java/com/android/ims/ImsCall.java
+@@ -574,6 +574,11 @@ public class ImsCall implements ICall {
+     // If it is triggered by the local, mute the call. Otherwise, play local hold tone
+     // or network generated media.
+     private boolean mHold = false;
++    // Auto-detected: some vendor IMS blobs (e.g. MediaTek) fire callSessionHeld/Resumed
++    // with inverted semantics. Detected when callSessionHeld fires without a pending hold
++    // request -- a freshly connected call can never start held.
++    private boolean mInvertHoldState = false;
++    private boolean mHoldInversionChecked = false;
+     // true if the call is on mute
+     private boolean mMute = false;
+     // It contains the exclusive call update request. Refer to UPDATE_*.
+@@ -2674,6 +2679,32 @@ public class ImsCall implements ICall {
+         @Override
+         public void callSessionHeld(ImsCallSession session, ImsCallProfile profile) {
+             logi("callSessionHeld :: session=" + session + "profile=" + profile);
++
++            // Auto-detect inverted hold state: if the vendor blob reports "held" but
++            // no hold was requested, a call cannot start held -- the blob is buggy.
++            synchronized(ImsCall.this) {
++                if (!mHoldInversionChecked) {
++                    mHoldInversionChecked = true;
++                    if (mUpdateRequest != UPDATE_HOLD
++                            && mUpdateRequest != UPDATE_HOLD_MERGE) {
++                        logi("callSessionHeld :: hold reported with mUpdateRequest="
++                                + updateRequestToString(mUpdateRequest)
++                                + " -- auto-detecting inverted IMS hold/resume callbacks");
++                        mInvertHoldState = true;
++                    }
++                }
++            }
++
++            if (mInvertHoldState) {
++                logi("callSessionHeld :: inverted blob, treating as resumed");
++                handleCallResumed(session, profile);
++                return;
++            }
++
++            handleCallHeld(session, profile);
++        }
++
++        private void handleCallHeld(ImsCallSession session, ImsCallProfile profile) {
+             ImsCall.Listener listener;
+
+             synchronized(ImsCall.this) {
+@@ -2791,6 +2822,16 @@ public class ImsCall implements ICall {
+                 return;
+             }
+
++            if (mInvertHoldState) {
++                logi("callSessionResumed :: inverted blob, treating as held");
++                handleCallHeld(session, profile);
++                return;
++            }
++
++            handleCallResumed(session, profile);
++        }
++
++        private void handleCallResumed(ImsCallSession session, ImsCallProfile profile) {
+             // If this call was pending a merge, it is not anymore. This is the case when we
+             // are merging in a new call into an existing conference.
+             setCallSessionMergePending(false);
+-- 
+2.53.0
+

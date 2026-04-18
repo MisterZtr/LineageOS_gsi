@@ -19,12 +19,12 @@ index 26d1579e7..acd7aa22f 100644
  #include <selinux/selinux.h>
 +#include <sys/utsname.h>
  #include <vendorsupport/api_level.h>
- 
+
  #include "debug_ramdisk.h"
 @@ -703,6 +704,16 @@ uint32_t InitPropertySet(const std::string& name, const std::string& value) {
  static Result<void> load_properties_from_file(const char*, const char*,
                                                std::map<std::string, std::string>*);
- 
+
 +static bool kernel_supports_capex() {
 +    //Put a threshold at >= 5.0
 +    struct utsname buf;
@@ -50,5 +50,5 @@ index 26d1579e7..acd7aa22f 100644
                      } else {
                          it->second = value;
 -- 
-2.25.1
+2.52.0
 

@@ -1,7 +1,7 @@
 From 6dc3035169030a8562c0b6401050c369c26dc7af Mon Sep 17 00:00:00 2001
 From: Peter Cai <peter@typeblog.net>
 Date: Wed, 16 Dec 2020 13:46:15 +0800
-Subject: [PATCH 18/57] TelephonyManager: bring back getNetworkClass()
+Subject: [PATCH 18/55] TelephonyManager: bring back getNetworkClass()
 
 This partially reverts commit c058cac051ab083dc7fb7ea6aa85699110b2e9bf.
 
@@ -17,7 +17,7 @@ index 394237288c73..8f7c966da93c 100644
 @@ -3427,6 +3427,64 @@ public class TelephonyManager {
          }
      }
- 
+
 +    /**
 +     * Network Class Definitions.
 +     * Do not change this order, it is used for sorting during emergency calling in
@@ -80,5 +80,5 @@ index 394237288c73..8f7c966da93c 100644
       * Returns a string representation of the radio technology (network type)
       * currently in use on the device.
 -- 
-2.25.1
+2.52.0
 
