@@ -34,6 +34,16 @@ repo sync --force-sync --optimized-fetch --no-tags --no-clone-bundle --prune -j4
 bash LineageOS_gsi/patches/apply-patches.sh .
 ```
 
+### Сборка treble_app
+
+treble_app теперь используется из скомпилированного вами варианта  
+Сперва убедитесь, что у вас установлена java17 по умолчанию. Как это сделать на [arch linux](https://wiki.archlinux.org/title/Java#List_compatible_Java_environments_installed)  
+Сама компиляция,
+
+```
+bash treble_app/build.sh
+```
+
 ### Используйте ccache, чтобы ускорить повторные сборки
 
 Вы можете добавив эти строки в файл ~/.bashrc или ~/.zshrc, чтобы не вводить их снова:

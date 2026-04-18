@@ -35,6 +35,12 @@ repo sync --force-sync --optimized-fetch --no-tags --no-clone-bundle --prune -j4
 bash LineageOS_gsi/patches/apply-patches.sh .
 ```
 
+### Building treble_app
+
+treble_app is now used from your compiled version.  
+First, make sure that Java 17 is set as your default. How to do this on [Arch Linux](https://wiki.archlinux.org/title/Java#List_compatible_Java_environments_installed)  
+The compilation itself,
+
 ### Turn on caching to speed up build
 
 You can speed up subsequent builds by adding these lines to your ~/.bashrc OR ~/.zshrc file:
