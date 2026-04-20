@@ -1,7 +1,7 @@
 From 01c328526352c5200c696acccecd56b303dfef81 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Thu, 26 Mar 2026 22:53:29 +0000
-Subject: [PATCH 6/21] allow samsung touch input HAL to read system properties
+Subject: [PATCH 6/23] allow samsung touch input HAL to read system properties
 
 hal_sec_inputdev_default is the vendor's touch input HAL daemon on
 some samsung MTK devices (e.g. galaxy A14).  it was being denied

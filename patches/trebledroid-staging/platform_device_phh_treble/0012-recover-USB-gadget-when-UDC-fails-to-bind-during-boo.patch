@@ -1,7 +1,7 @@
 From 668ac9f9fd21432a0f30995bc0246c711e503250 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Sun, 29 Mar 2026 23:54:13 +0100
-Subject: [PATCH 12/21] recover USB gadget when UDC fails to bind during boot
+Subject: [PATCH 12/23] recover USB gadget when UDC fails to bind during boot
 
 on some exynos devices (e.g. samsung galaxy M33 / s5e8825), the dwc3
 OTG state machine detects VBUS and starts the gadget before init has

@@ -1,7 +1,7 @@
 From 272eab8a4d6657f55abf07ae456579889f023a8f Mon Sep 17 00:00:00 2001
 From: Jonathon Fitch <lightman1@virginmedia.com>
 Date: Mon, 26 May 2025 15:59:24 +0100
-Subject: [PATCH 1/21] Fix MTK sepolicy errors noticed in logcat
+Subject: [PATCH 1/23] Fix MTK sepolicy errors noticed in logcat
 
 ---
  sepolicy/mediatek.te | 3 +++

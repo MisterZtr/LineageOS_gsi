@@ -1,0 +1,47 @@
+From 662b513d40311f4476ede4962026a94e6aba2f99 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Mon, 20 Apr 2026 17:28:54 +0100
+Subject: [PATCH 23/23] Block OPPO/Realme root detection reboot on GSI boot
+
+OPPO and Realme devices with MediaTek vendor kernels include an
+oppo_root_check kernel module that detects an unlocked bootloader
+and forces a reboot to recovery. This makes the GSI completely
+unbootable on these devices.
+
+Set ro.boot.flash.locked, ro.boot.vbmeta.device_state and
+ro.boot.verifiedbootstate to locked/green in the early-init phase
+of vndk.rc, before vendor init services run. This ensures any
+userspace component of the root check sees a locked device.
+
+Note: this may not prevent the kernel-level fuse check on all
+devices; additional handling may be needed for full coverage on
+devices where the kernel module reads fuses directly.
+---
+ vndk.rc | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/vndk.rc b/vndk.rc
+index 2bd6b35..b40b7a2 100644
+--- a/vndk.rc
++++ b/vndk.rc
+@@ -1,4 +1,17 @@
+ on post-fs
++on early-init
++    # OPPO/Realme devices with MTK vendor kernels include an oppo_root_check
++    # kernel module that detects an unlocked bootloader and forces a reboot to
++    # recovery. Set the boot-state properties to "locked" before vendor init
++    # services run so any userspace component of the check sees a locked device.
++    # Note: this may not prevent the kernel-level fuse check on all devices;
++    # additional kernel module handling may be needed for full coverage.
++    if property:ro.product.brand==OPPO setprop ro.boot.flash.locked 1
++    if property:ro.product.brand==OPPO setprop ro.boot.vbmeta.device_state locked
++    if property:ro.product.brand==OPPO setprop ro.boot.verifiedbootstate green
++    if property:ro.product.brand==realme setprop ro.boot.flash.locked 1
++    if property:ro.product.brand==realme setprop ro.boot.vbmeta.device_state locked
++    if property:ro.product.brand==realme setprop ro.boot.verifiedbootstate green
+     exec - root -- /system/bin/vndk-detect
+     exec - root -- /system/bin/rw-system.sh
+     mount none /system/etc/usb_audio_policy_configuration.xml /vendor/etc/usb_audio_policy_configuration.xml bind
+-- 
+2.53.0
+

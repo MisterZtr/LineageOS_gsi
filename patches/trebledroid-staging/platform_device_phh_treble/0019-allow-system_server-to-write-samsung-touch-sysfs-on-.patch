@@ -1,7 +1,7 @@
 From 5a1c3794a411b337138e4ffd74dc4dedc4995465 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 1 Apr 2026 14:33:45 +0100
-Subject: [PATCH 19/21] allow system_server to access samsung touch sysfs on wake
+Subject: [PATCH 19/23] allow system_server to access samsung touch sysfs on wake
 
 when the samsung sysinput HAL is missing from the VINTF manifest
 (common on budget exynos devices like the A15/exynos 850), the

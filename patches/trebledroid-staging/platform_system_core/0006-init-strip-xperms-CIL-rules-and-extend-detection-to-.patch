@@ -1,0 +1,226 @@
+From ecbab60ab474172495fafa0425fcc318adc56e21 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Mon, 20 Apr 2026 17:18:37 +0100
+Subject: [PATCH 6/6] init: strip xperms CIL rules and extend detection to kernels
+ <5.4
+
+Many vendor kernels between 4.9 and 5.4 lack the ioctl
+extended-permission (xperms) backport despite reporting version
+>= 4.9.  The existing version cap to 29 for kernels <4.9 is
+necessary but insufficient: secilc -c 29 still fails when the
+CIL input contains allowxperm / auditallowxperm /
+dontauditxperm / neverallowxperm statements because libsepol
+refuses to write AVTAB_XPERMS entries at policydb version < 30.
+
+Extend the detection to cover kernels <5.4 (conservative) and
+strip xperms CIL statements from all policy files before passing
+them to secilc on affected kernels.  Both single-line and
+multi-line xperms blocks are handled via paren-depth tracking.
+
+Property overrides:
+- ro.boot.selinux_xperms_supported=1: opt back in on 4.9-5.4
+  kernels that DO have xperms
+- ro.boot.selinux_no_xperms=1: opt out on 5.4+ kernels that
+  DON'T have xperms
+---
+ init/selinux.cpp | 165 ++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 157 insertions(+), 8 deletions(-)
+
+diff --git a/init/selinux.cpp b/init/selinux.cpp
+index acd3a08..1f91b9a 100644
+--- a/init/selinux.cpp
++++ b/init/selinux.cpp
+@@ -247,6 +247,80 @@ bool KernelOlderThan(unsigned want_major, unsigned want_minor) {
+     return false;
+ }
+ 
++// Strip xperms CIL statements from a file.  When secilc is invoked
++// with -c 29 it still fails if the CIL input contains
++// allowxperm / auditallowxperm / dontauditxperm / neverallowxperm
++// statements, because libsepol refuses to write AVTAB_XPERMS entries
++// at policydb version < 30.  This function removes all such
++// statements (both single-line and multi-line) from the CIL source
++// so secilc never encounters them.  Returns false on I/O error.
++bool StripXpermsCil(const std::string& src_path, const std::string& dst_path,
++                    int* stripped_count) {
++    std::string content;
++    if (!android::base::ReadFileToString(src_path, &content)) return false;
++
++    std::string result;
++    result.reserve(content.size());
++    *stripped_count = 0;
++
++    size_t pos = 0;
++    while (pos < content.size()) {
++        // Copy leading whitespace as-is
++        while (pos < content.size() &&
++               (content[pos] == ' ' || content[pos] == '\t' ||
++                content[pos] == '\n' || content[pos] == '\r')) {
++            result += content[pos];
++            pos++;
++        }
++        if (pos >= content.size()) break;
++
++        // Check for xperms statement start
++        static const struct {
++            const char* kw;
++            size_t len;
++        } xperms_kw[] = {
++                {"(allowxperm ", 12},      {"(allowxperm\t", 12},
++                {"(auditallowxperm ", 18}, {"(auditallowxperm\t", 18},
++                {"(dontauditxperm ", 17},  {"(dontauditxperm\t", 17},
++                {"(neverallowxperm ", 18}, {"(neverallowxperm\t", 18},
++        };
++
++        bool is_xperm = false;
++        for (const auto& kw : xperms_kw) {
++            if (content.compare(pos, kw.len, kw.kw) == 0) {
++                is_xperm = true;
++                break;
++            }
++        }
++
++        if (!is_xperm) {
++            result += content[pos];
++            pos++;
++            continue;
++        }
++
++        // Skip the entire xperms statement by tracking paren depth
++        int depth = 0;
++        while (pos < content.size()) {
++            if (content[pos] == '(') depth++;
++            if (content[pos] == ')') {
++                depth--;
++                if (depth == 0) {
++                    pos++;  // skip the closing ')'
++                    break;
++                }
++            }
++            pos++;
++        }
++        (*stripped_count)++;
++
++        // Skip trailing newline
++        if (pos < content.size() && content[pos] == '\n') pos++;
++    }
++
++    return android::base::WriteStringToFile(result, dst_path);
++}
++
+ bool OpenSplitPolicy(PolicyFile* policy_file) {
+     // IMPLEMENTATION NOTE: Split policy consists of three or more CIL files:
+     // * platform -- policy needed due to logic contained in the system image,
+@@ -349,15 +423,33 @@ bool OpenSplitPolicy(PolicyFile* policy_file) {
+     if (access(odm_policy_cil_file.c_str(), F_OK) == -1) {
+         odm_policy_cil_file.clear();
+     }
+-    // Kernels older than 4.9 may lack the ioctl extended-permission (xperms)
+-    // backport.  Policies compiled at policydb version >= 30 contain
+-    // AVTAB_XPERMS_ALLOWED entries that such kernels cannot parse, causing
+-    // security_load_policy() to fail with EINVAL.  Cap the version to 29 so
+-    // secilc omits xperms rules.
++    // Many vendor kernels lack the ioctl extended-permission (xperms)
++    // backport even when they report version >= 4.9.  Policies compiled
++    // at policydb version >= 30 contain AVTAB_XPERMS_ALLOWED entries that
++    // such kernels cannot parse, causing security_load_policy() to fail
++    // with EINVAL.  Additionally, secilc -c 29 still fails if the CIL
++    // input contains xperms statements because libsepol refuses to write
++    // them at version < 30.  Cap the version to 29 AND strip xperms CIL
++    // rules on affected kernels.
+     unsigned int effective_version = SEPOLICY_VERSION;
+-    if (KernelOlderThan(4, 9) && effective_version > 29) {
++    // Conservative: assume kernels < 5.4 lack xperms unless explicitly
++    // opted in.  4.9-5.4 vendor kernels are widely known to miss the
++    // backport.
++    bool kernel_lacks_xperms = KernelOlderThan(5, 4);
++    if (kernel_lacks_xperms && !KernelOlderThan(4, 9)) {
++        // 4.9-5.4 range: allow opt-in for kernels known to have xperms
++        const char* prop = getenv("ro.boot.selinux_xperms_supported");
++        if (prop && prop[0] == '1') kernel_lacks_xperms = false;
++    }
++    if (!kernel_lacks_xperms) {
++        // 5.4+: allow opt-out for broken kernels
++        const char* prop = getenv("ro.boot.selinux_no_xperms");
++        if (prop && prop[0] == '1') kernel_lacks_xperms = true;
++    }
++
++    if (kernel_lacks_xperms && effective_version > 29) {
+         LOG(WARNING) << "SELinux: capping policy version from " << effective_version
+-                     << " to 29 for legacy kernel (no xperms support)";
++                     << " to 29 for kernel lacking xperms support";
+         effective_version = 29;
+     }
+     const std::string version_as_string = std::to_string(effective_version);
+@@ -374,10 +466,67 @@ bool OpenSplitPolicy(PolicyFile* policy_file) {
+         LOG(INFO) << "Using " << genfs_cil_file << " for genfs labels";
+     }
+ 
++    // Shadow the constexpr plat_policy_cil_file and the optional
++    // userdebug policy path with mutable strings so we can redirect
++    // secilc to xperms-stripped copies on affected kernels.
++    std::string effective_plat_policy = plat_policy_cil_file;
++    std::string effective_userdebug_policy;
++    if (use_userdebug_policy) effective_userdebug_policy = *userdebug_plat_sepolicy;
++
++    if (kernel_lacks_xperms) {
++        char cil_tmpdir[] = "/dev/selinux-cil.XXXXXX";
++        if (mkdtemp(cil_tmpdir) == nullptr) {
++            PLOG(ERROR) << "Failed to create temp dir for xperms-stripped CIL";
++            return false;
++        }
++
++        int total_stripped = 0;
++        int idx = 0;
++
++        auto strip = [&](std::string& path) {
++            if (path.empty()) return;
++            std::string dst = std::string(cil_tmpdir) + "/" + std::to_string(idx++) + ".cil";
++            int stripped = 0;
++            if (StripXpermsCil(path, dst, &stripped)) {
++                if (stripped > 0) {
++                    LOG(INFO) << "SELinux: stripped " << stripped
++                              << " xperms rules from " << path;
++                    path = dst;
++                    total_stripped += stripped;
++                }
++            } else {
++                LOG(WARNING) << "SELinux: failed to strip xperms from " << path
++                             << "; using original file";
++            }
++        };
++
++        strip(effective_plat_policy);
++        if (use_userdebug_policy) strip(effective_userdebug_policy);
++        strip(plat_mapping_file);
++        strip(plat_compat_cil_file);
++        strip(system_ext_policy_cil_file);
++        strip(system_ext_mapping_file);
++        strip(system_ext_compat_cil_file);
++        strip(product_policy_cil_file);
++        strip(product_mapping_file);
++        strip(vendor_policy_cil_file);
++        strip(plat_pub_versioned_cil_file);
++        strip(odm_policy_cil_file);
++        strip(genfs_cil_file);
++
++        if (total_stripped > 0) {
++            LOG(WARNING) << "SELinux: stripped " << total_stripped
++                         << " total xperms CIL rules for kernel lacking xperms";
++        } else {
++            LOG(INFO) << "SELinux: no xperms CIL rules found to strip";
++            rmdir(cil_tmpdir);
++        }
++    }
++
+     // clang-format off
+     std::vector<const char*> compile_args {
+         "/system/bin/secilc",
+-        use_userdebug_policy ? *userdebug_plat_sepolicy : plat_policy_cil_file,
++        use_userdebug_policy ? effective_userdebug_policy.c_str() : effective_plat_policy.c_str(),
+         "-m", "-M", "true", "-G", "-N",
+         "-c", version_as_string.c_str(),
+         plat_mapping_file.c_str(),
+-- 
+2.53.0
+

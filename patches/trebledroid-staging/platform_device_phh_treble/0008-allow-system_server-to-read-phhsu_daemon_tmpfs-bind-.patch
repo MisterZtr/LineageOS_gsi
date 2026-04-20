@@ -1,7 +1,7 @@
 From 3bddc9dd2642b92e7eaf18a17a236632a55de849 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Sat, 28 Mar 2026 19:23:05 +0000
-Subject: [PATCH 8/21] allow system_server to read phhsu_daemon_tmpfs bind mounts
+Subject: [PATCH 8/23] allow system_server to read phhsu_daemon_tmpfs bind mounts
 
 rw-system.sh bind-mounts empty files from /mnt/phh/empty over feature
 XMLs like android.hardware.fingerprint.xml to hide hardware features

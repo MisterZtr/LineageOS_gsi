@@ -1,7 +1,7 @@
 From 01fa5be037a44e5cec35cd8c067e271d419aa7d7 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Thu, 19 Mar 2026 07:03:19 +0000
-Subject: [PATCH 4/5] init: tolerate EROFS on restorecon of /system/bin/init
+Subject: [PATCH 4/6] init: tolerate EROFS on restorecon of /system/bin/init
 
 On devices with kernel <= 4.14, the system partition is ext4 but the
 kernel implicitly advertises seclabel support regardless of the fstab

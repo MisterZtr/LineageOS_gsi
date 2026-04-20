@@ -1,0 +1,51 @@
+From f76ce00e18feae2416cf6806dbf9b816f12c0f0b Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Mon, 20 Apr 2026 17:24:44 +0100
+Subject: [PATCH 22/23] Disable FUSE BPF on devices whose kernels lack fuse-bpf
+ support
+
+Android 16 enables FUSE BPF by default, which requires kernel
+support for the fuse-bpf program type and the fuseMedia.bpf BPF
+program. On older kernels (< 5.4 without backport), fuseMedia.bpf
+fails to load and the FuseDaemon falls back to legacy mode, but
+the legacy FUSE path may not work correctly on QPR2+.
+
+Setting persist.sys.fuse.bpf.override=false tells the FuseDaemon
+and vold to use the legacy FUSE path from the start, avoiding
+the failed BPF load and ensuring bind-mounts for Android/data
+and Android/obb are set up correctly by vold.
+
+The kernel exposes fuse-bpf support at /sys/fs/fuse/features/fuse_bpf.
+If this file does not exist, the kernel does not support FUSE BPF.
+---
+ phh-on-boot.sh | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/phh-on-boot.sh b/phh-on-boot.sh
+index c8cd1fd..ac9cf86 100644
+--- a/phh-on-boot.sh
++++ b/phh-on-boot.sh
+@@ -11,6 +11,20 @@ if [ ! -e /sys/fs/bpf/netd_shared/map_netd_uid_owner_map ]; then
+     log -t phh-on-boot "Disabled restricted_networking_mode (BPF uid_owner_map absent)"
+ fi
+ 
++# Disable FUSE BPF on devices whose kernels lack fuse-bpf support.
++# Android 16 enables FUSE BPF by default, which requires kernel support for
++# the fuse-bpf program type. On older kernels (< 5.4 without backport),
++# fuseMedia.bpf fails to load and the FuseDaemon falls back to legacy mode
++# but the legacy FUSE path may not work correctly on QPR2+. Setting
++# persist.sys.fuse.bpf.override=false tells the FuseDaemon and vold to
++# use the legacy FUSE path from the start, avoiding the failed BPF load
++# and ensuring bind-mounts for Android/data and Android/obb are set up
++# correctly by vold.
++if [ ! -f /sys/fs/fuse/features/fuse_bpf ]; then
++    setprop persist.sys.fuse.bpf.override false
++    log -t phh-on-boot "Disabled FUSE BPF (kernel fuse_bpf feature absent)"
++fi
++
+ vndk="$(getprop persist.sys.vndk)"
+ [ -z "$vndk" ] && vndk="$(getprop ro.vndk.version |grep -oE '^[0-9]+')"
+ 
+-- 
+2.53.0
+

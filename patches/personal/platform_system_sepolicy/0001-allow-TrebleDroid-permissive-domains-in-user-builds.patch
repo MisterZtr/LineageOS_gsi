@@ -1,0 +1,39 @@
+From 2b891538b33d184c179ad685ee975fe4cbd80de9 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Mon, 30 Mar 2026 08:51:07 +0100
+Subject: [PATCH 1/2] allow TrebleDroid permissive domains in user builds
+
+TrebleDroid declares ueventd, tkcore, and phhsu_daemon as permissive
+for broad vendor device compatibility. the AOSP build system rejects
+permissive domains in user builds, but GSI images need these for
+devices with vendor blobs that depend on relaxed SELinux enforcement
+in these domains.
+
+use the permissive_domains_on_user_builds property (added in Android 16)
+to allowlist these three domains so the build succeeds as a user variant.
+---
+ Android.bp | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/Android.bp b/Android.bp
+index f526827..8399cac 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -721,6 +721,14 @@ precompiled_se_policy_binary {
+     srcs: [
+         ":precompiled_sepolicy_srcs",
+     ],
++    // TrebleDroid declares these domains as permissive for broad device compat.
++    // allow them in user builds so the GSI can ship as a user (not userdebug)
++    // variant while retaining vendor compatibility.
++    permissive_domains_on_user_builds: [
++        "phhsu_daemon",
++        "tkcore",
++        "ueventd",
++    ],
+     soong_config_variables: {
+         BOARD_USES_ODMIMAGE: {
+             device_specific: true,
+-- 
+2.53.0
+

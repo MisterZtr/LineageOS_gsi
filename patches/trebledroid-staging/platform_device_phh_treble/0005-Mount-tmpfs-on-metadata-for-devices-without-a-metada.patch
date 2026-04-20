@@ -1,7 +1,7 @@
 From 6ce5ea72753efd5defe4df3ce75d1dba68f54803 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 11 Mar 2026 17:59:16 +0000
-Subject: [PATCH 5/21] Mount tmpfs on /metadata for devices without a metadata
+Subject: [PATCH 5/23] Mount tmpfs on /metadata for devices without a metadata
  partition
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

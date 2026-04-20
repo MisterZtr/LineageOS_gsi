@@ -1,7 +1,7 @@
 From bd5d1e55363ccf65533de8ec5a79e03375e2ff89 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Sat, 28 Mar 2026 22:44:11 +0000
-Subject: [PATCH 9/21] allow qseecomd to access gatekeeper data on samsung devices
+Subject: [PATCH 9/23] allow qseecomd to access gatekeeper data on samsung devices
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
