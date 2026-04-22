@@ -1,6 +1,6 @@
-From ce1e32b2435d173ead19ed900cd431f37bc12dbb Mon Sep 17 00:00:00 2001
+From 2fa76b20a1a7d5bff38cc1521f8668e397d19ba0 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
-Date: Fri, 10 Apr 2026 00:18:59 +0100
+Date: Wed, 22 Apr 2026 11:56:38 +0100
 Subject: [PATCH 08/8] add prefer hardware codecs toggle
 
 add an opt-in toggle for persist.sys.phh.prefer_hw_codecs which
@@ -14,7 +14,7 @@ users with working vendor HW codecs can opt in for better performance.
  3 files changed, 10 insertions(+)
 
 diff --git a/app/src/main/java/me/phh/treble/app/Misc.kt b/app/src/main/java/me/phh/treble/app/Misc.kt
-index 4828fa4..b9a053c 100644
+index 1966ce1..efb87f3 100644
 --- a/app/src/main/java/me/phh/treble/app/Misc.kt
 +++ b/app/src/main/java/me/phh/treble/app/Misc.kt
 @@ -410,6 +410,10 @@ object Misc: EntryStartup {
@@ -25,11 +25,11 @@ index 4828fa4..b9a053c 100644
 +                val value = sp.getBoolean(key, false)
 +                SystemProperties.set("persist.sys.phh.prefer_hw_codecs", if (value) "true" else "false")
 +            }
-             MiscSettings.disableExpensiveRenderingMode -> {
+             MiscSettings.secureAdb -> {
                  val value = sp.getBoolean(key, false)
-                 SystemProperties.set("persist.sys.phh.disable_expensive_rendering_mode", if (value) "1" else "0")
+                 SystemProperties.set("persist.sys.phh.adb_secure", if (value) "1" else "0")
 diff --git a/app/src/main/java/me/phh/treble/app/MiscSettings.kt b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
-index cdb08fc..ea88e86 100644
+index a5eddbe..e4e9305 100644
 --- a/app/src/main/java/me/phh/treble/app/MiscSettings.kt
 +++ b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
 @@ -21,6 +21,7 @@ object MiscSettings : Settings {
@@ -39,9 +39,9 @@ index cdb08fc..ea88e86 100644
 +    val preferHwCodecs = "key_misc_prefer_hw_codecs"
      val activityAnimPerfOverride = "key_misc_activity_anim_perf_override"
      val securize = "key_misc_securize"
-     val disableExpensiveRenderingMode = "key_misc_disable_expensive_rendering_mode"
+     val secureAdb = "key_misc_secure_adb"
 diff --git a/app/src/main/res/xml/pref_misc.xml b/app/src/main/res/xml/pref_misc.xml
-index c120344..40430f1 100644
+index 97c271f..78aa653 100644
 --- a/app/src/main/res/xml/pref_misc.xml
 +++ b/app/src/main/res/xml/pref_misc.xml
 @@ -280,6 +280,11 @@
@@ -55,7 +55,7 @@ index c120344..40430f1 100644
 +            android:summary="Use vendor hardware codecs instead of software codecs for video recording\nOnly enable if video recording already works on your device\nRequires reboot" />
          <SwitchPreference
              android:defaultValue="false"
-             android:key="key_misc_disable_expensive_rendering_mode"
+             android:key="key_misc_secure_adb"
 -- 
 2.53.0
 

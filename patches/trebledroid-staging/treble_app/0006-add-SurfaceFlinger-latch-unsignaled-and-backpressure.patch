@@ -1,7 +1,8 @@
-From 3a07606b95aec84f2eef8efce9138cdcf8f350b6 Mon Sep 17 00:00:00 2001
+From 05c87fa485cadaccf7c3de3f602f611dcee184eb Mon Sep 17 00:00:00 2001
 From: Doze-off <viniciussadxxx@gmail.com>
 Date: Wed, 25 Mar 2026 09:41:33 +0000
-Subject: [PATCH 06/8] add SurfaceFlinger latch unsignaled and backpressure toggles
+Subject: [PATCH 06/8] add SurfaceFlinger latch unsignaled and backpressure
+ toggles
 
 add three new toggles to the misc settings for SurfaceFlinger control:
 
@@ -19,7 +20,7 @@ existing SF GL/HWC backpressure toggles in misc settings.
  3 files changed, 30 insertions(+)
 
 diff --git a/app/src/main/java/me/phh/treble/app/Misc.kt b/app/src/main/java/me/phh/treble/app/Misc.kt
-index 10965f7..bfcf15c 100644
+index ae57d33..f0193a6 100644
 --- a/app/src/main/java/me/phh/treble/app/Misc.kt
 +++ b/app/src/main/java/me/phh/treble/app/Misc.kt
 @@ -382,6 +382,18 @@ object Misc: EntryStartup {
@@ -42,10 +43,10 @@ index 10965f7..bfcf15c 100644
                  val value = sp.getBoolean(key, false)
                  SystemProperties.set("persist.sys.phh.wifi_disable_sae", if (value) "true" else "false")
 diff --git a/app/src/main/java/me/phh/treble/app/MiscSettings.kt b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
-index b2430bb..1e23888 100644
+index 4b16302..68187a3 100644
 --- a/app/src/main/java/me/phh/treble/app/MiscSettings.kt
 +++ b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
-@@ -56,6 +56,9 @@ object MiscSettings : Settings {
+@@ -55,6 +55,9 @@ object MiscSettings : Settings {
      val disableVoiceCallIn = "key_misc_disable_voice_call_in"
      val disableSfGlBackpressure = "key_misc_disable_sf_gl_backpressure"
      val disableSfHwcBackpressure = "key_misc_disable_sf_hwc_backpressure"
@@ -56,7 +57,7 @@ index b2430bb..1e23888 100644
      val escoTransportUnitSize = "key_misc_esco_transport_unit_size"
      val disableLeApcfExtended = "key_misc_disable_le_apcfe"
 diff --git a/app/src/main/res/xml/pref_misc.xml b/app/src/main/res/xml/pref_misc.xml
-index 79d1341..6d6a593 100644
+index 3f978b3..f7806e3 100644
 --- a/app/src/main/res/xml/pref_misc.xml
 +++ b/app/src/main/res/xml/pref_misc.xml
 @@ -131,6 +131,21 @@

@@ -1,4 +1,4 @@
-From 7c40504e4b9c1b7f05232ccbf32bcfa2ab7a8f61 Mon Sep 17 00:00:00 2001
+From cb53bf0c374d82566abe4983cca4dbe3cc781a34 Mon Sep 17 00:00:00 2001
 From: ChonDoit <thphantomblog@gmail.com>
 Date: Wed, 13 Aug 2025 16:13:20 +0100
 Subject: [PATCH 05/8] Add status bar and QS padding options
@@ -15,7 +15,7 @@ fix clipped UI elements on devices with unusual display cutouts.
  3 files changed, 95 insertions(+), 1 deletion(-)
 
 diff --git a/app/src/main/java/me/phh/treble/app/Misc.kt b/app/src/main/java/me/phh/treble/app/Misc.kt
-index dbeaf14..fce71f9 100644
+index 8afb25693..ae57d33 100644
 --- a/app/src/main/java/me/phh/treble/app/Misc.kt
 +++ b/app/src/main/java/me/phh/treble/app/Misc.kt
 @@ -143,6 +143,8 @@ object Misc: EntryStartup {
@@ -83,10 +83,10 @@ index dbeaf14..fce71f9 100644
                  val value = sp.getBoolean(key, false)
                  SystemProperties.set("persist.sys.phh.low_gamma_brightness", if (value) "true" else "false")
 diff --git a/app/src/main/java/me/phh/treble/app/MiscSettings.kt b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
-index 1c16d5f..b2430bb 100644
+index afdcb46..4b16302 100644
 --- a/app/src/main/java/me/phh/treble/app/MiscSettings.kt
 +++ b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
-@@ -44,6 +44,12 @@ object MiscSettings : Settings {
+@@ -43,6 +43,12 @@ object MiscSettings : Settings {
      val mtkTouchHintIsRotate = "key_misc_mediatek_touch_hint_rotate"
      val mtkGedKpi = "key_misc_mediatek_ged_kpi"
      val allowBinderThread = "key_misc_allow_binder_thread_on_incoming_calls"
@@ -100,7 +100,7 @@ index 1c16d5f..b2430bb 100644
      val linearBrightness = "key_misc_linear_brightness"
      val forceDisplay5g = "key_misc_force_display_5g"
 diff --git a/app/src/main/res/xml/pref_misc.xml b/app/src/main/res/xml/pref_misc.xml
-index 8644415..79d1341 100644
+index 17bd35d..3f978b3 100644
 --- a/app/src/main/res/xml/pref_misc.xml
 +++ b/app/src/main/res/xml/pref_misc.xml
 @@ -33,7 +33,7 @@
