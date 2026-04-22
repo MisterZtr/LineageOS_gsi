@@ -1,0 +1,50 @@
+From b8803f8b54aabd0a36d6177b1d7b280dd649d4f0 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Wed, 22 Apr 2026 11:15:44 +0100
+Subject: [PATCH 12/12] power: deduplicate redundant setPowerMode calls to vendor HAL
+
+---
+ ...com_android_server_power_PowerManagerService.cpp | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/services/core/jni/com_android_server_power_PowerManagerService.cpp b/services/core/jni/com_android_server_power_PowerManagerService.cpp
+index 788f9585f..e2354dbc9 100644
+--- a/services/core/jni/com_android_server_power_PowerManagerService.cpp
++++ b/services/core/jni/com_android_server_power_PowerManagerService.cpp
+@@ -37,6 +37,7 @@
+ #include <limits.h>
+ #include <android-base/properties.h>
+ #include <sstream>
++#include <unordered_map>
+ #include <unordered_set>
+ #include <nativehelper/JNIHelp.h>
+ #include <nativehelper/ScopedUtfChars.h>
+@@ -118,6 +119,15 @@ static bool setPowerMode(Mode mode, bool enabled) {
+     if (getBlockedPowerModes().count(modeInt) || sUnsupportedModes.count(mode)) {
+         return true;
+     }
++    // deduplicate redundant state transitions.
++    // some vendor HALs (notably MTK) burn cpu on every setMode call even when
++    // the state hasn't changed. avoid the binder IPC entirely when the
++    // requested state matches our last cached value.
++    static std::unordered_map<Mode, bool> sLastState;
++    auto it = sLastState.find(mode);
++    if (it != sLastState.end() && it->second == enabled) {
++        return true;
++    }
+     android::base::Timer t;
+     auto result = gPowerHalController.setMode(mode, enabled);
+     if (mode == Mode::INTERACTIVE && t.duration() > 20ms) {
+@@ -129,6 +139,9 @@ static bool setPowerMode(Mode mode, bool enabled) {
+         sUnsupportedModes.insert(mode);
+         return true;
+     }
++    if (result.isOk()) {
++        sLastState[mode] = enabled;
++    }
+     return result.isOk();
+ }
+ 
+-- 
+2.53.0
+

@@ -1,7 +1,7 @@
 From 9da044d55d72eaa0c802855e4ac83597fbff42f8 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Mon, 16 Feb 2026 09:44:47 +0000
-Subject: [PATCH 6/11] TelephonyManager: add prop to force SIM slot count
+Subject: [PATCH 6/12] TelephonyManager: add prop to force SIM slot count
 
 Some devices report an incorrect number of SIM slots, causing dual-SIM
 functionality to be unavailable. Add persist.sys.phh.sim_slots property

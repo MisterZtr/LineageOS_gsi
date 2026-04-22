@@ -1,7 +1,7 @@
 From 43d3258e6194e30f057d78a4fe38572dda2a961c Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 1 Apr 2026 14:33:09 +0100
-Subject: [PATCH 11/11] fall back to sysfs touch poke when samsung sysinput HAL is
+Subject: [PATCH 11/12] fall back to sysfs touch poke when samsung sysinput HAL is
  missing
 
 on samsung devices where the sysinput HIDL HAL

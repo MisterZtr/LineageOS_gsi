@@ -1,7 +1,7 @@
 From f676962ed5d56ed2f8bda8d29de916514e7be1d2 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 13 Mar 2026 14:04:57 +0000
-Subject: [PATCH 8/11] SettingsProvider: Fix NPE in SSAID migration on legacy
+Subject: [PATCH 8/12] SettingsProvider: Fix NPE in SSAID migration on legacy
  vendor partitions
 
 migrateAllLegacySettingsIfNeededLocked() creates system, secure, and

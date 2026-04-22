@@ -1,7 +1,7 @@
 From e92717f13246aedb5fb87dcdc228ed57cd8c385a Mon Sep 17 00:00:00 2001
 From: TBM13 <mateotrueba@gmail.com>
 Date: Wed, 26 Mar 2025 20:43:15 -0300
-Subject: [PATCH 1/11] Prefer HIDL when AIDL fingerprint sensor is "virtual"
+Subject: [PATCH 1/12] Prefer HIDL when AIDL fingerprint sensor is "virtual"
 
 ---
  .../server/biometrics/AuthService.java        | 37 +++++++++++++++++--
