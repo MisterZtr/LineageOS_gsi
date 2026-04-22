@@ -1,4 +1,4 @@
-From 05c87fa485cadaccf7c3de3f602f611dcee184eb Mon Sep 17 00:00:00 2001
+From f5473d34eff3e7dfbf3d4061d833df8f81df910e Mon Sep 17 00:00:00 2001
 From: Doze-off <viniciussadxxx@gmail.com>
 Date: Wed, 25 Mar 2026 09:41:33 +0000
 Subject: [PATCH 06/8] add SurfaceFlinger latch unsignaled and backpressure
@@ -20,7 +20,7 @@ existing SF GL/HWC backpressure toggles in misc settings.
  3 files changed, 30 insertions(+)
 
 diff --git a/app/src/main/java/me/phh/treble/app/Misc.kt b/app/src/main/java/me/phh/treble/app/Misc.kt
-index ae57d33..f0193a6 100644
+index fb1ffef..0fc62f6 100644
 --- a/app/src/main/java/me/phh/treble/app/Misc.kt
 +++ b/app/src/main/java/me/phh/treble/app/Misc.kt
 @@ -382,6 +382,18 @@ object Misc: EntryStartup {
@@ -43,10 +43,10 @@ index ae57d33..f0193a6 100644
                  val value = sp.getBoolean(key, false)
                  SystemProperties.set("persist.sys.phh.wifi_disable_sae", if (value) "true" else "false")
 diff --git a/app/src/main/java/me/phh/treble/app/MiscSettings.kt b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
-index 4b16302..68187a3 100644
+index df58d7a..812e30c 100644
 --- a/app/src/main/java/me/phh/treble/app/MiscSettings.kt
 +++ b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
-@@ -55,6 +55,9 @@ object MiscSettings : Settings {
+@@ -54,6 +54,9 @@ object MiscSettings : Settings {
      val disableVoiceCallIn = "key_misc_disable_voice_call_in"
      val disableSfGlBackpressure = "key_misc_disable_sf_gl_backpressure"
      val disableSfHwcBackpressure = "key_misc_disable_sf_hwc_backpressure"
@@ -57,7 +57,7 @@ index 4b16302..68187a3 100644
      val escoTransportUnitSize = "key_misc_esco_transport_unit_size"
      val disableLeApcfExtended = "key_misc_disable_le_apcfe"
 diff --git a/app/src/main/res/xml/pref_misc.xml b/app/src/main/res/xml/pref_misc.xml
-index 3f978b3..f7806e3 100644
+index 6453388..dcd83cc 100644
 --- a/app/src/main/res/xml/pref_misc.xml
 +++ b/app/src/main/res/xml/pref_misc.xml
 @@ -131,6 +131,21 @@

@@ -1,6 +1,6 @@
-From f5dca9a4f5d5000958ecdf66213d1a7932d9d99d Mon Sep 17 00:00:00 2001
+From 6ffc23c16824d092b1e221a66fc327d24f03341a Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
-Date: Wed, 22 Apr 2026 11:52:55 +0100
+Date: Wed, 22 Apr 2026 18:19:39 +0100
 Subject: [PATCH 07/8] add activity animation performance override toggle
 
 add a toggle for persist.sys.activity_anim_perf_override which
@@ -14,7 +14,7 @@ during app open/close on low-end MTK devices running android 16.
  3 files changed, 10 insertions(+)
 
 diff --git a/app/src/main/java/me/phh/treble/app/Misc.kt b/app/src/main/java/me/phh/treble/app/Misc.kt
-index f0193a6..1966ce1 100644
+index 0fc62f6..b4301c1 100644
 --- a/app/src/main/java/me/phh/treble/app/Misc.kt
 +++ b/app/src/main/java/me/phh/treble/app/Misc.kt
 @@ -406,6 +406,10 @@ object Misc: EntryStartup {
@@ -25,11 +25,11 @@ index f0193a6..1966ce1 100644
 +                val value = sp.getBoolean(key, false)
 +                SystemProperties.set("persist.sys.activity_anim_perf_override", if (value) "true" else "false")
 +            }
-             MiscSettings.secureAdb -> {
+             MiscSettings.disableLeApcfExtended -> {
                  val value = sp.getBoolean(key, false)
-                 SystemProperties.set("persist.sys.phh.adb_secure", if (value) "1" else "0")
+                 SystemProperties.set("persist.sys.bt.le.disable_apcf_extended_features", if (value) "1" else "0")
 diff --git a/app/src/main/java/me/phh/treble/app/MiscSettings.kt b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
-index 68187a3..a5eddbe 100644
+index 812e30c..5ba39c8 100644
 --- a/app/src/main/java/me/phh/treble/app/MiscSettings.kt
 +++ b/app/src/main/java/me/phh/treble/app/MiscSettings.kt
 @@ -21,6 +21,7 @@ object MiscSettings : Settings {
@@ -38,10 +38,10 @@ index 68187a3..a5eddbe 100644
      val bluetooth = "key_misc_bluetooth"
 +    val activityAnimPerfOverride = "key_misc_activity_anim_perf_override"
      val securize = "key_misc_securize"
-     val secureAdb = "key_misc_secure_adb"
      val removeTelephony = "key_misc_removetelephony"
+     val disableAudioEffects = "key_misc_disable_audio_effects"
 diff --git a/app/src/main/res/xml/pref_misc.xml b/app/src/main/res/xml/pref_misc.xml
-index f7806e3..97c271f 100644
+index dcd83cc..f3c5050 100644
 --- a/app/src/main/res/xml/pref_misc.xml
 +++ b/app/src/main/res/xml/pref_misc.xml
 @@ -275,6 +275,11 @@
@@ -55,7 +55,7 @@ index f7806e3..97c271f 100644
 +            android:summary="Use lightweight programmatic activity transitions instead of XML animations\nFixes lag in Settings on low-end MTK devices" />
          <SwitchPreference
              android:defaultValue="false"
-             android:key="key_misc_secure_adb"
+             android:key="key_misc_treat_virtual_sensors_as_real"
 -- 
 2.53.0
 
