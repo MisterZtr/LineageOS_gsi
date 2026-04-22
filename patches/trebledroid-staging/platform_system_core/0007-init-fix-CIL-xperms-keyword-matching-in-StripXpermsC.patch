@@ -1,0 +1,79 @@
+From 46bbf9153b7cb97ebb81cd38f345bef0be4a34b4 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Wed, 22 Apr 2026 18:44:21 +0100
+Subject: [PATCH 7/7] init: fix CIL xperms keyword matching in StripXpermsCil
+
+the StripXpermsCil function searched for (allowxperm ...) in CIL
+files, but the CIL language uses (allowx ...) not (allowxperm ...).
+the _perm suffix does not exist in CIL syntax.  this caused the
+stripper to report "no xperms CIL rules found to strip" on every
+file, even though the files contained (allowx ...) statements that
+produce AVTAB_XPERMS entries in the compiled policy.
+
+fix the keyword matching to use the correct CIL syntax:
+- allowxperm -> allowx
+- auditallowxperm -> auditallowx
+- dontauditxperm -> dontauditx
+- neverallowxperm -> neverallowx
+
+also update the comment to clarify the CIL keywords vs the .te format.
+
+this was the root cause of all boot-to-recovery failures on 4.4 and
+4.14 kernels: secilc -c 29 would compile the CIL including xperms,
+then libsepol's avtab_write_item would fail writing the binary at
+version 29 because xperms entries were still present.
+---
+ init/selinux.cpp | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/init/selinux.cpp b/init/selinux.cpp
+index 1f91b9a..4b75bf7 100644
+--- a/init/selinux.cpp
++++ b/init/selinux.cpp
+@@ -249,7 +249,7 @@ bool KernelOlderThan(unsigned want_major, unsigned want_minor) {
+ 
+ // Strip xperms CIL statements from a file.  When secilc is invoked
+ // with -c 29 it still fails if the CIL input contains
+-// allowxperm / auditallowxperm / dontauditxperm / neverallowxperm
++// allowx / auditallowx / dontauditx / neverallowx
+ // statements, because libsepol refuses to write AVTAB_XPERMS entries
+ // at policydb version < 30.  This function removes all such
+ // statements (both single-line and multi-line) from the CIL source
+@@ -258,11 +258,9 @@ bool StripXpermsCil(const std::string& src_path, const std::string& dst_path,
+                     int* stripped_count) {
+     std::string content;
+     if (!android::base::ReadFileToString(src_path, &content)) return false;
+-
+     std::string result;
+     result.reserve(content.size());
+     *stripped_count = 0;
+-
+     size_t pos = 0;
+     while (pos < content.size()) {
+         // Copy leading whitespace as-is
+@@ -273,16 +271,16 @@ bool StripXpermsCil(const std::string& src_path, const std::string& dst_path,
+             pos++;
+         }
+         if (pos >= content.size()) break;
+-
+-        // Check for xperms statement start
++        // Check for xperms statement start.  CIL uses allowx/auditallowx/
++        // dontauditx/neverallowx (NOT allowxperm/auditallowxperm/etc).
+         static const struct {
+             const char* kw;
+             size_t len;
+         } xperms_kw[] = {
+-                {"(allowxperm ", 12},      {"(allowxperm\t", 12},
+-                {"(auditallowxperm ", 18}, {"(auditallowxperm\t", 18},
+-                {"(dontauditxperm ", 17},  {"(dontauditxperm\t", 17},
+-                {"(neverallowxperm ", 18}, {"(neverallowxperm\t", 18},
++                {"(allowx ", 8},      {"(allowx\t", 8},
++                {"(auditallowx ", 14}, {"(auditallowx\t", 14},
++                {"(dontauditx ", 13},  {"(dontauditx\t", 13},
++                {"(neverallowx ", 14}, {"(neverallowx\t", 14},
+         };
+ 
+         bool is_xperm = false;
+-- 
+2.53.0
+

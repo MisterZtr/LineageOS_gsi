@@ -1,0 +1,77 @@
+From 58bf95c23d72b08a5a764f4ae165ec31afac3e6a Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Wed, 22 Apr 2026 18:41:22 +0100
+Subject: [PATCH 3/3] libsepol: skip xperms entries when writing policy below
+ version 30
+
+when secilc compiles SELinux policy with -c 29 (capped for kernels
+lacking ioctl xperms support), the CIL input still contains allowx/
+auditallowx/ dontauditx/ neverallowx/ rules.  secilc compiles them
+into AVTAB_XPERMS entries in the in-memory policydb.  when the binary
+writer encounters these entries at policydb version 29, it fails with:
+
+  libsepol.avtab_write_item: policy version 29 does not support ioctl
+  extendedpermissions rules and one was specified
+
+this makes the GSI unbootable on any kernel that lacks the ioctl
+xperms backport (anything below ~5.4 that hasn't been patched).
+
+the CIL stripping approach in init (system/core) is supposed to remove
+xperms rules from CIL before compilation, but the keyword matching
+used CIL keywords (allowxperm) instead of the actual CIL syntax
+(allowx), so it never found any rules to strip.
+
+fix libsepol to skip xperms avtab entries during binary write when the
+target policy version is below POLICYDB_VERSION_XPERMS_IOCTL (30).
+these rules cannot be enforced on such kernels anyway, so omitting
+them from the binary is correct.  adjust the entry count (nel) in
+avtab_write to account for skipped entries so the kernel doesn't try
+to read past the end of the table.
+---
+ libsepol/src/write.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/libsepol/src/write.c b/libsepol/src/write.c
+index c6c1410..f49908d 100644
+--- a/libsepol/src/write.c
++++ b/libsepol/src/write.c
+@@ -116,6 +116,14 @@ static int avtab_write_item(policydb_t * p,
+ 				&& p->policyvers < POLICYDB_VERSION_AVTAB);
+ 	unsigned int i;
+ 
++	/* On GSI builds running on kernels that lack ioctl xperms support,
++	   the policy version is capped below POLICYDB_VERSION_XPERMS_IOCTL.
++	   Skip xperms entries entirely during write; they can't be enforced
++	   on such kernels anyway. */
++	if (!oldvers && (p->policyvers < POLICYDB_VERSION_XPERMS_IOCTL) &&
++			(cur->key.specified & AVTAB_XPERMS)) {
++		return POLICYDB_SUCCESS;
++	}
+ 	if (oldvers) {
+ 		/* Generate the old avtab format.
+ 		   Requires merging similar entries if uncond avtab. */
+@@ -303,7 +311,20 @@ static int avtab_write(struct policydb *p, avtab_t * a, struct policy_file *fp)
+ 		nel = a->nel;
+ 	} else {
+ 		/* New avtab format.  nel is good to go. */
+-		nel = cpu_to_le32(a->nel);
++		uint32_t xperms_count = 0;
++		if (p->policyvers < POLICYDB_VERSION_XPERMS_IOCTL) {
++			/* count xperms entries so we can subtract them from nel.
++			   avtab_write_item skips them when policyvers is below
++			   POLICYDB_VERSION_XPERMS_IOCTL, so nel must reflect the
++			   actual number of entries written. */
++			for (i = 0; i < a->nslot; i++) {
++				for (cur = a->htable[i]; cur; cur = cur->next) {
++					if (cur->key.specified & AVTAB_XPERMS)
++						xperms_count++;
++				}
++			}
++		}
++		nel = cpu_to_le32(a->nel - xperms_count);
+ 		items = put_entry(&nel, sizeof(uint32_t), 1, fp);
+ 		if (items != 1)
+ 			return POLICYDB_ERROR;
+-- 
+2.53.0
+

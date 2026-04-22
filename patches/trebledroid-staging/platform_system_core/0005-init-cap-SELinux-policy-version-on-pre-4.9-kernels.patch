@@ -1,7 +1,7 @@
 From 119be878cdaffe8f74680f5be549856b652125cc Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Sat, 11 Apr 2026 23:37:17 +0100
-Subject: [PATCH 5/6] init: cap SELinux policy version on pre-4.9 kernels to
+Subject: [PATCH 5/7] init: cap SELinux policy version on pre-4.9 kernels to
  avoid xperms rejection
 
 Android sepolicy uses allowxperm / auditallowxperm / dontauditxperm

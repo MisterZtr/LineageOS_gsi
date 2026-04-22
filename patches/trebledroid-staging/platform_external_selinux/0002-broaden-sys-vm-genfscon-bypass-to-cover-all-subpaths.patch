@@ -1,7 +1,7 @@
 From 63623721333cc76361ef93a9fd4464abe0357813 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 27 Mar 2026 16:22:26 +0000
-Subject: [PATCH 2/2] broaden /sys/vm/ genfscon bypass to cover all subpaths
+Subject: [PATCH 2/3] broaden /sys/vm/ genfscon bypass to cover all subpaths
 
 vendors frequently define their own types for proc /sys/vm/ knobs
 that conflict with AOSP labels (watermark_scale_factor on Freebox,
