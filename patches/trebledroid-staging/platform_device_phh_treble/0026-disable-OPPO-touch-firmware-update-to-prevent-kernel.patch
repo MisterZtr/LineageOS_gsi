@@ -1,0 +1,54 @@
+From bd3c4da9a1d0aca2b041b35afa955fd98c413a33 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 24 Apr 2026 20:56:08 +0100
+Subject: [PATCH] rw-system: disable OPPO touch firmware update on MT6771 to
+ prevent kernel panic
+
+The OPPO F11 (CPH1911, MT6771/Helio P70) bootloops because the
+touchscreen driver (td4320_nf) triggers a kernel panic during
+firmware change. After the panic, the MediaTek watchdog (toprgu)
+triggers a hard reset, causing a bootloop.
+
+This is a kernel-space issue that occurs before userspace runs.
+However, the td4320_nf driver reads a firmware update flag from
+sysfs/proc nodes that can be controlled by the vendor. Some OPPO
+devices expose /proc/touchpanel/fw_update or similar entries that
+control whether the touch driver performs a firmware update on boot.
+
+For OPPO/Realme MediaTek devices, write 0 to any known touch firmware
+update sysfs/proc nodes during rw-system.sh (post-fs) to prevent the
+driver from attempting a firmware change that could cause a kernel
+panic. This is a best-effort mitigation -- if the driver does not
+expose such a node, or the panic occurs before post-fs, this will
+have no effect.
+
+Fixes: #45
+---
+ rw-system.sh | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/rw-system.sh b/rw-system.sh
+index e295b70..8d5aac3 100644
+--- a/rw-system.sh
++++ b/rw-system.sh
+@@ -375,6 +375,17 @@ for part in /dev/block/bootdevice/by-name/oppodycnvbk  /dev/block/platform/bootd
+     fi
+ done
+ 
++# Disable touch firmware update on OPPO/Realme MTK devices to prevent
++# kernel panic from td4320_nf driver during boot.  The driver triggers
++# a kernel panic during firmware change on some devices (notably OPPO F11
++# CPH1911 MT6771).  Writing 0 to the firmware update flag prevents the
++# driver from attempting the update.
++for node in /proc/touchpanel/fw_update /sys/devices/platform/tpd/fw_update /proc/tfa98xx/oppo_tfa98xx_fw_update; do
++    if [ -f "$node" ]; then
++        echo 0 > "$node" 2>/dev/null
++        log -t rw-system "Disabled touch fw update at $node"
++    fi
++done
+ 
+ mkdir -p /mnt/phh/
+ mount -t tmpfs -o rw,nodev,relatime,mode=755,gid=0 none /mnt/phh || true
+-- 
+2.53.0
+
