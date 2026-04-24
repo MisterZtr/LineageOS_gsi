@@ -1,0 +1,44 @@
+From f465f691c0fdd3bdd691d5856283e9c1f277a766 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Fri, 24 Apr 2026 20:54:18 +0100
+Subject: [PATCH] phh-on-boot: restart fingerprint HAL after USB gadget
+ recovery
+
+The USB gadget recovery code above cycles sys.usb.config to force the
+vendor USB init to tear down and rebuild the gadget.  On some devices
+(e.g. Samsung Galaxy M33, Exynos 1280), this also disconnects the
+biometrics HAL's session with the Trusted Execution Environment,
+causing fingerprint enrollment and authentication to fail with a
+generic hardware error.
+
+Restart vendor.fps_hal and vendor.biometrics-hal-1 when USB gadget
+recovery was performed so they re-establish their TEE connections.
+
+Fixes: #31
+---
+ phh-on-boot.sh | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/phh-on-boot.sh b/phh-on-boot.sh
+index 1be78a2..85524c7 100644
+--- a/phh-on-boot.sh
++++ b/phh-on-boot.sh
+@@ -22,6 +22,15 @@ if [ -z "$udc_state" ] || [ "$udc_state" = "none" ]; then
+     fi
+ fi
+ 
++# Restart fingerprint HAL after USB gadget recovery. The USB gadget reset
++# can disconnect the biometrics HAL's connection to the TEE (trusted
++# execution environment), causing fingerprint enrollment/auth to fail
++# with a generic error. Restarting the HAL re-establishes the TEE session.
++if [ -z "$udc_state" ] || [ "$udc_state" = "none" ]; then
++    setprop ctl.restart vendor.fps_hal
++    setprop ctl.restart vendor.biometrics-hal-1
++fi
++
+ setprop ctl.start media.swcodec
+ 
+ for i in wpa p2p;do
+-- 
+2.53.0
+
