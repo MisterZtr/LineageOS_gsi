@@ -1,7 +1,7 @@
-From 8f94baf5e261e9bb5562f4499b4ace5136d6881d Mon Sep 17 00:00:00 2001
+From a335c7ee2a087904a8dad896cf8de2a62c115d2b Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Tue, 24 Mar 2026 12:44:06 +0000
-Subject: [PATCH 2/3] remove persist.sys.usb.config=adb default from base.mk
+Subject: [PATCH 8/9] remove persist.sys.usb.config=adb default from base.mk
 
 adb is disabled by default on release builds; enabling it requires
 the usual developer options + usb debugging toggle. debug builds
@@ -11,10 +11,10 @@ re-enable it via the debug tier.
  1 file changed, 1 deletion(-)
 
 diff --git a/base.mk b/base.mk
-index 4bc643c..414347e 100644
+index 439bef8..abcfd3f 100644
 --- a/base.mk
 +++ b/base.mk
-@@ -43,7 +43,6 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+@@ -38,7 +38,6 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
  
  # Huawei HiSuite (also other OEM custom programs I guess) it's of no use in AOSP builds
  PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
@@ -23,5 +23,5 @@ index 4bc643c..414347e 100644
  
  # VNDK config files
 -- 
-2.53.0
+2.54.0
 

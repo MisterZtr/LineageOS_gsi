@@ -1,11 +1,16 @@
-From af7f25ded57f869b5139397e6e5a6964b53cbfae (HEAD)
+From 6f3959ece381a01474d455a44e2bd9abd02bb034 Mon Sep 17 00:00:00 2001
 From: MisterZtr <andey2004586@gmail.com>
-Date: Fri Apr 18 17:12:06 2025 +0300
-Subject: [PATCH] Add own product prop
+Date: Fri, 18 Apr 2025 17:12:06 +0300
+Subject: [PATCH 6/9] Add own product prop
+
+---
+ product.prop | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+ create mode 100644 product.prop
 
 diff --git a/product.prop b/product.prop
 new file mode 100644
-index 0000000..6d468a1
+index 0000000..70f4953
 --- /dev/null
 +++ b/product.prop
 @@ -0,0 +1,50 @@
@@ -59,3 +64,6 @@ index 0000000..6d468a1
 +ro.min_pointer_dur=8
 +debug.egl.hw=1
 +video.accelerate.hw=1
+-- 
+2.54.0
+

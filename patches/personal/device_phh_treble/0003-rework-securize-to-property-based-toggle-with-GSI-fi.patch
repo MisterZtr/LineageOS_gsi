@@ -1,22 +1,22 @@
-From 8739d2053e327670dca9598e1fce9c4ac2194a7d Mon Sep 17 00:00:00 2001
+From 30e4a2e00f756d776605b8c6b2affe169721428e Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 22 Apr 2026 19:20:04 +0100
-Subject: [PATCH] rework securize to property-based toggle with GSI fingerprint
- tracking
+Subject: [PATCH 3/9] rework securize to property-based toggle with GSI
+ fingerprint tracking
 
 ---
  base.mk             |   1 -
- phh-on-boot.sh      |  25 ++++++++
+ phh-on-boot.sh      |  23 ++++++++
  phh-prop-handler.sh |  11 ++++
- rw-system.sh        | 142 ++++++++++++++++++++++++++++++--------------
+ rw-system.sh        | 135 ++++++++++++++++++++++++++++++--------------
  vndk.rc             |   3 +
- 5 files changed, 138 insertions(+), 44 deletions(-)
+ 5 files changed, 131 insertions(+), 42 deletions(-)
 
 diff --git a/base.mk b/base.mk
-index 7a6d528..550c34c 100644
+index cc5841f..7924b08 100644
 --- a/base.mk
 +++ b/base.mk
-@@ -176,7 +176,6 @@ PRODUCT_PACKAGES += \
+@@ -167,7 +167,6 @@ PRODUCT_PACKAGES += \
      resetprop_phh
  
  PRODUCT_COPY_FILES += \
@@ -25,7 +25,7 @@ index 7a6d528..550c34c 100644
  
  PRODUCT_COPY_FILES += \
 diff --git a/phh-on-boot.sh b/phh-on-boot.sh
-index ac9cf86..aabf293 100644
+index 5f26430..1adb226 100644
 --- a/phh-on-boot.sh
 +++ b/phh-on-boot.sh
 @@ -25,6 +25,29 @@ if [ ! -f /sys/fs/fuse/features/fuse_bpf ]; then
@@ -81,11 +81,11 @@ index cae90d6..d698b6a 100644
      if [[ "$prop_value" != "0" && "$prop_value" != "1" ]]; then
          exit 1
 diff --git a/rw-system.sh b/rw-system.sh
-index 835d5ab..abc5007 100644
+index b249161..ecba25e 100644
 --- a/rw-system.sh
 +++ b/rw-system.sh
-@@ -814,74 +814,127 @@ if [ "$brand" = OPPO ] || [ "$brand" = realme ]; then
-     resetprop_phh ro.boot.verifiedbootstate green
+@@ -831,74 +831,127 @@ if [ "$brand" = OPPO ] || [ "$brand" = realme ]; then
+     setprop ctl.stop oppo_root_check 2>/dev/null
  fi
  
 -if [ -f /system/phh/secure ] || [ -f /metadata/phh/secure ];then
@@ -188,7 +188,7 @@ index 835d5ab..abc5007 100644
      copyprop ro.product.manufacturer ro.vendor.product.manufacturer
 +    copyprop ro.product.system.manufacturer ro.vendor.product.manufacturer
 +    copyprop ro.product.product.manufacturer ro.vendor.product.manufacturer
-+    copyprop ro.product.system_ext.manufacturer ro.vendor.product.manufacture
++    copyprop ro.product.system_ext.manufacturer ro.vendor.product.manufacturer
      copyprop ro.system.product.manufacturer ro.product.vendor.manufacturer
      copyprop ro.product.manufacturer ro.product.vendor.manufacturer
 -    (getprop ro.vendor.build.security_patch; getprop ro.keymaster.xxx.security_patch) |sort |tail -n 1 |while read v;do
@@ -232,11 +232,11 @@ index 835d5ab..abc5007 100644
 -    mkdir /mnt/phh/xbin
 -    chmod 0755 /mnt/phh/xbin
 -    chcon u:object_r:system_file:s0 /mnt/phh/xbin
- 
+-
 -    #phh-su will bind over this empty file to make a real su
 -    touch /mnt/phh/xbin/su
 -    chcon u:object_r:system_file:s0 /mnt/phh/xbin/su
--
+ 
 -    mount -o bind /mnt/phh/xbin /system/xbin
 +    # update usb gadget strings so the device appears correctly when connected
 +    model="$(getprop ro.product.model)"
@@ -268,4 +268,5 @@ index 2bd6b35..a807273 100644
      exec u:r:phhsu_daemon:s0 root -- /system/bin/phh-prop-handler.sh "persist.sys.phh.oppo.usbotg"
  
 -- 
-2.53.0
+2.54.0
+
