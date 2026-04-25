@@ -140,16 +140,13 @@ diff --git a/lineage.mk b/lineage.mk
 index 172bb01..deb95c7 100644
 --- a/lineage.mk
 +++ b/lineage.mk
-@@ -1,3 +1,17 @@
+@@ -1,3 +1,14 @@
  $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
 +$(call inherit-product, vendor/lineage/config/BoardConfigSoong.mk)
 +$(call inherit-product, vendor/lineage/config/BoardConfigLineage.mk)
 +$(call inherit-product, device/lineage/sepolicy/common/sepolicy.mk)
  -include vendor/lineage/build/core/config.mk
 --include vendor/lineage/build/core/apicheck.mk
-+
-+# Disable adb secure
-+WITH_ADB_INSECURE := true
 +
 +# Bootanimation
 +TARGET_BOOT_ANIMATION_RES := 1080

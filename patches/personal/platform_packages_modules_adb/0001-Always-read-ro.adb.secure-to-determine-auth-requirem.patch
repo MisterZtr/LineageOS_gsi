@@ -1,0 +1,47 @@
+From f860977abc138ab08337f2bf8f0b6df91bfa31c6 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Sat, 7 Mar 2026 19:52:08 +0000
+Subject: [PATCH] Always read ro.adb.secure to determine auth requirement
+
+Remove the ro.debuggable / ro.boot.verifiedbootstate gate around the
+ro.adb.secure property check.  On a GSI the securize mechanism spoofs
+both of those properties after boot completes, which means a restarted
+adbd process would skip the ro.adb.secure code-path entirely and
+unconditionally require authentication -- making the property useless
+for runtime control.
+
+By reading ro.adb.secure unconditionally (defaulting to true when the
+property is absent) we allow the boot scripts to decide whether
+authentication should be required on a per-boot basis via a sentinel
+file on /metadata.
+---
+ daemon/main.cpp | 18 +++---------------
+ 1 file changed, 3 insertions(+), 15 deletions(-)
+
+diff --git a/daemon/main.cpp b/daemon/main.cpp
+index 3d3f302..5c897b0 100644
+--- a/daemon/main.cpp
++++ b/daemon/main.cpp
+@@ -219,16 +219,9 @@ int adbd_main() {
+     // descriptor will always be open.
+     adbd_cloexec_auth_socket();
+ 
+-#if defined(__ANDROID__)
+-    bool device_unlocked = android::base::GetProperty("ro.boot.verifiedbootstate", "") == "orange";
+-    if (device_unlocked || ANDROID_DEBUGGABLE || __android_log_is_debuggable()) {
+-        // If we're on userdebug/eng or the device is unlocked, permit no-authentication.
+-        auth_required = android::base::GetBoolProperty("ro.adb.secure", false);
+-#if defined(__ANDROID_RECOVERY__)
+-        auth_required &= android::base::GetBoolProperty("ro.adb.secure.recovery", true);
+-#endif
+-    }
+-#endif
++    // Allow boot scripts to control authentication via ro.adb.secure.
++    // Default to requiring auth when the property is absent.
++    auth_required = android::base::GetBoolProperty("ro.adb.secure", true);
+ 
+     // Our external storage path may be different than apps, since
+     // we aren't able to bind mount after dropping root.
+-- 
+2.53.0
+

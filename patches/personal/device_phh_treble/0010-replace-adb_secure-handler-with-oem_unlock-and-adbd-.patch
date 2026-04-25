@@ -1,0 +1,35 @@
+From 793e53a79e3e7cfafed25778589fa93ef6ce3a4a Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Wed, 22 Apr 2026 18:15:39 +0100
+Subject: [PATCH 3/3] replace adb_secure handler with oem_unlock and adbd
+ hiding triggers
+
+remove the old persist.sys.phh.adb_secure=1 handler that just set
+ro.adb.secure and restarted adbd. replace with property triggers that
+use magisk SELinux context to hide oem_unlock_allowed and adbd status
+from root detection.
+---
+ vndk.rc | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/vndk.rc b/vndk.rc
+index a807273..867368f 100644
+--- a/vndk.rc
++++ b/vndk.rc
+@@ -136,6 +136,10 @@ service watchdogd-gsi /system/bin/watchdogd 10 20
+     disabled
+     seclabel u:r:watchdogd:s0
+ 
+-on property:persist.sys.phh.adb_secure=1
+-    exec u:r:phhsu_daemon:s0 root -- /system/bin/resetprop_phh ro.adb.secure 1
+-    restart adbd
++# reset oem unlock toggle to disable
++on property:sys.oem_unlock_allowed=*
++    exec u:r:magisk:s0 root root -- /system/bin/resetprop_phh -n sys.oem_unlock_allowed 0
++
++# hide adbd is running
++on property:init.svc.adbd=*
++    exec u:r:magisk:s0 root root -- /system/bin/resetprop_phh -n init.svc.adbd stopped
+-- 
+2.53.0
+

@@ -1,88 +1,29 @@
-From 4c2fb7d2872e910828cd3cdc7b71686f1bf94c94 Mon Sep 17 00:00:00 2001
+From 8739d2053e327670dca9598e1fce9c4ac2194a7d Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
-Date: Tue, 7 Apr 2026 22:29:26 +0100
+Date: Wed, 22 Apr 2026 19:20:04 +0100
 Subject: [PATCH] rework securize to property-based toggle with GSI fingerprint
  tracking
 
-Replace the file-based /system/phh/secure gate with an inverted
-property-based /metadata/securize_disable gate. Add GSI fingerprint
-change detection so PackageManagerService sees mIsUpgrade=true on
-real GSI upgrades by setting persist.pm.mock-upgrade, which PMS ORs
-into isDeviceUpgrading().
-
-Re-assert the production debuggability spoofing (ro.debuggable=0,
-ro.secure=1) inside the securize block now that the shared personal
-tier strips them from upstream. Without this, release builds would
-ship with ro.debuggable=1 and root detection would trivially flag
-the device.
-
-Drop the remaining ro.*.build.type and ro.adb.secure=1 spoofing
-lines, the Hide system/xbin/su mount trick, and the phh-securize.sh
-product copy. Add model/manufacturer updates to the usb gadget
-strings so lsusb reports the spoofed identity.
 ---
- ...-on-devices-whose-kernels-lack-fuse-.patch | 51 +++++++++++++++++++
- phh-on-boot.sh                                | 25 +++++++++
- 2 files changed, 76 insertions(+)
- create mode 100644 0001-Disable-FUSE-BPF-on-devices-whose-kernels-lack-fuse-.patch
+ base.mk             |   1 -
+ phh-on-boot.sh      |  25 ++++++++
+ phh-prop-handler.sh |  11 ++++
+ rw-system.sh        | 142 ++++++++++++++++++++++++++++++--------------
+ vndk.rc             |   3 +
+ 5 files changed, 138 insertions(+), 44 deletions(-)
 
-diff --git a/0001-Disable-FUSE-BPF-on-devices-whose-kernels-lack-fuse-.patch b/0001-Disable-FUSE-BPF-on-devices-whose-kernels-lack-fuse-.patch
-new file mode 100644
-index 0000000..fe02cc4
---- /dev/null
-+++ b/0001-Disable-FUSE-BPF-on-devices-whose-kernels-lack-fuse-.patch
-@@ -0,0 +1,51 @@
-+From f76ce00e18feae2416cf6806dbf9b816f12c0f0b Mon Sep 17 00:00:00 2001
-+From: "Christopher A. Williamson" <contact@chrisaw.io>
-+Date: Mon, 20 Apr 2026 17:24:44 +0100
-+Subject: [PATCH] Disable FUSE BPF on devices whose kernels lack fuse-bpf
-+ support
-+
-+Android 16 enables FUSE BPF by default, which requires kernel
-+support for the fuse-bpf program type and the fuseMedia.bpf BPF
-+program. On older kernels (< 5.4 without backport), fuseMedia.bpf
-+fails to load and the FuseDaemon falls back to legacy mode, but
-+the legacy FUSE path may not work correctly on QPR2+.
-+
-+Setting persist.sys.fuse.bpf.override=false tells the FuseDaemon
-+and vold to use the legacy FUSE path from the start, avoiding
-+the failed BPF load and ensuring bind-mounts for Android/data
-+and Android/obb are set up correctly by vold.
-+
-+The kernel exposes fuse-bpf support at /sys/fs/fuse/features/fuse_bpf.
-+If this file does not exist, the kernel does not support FUSE BPF.
-+---
-+ phh-on-boot.sh | 14 ++++++++++++++
-+ 1 file changed, 14 insertions(+)
-+
-+diff --git a/phh-on-boot.sh b/phh-on-boot.sh
-+index c8cd1fd..ac9cf86 100644
-+--- a/phh-on-boot.sh
-++++ b/phh-on-boot.sh
-+@@ -11,6 +11,20 @@ if [ ! -e /sys/fs/bpf/netd_shared/map_netd_uid_owner_map ]; then
-+     log -t phh-on-boot "Disabled restricted_networking_mode (BPF uid_owner_map absent)"
-+ fi
-+ 
-++# Disable FUSE BPF on devices whose kernels lack fuse-bpf support.
-++# Android 16 enables FUSE BPF by default, which requires kernel support for
-++# the fuse-bpf program type. On older kernels (< 5.4 without backport),
-++# fuseMedia.bpf fails to load and the FuseDaemon falls back to legacy mode
-++# but the legacy FUSE path may not work correctly on QPR2+. Setting
-++# persist.sys.fuse.bpf.override=false tells the FuseDaemon and vold to
-++# use the legacy FUSE path from the start, avoiding the failed BPF load
-++# and ensuring bind-mounts for Android/data and Android/obb are set up
-++# correctly by vold.
-++if [ ! -f /sys/fs/fuse/features/fuse_bpf ]; then
-++    setprop persist.sys.fuse.bpf.override false
-++    log -t phh-on-boot "Disabled FUSE BPF (kernel fuse_bpf feature absent)"
-++fi
-++
-+ vndk="$(getprop persist.sys.vndk)"
-+ [ -z "$vndk" ] && vndk="$(getprop ro.vndk.version |grep -oE '^[0-9]+')"
-+ 
-+-- 
-+2.53.0
-+
+diff --git a/base.mk b/base.mk
+index 7a6d528..550c34c 100644
+--- a/base.mk
++++ b/base.mk
+@@ -176,7 +176,6 @@ PRODUCT_PACKAGES += \
+     resetprop_phh
+ 
+ PRODUCT_COPY_FILES += \
+-    device/phh/treble/phh-securize.sh:system/bin/phh-securize.sh \
+     device/phh/treble/files/ota.sh:system/bin/ota.sh \
+ 
+ PRODUCT_COPY_FILES += \
 diff --git a/phh-on-boot.sh b/phh-on-boot.sh
 index ac9cf86..aabf293 100644
 --- a/phh-on-boot.sh
@@ -117,6 +58,214 @@ index ac9cf86..aabf293 100644
  vndk="$(getprop persist.sys.vndk)"
  [ -z "$vndk" ] && vndk="$(getprop ro.vndk.version |grep -oE '^[0-9]+')"
  
+diff --git a/phh-prop-handler.sh b/phh-prop-handler.sh
+index cae90d6..d698b6a 100644
+--- a/phh-prop-handler.sh
++++ b/phh-prop-handler.sh
+@@ -146,6 +146,17 @@ if [ "$1" == "persist.sys.phh.oppo.usbotg" ]; then
+     exit
+ fi
+ 
++
++if [ "$1" == "persist.sys.phh.securize" ]; then
++    if [[ "$prop_value" != "0" && "$prop_value" != "1" ]]; then
++        exit 1
++    fi
++    if [[ "$prop_value" == 1 ]]; then
++        rm -f /metadata/securize_disable
++    else
++        touch /metadata/securize_disable
++    fi
++fi
+ if [ "$1" == "persist.sys.phh.transsion.usbotg" ]; then
+     if [[ "$prop_value" != "0" && "$prop_value" != "1" ]]; then
+         exit 1
+diff --git a/rw-system.sh b/rw-system.sh
+index 835d5ab..abc5007 100644
+--- a/rw-system.sh
++++ b/rw-system.sh
+@@ -814,74 +814,127 @@ if [ "$brand" = OPPO ] || [ "$brand" = realme ]; then
+     resetprop_phh ro.boot.verifiedbootstate green
+ fi
+ 
+-if [ -f /system/phh/secure ] || [ -f /metadata/phh/secure ];then
++# Detect GSI system image changes before securize overwrites fingerprints.
++# PackageManagerService uses PackagePartitions.FINGERPRINT (a SHA-1 digest of
++# all ro.*.build.fingerprint properties) to detect upgrades and set mIsUpgrade.
++# Because securize replaces every system fingerprint property with the vendor
++# fingerprint, PMS always sees the same digest after first boot and mIsUpgrade
++# is always false, even after a real GSI upgrade.
++#
++# To work around this we compare the original (pre-securize) system fingerprint
++# against a persisted value and, when they differ, set persist.pm.mock-upgrade=true
++# which PMS ORs into isDeviceUpgrading(). The same comparison gates the
++# (no longer used for adb; release builds keep adb fully disabled.)
++#
++# Storage selection: neither /cache nor /metadata is universally available
++# at the time rw-system.sh runs.
++#   /metadata: real persistent partition on post-Q A/B devices; tmpfs on
++#              pre-Q devices without a metadata partition (see 00-fix-metadata.sh).
++#   /cache:    real persistent partition on non-A/B devices; a symlink to
++#              /data/cache on A/B devices, but /data is not yet mounted at
++#              this point in boot so writes would be silently lost.
++# Strategy: prefer /metadata if it is a real mountpoint (not tmpfs), else
++# prefer /cache if it is a real mountpoint, else skip persistence (best-effort).
++gsi_fp="$(getprop ro.system.build.fingerprint)"
++gsi_fp_dir=""
++if mountpoint -q /metadata && [ "$(stat -f -c %T /metadata)" != "tmpfs" ]; then
++    gsi_fp_dir="/metadata/phh"
++elif mountpoint -q /cache; then
++    gsi_fp_dir="/cache/phh"
++fi
++gsi_fp_file=""
++prev_gsi_fp=""
++if [ -n "$gsi_fp_dir" ]; then
++    mkdir -p "$gsi_fp_dir"
++    gsi_fp_file="$gsi_fp_dir/gsi_fingerprint"
++    [ -f "$gsi_fp_file" ] && prev_gsi_fp="$(cat "$gsi_fp_file")"
++fi
++if [ -n "$gsi_fp" ] && [ -n "$prev_gsi_fp" ] && [ "$gsi_fp" != "$prev_gsi_fp" ]; then
++    # fingerprint changed: GSI upgrade detected.
++    [ -n "$gsi_fp_file" ] && echo "$gsi_fp" > "$gsi_fp_file"
++    # signal PMS to run post-upgrade steps.
++    resetprop_phh -n persist.pm.mock-upgrade true
++elif [ -n "$gsi_fp" ] && [ -z "$prev_gsi_fp" ]; then
++    # no prior fingerprint: fresh flash, factory reset, or no persistent storage.
++    [ -n "$gsi_fp_file" ] && echo "$gsi_fp" > "$gsi_fp_file"
++    resetprop_phh -n persist.pm.mock-upgrade false
++else
++    # same build as last boot: clear upgrade flag.
++    resetprop_phh -n persist.pm.mock-upgrade false
++fi
++
++if [ ! -f /metadata/securize_disable ]; then
+     copyprop ro.build.device ro.vendor.build.device
+     copyprop ro.system.build.fingerprint ro.vendor.build.fingerprint
+     copyprop ro.bootimage.build.fingerprint ro.vendor.build.fingerprint
+     copyprop ro.build.fingerprint ro.vendor.build.fingerprint
++    copyprop ro.system_ext.build.fingerprint ro.vendor.build.fingerprint
++    copyprop ro.product.build.fingerprint ro.vendor.build.fingerprint
+     copyprop ro.build.device ro.vendor.product.device
+     copyprop ro.product.system.device ro.vendor.product.device
+     copyprop ro.product.device ro.vendor.product.device
+     copyprop ro.product.system.device ro.product.vendor.device
+     copyprop ro.product.device ro.product.vendor.device
++    copyprop ro.product.system_ext.device ro.vendor.product.device
++    copyprop ro.product.product.device ro.vendor.product.device
++    copyprop ro.product.system_ext.device ro.product.vendor.device
++    copyprop ro.product.product.device ro.product.vendor.device
+     copyprop ro.product.system.name ro.vendor.product.name
+     copyprop ro.product.name ro.vendor.product.name
+-    copyprop ro.product.system.name ro.product.vendor.device
+-    copyprop ro.product.name ro.product.vendor.device
++    copyprop ro.product.system.name ro.product.vendor.name
++    copyprop ro.product.name ro.product.vendor.name
++    copyprop ro.product.system_ext.name ro.vendor.product.name
++    copyprop ro.product.product.name ro.vendor.product.name
++    copyprop ro.product.system_ext.name ro.product.vendor.name
++    copyprop ro.product.product.name ro.product.vendor.name
+     copyprop ro.system.product.brand ro.vendor.product.brand
+     copyprop ro.product.brand ro.vendor.product.brand
++    copyprop ro.product.system.brand ro.vendor.product.brand
++    copyprop ro.product.system_ext.brand ro.vendor.product.brand
++    copyprop ro.product.product.brand ro.product.vendor.brand
++    copyprop ro.system.product.brand ro.product.vendor.brand
++    copyprop ro.product.brand ro.product.vendor.brand
++    copyprop ro.product.system.brand ro.product.vendor.brand
++    copyprop ro.product.system_ext.brand ro.product.vendor.brand
++    copyprop ro.product.product.brand ro.product.vendor.brand
+     copyprop ro.product.system.model ro.vendor.product.model
+     copyprop ro.product.model ro.vendor.product.model
++    copyprop ro.product.system_ext.model ro.vendor.product.model
++    copyprop ro.product.product.model ro.vendor.product.model
+     copyprop ro.product.system.model ro.product.vendor.model
+     copyprop ro.product.model ro.product.vendor.model
+     copyprop ro.build.product ro.vendor.product.model
+     copyprop ro.build.product ro.product.vendor.model
++    copyprop ro.product.system_ext.model ro.product.vendor.model
++    copyprop ro.product.product.model ro.product.vendor.model
+     copyprop ro.system.product.manufacturer ro.vendor.product.manufacturer
+     copyprop ro.product.manufacturer ro.vendor.product.manufacturer
++    copyprop ro.product.system.manufacturer ro.vendor.product.manufacturer
++    copyprop ro.product.product.manufacturer ro.vendor.product.manufacturer
++    copyprop ro.product.system_ext.manufacturer ro.vendor.product.manufacture
+     copyprop ro.system.product.manufacturer ro.product.vendor.manufacturer
+     copyprop ro.product.manufacturer ro.product.vendor.manufacturer
+-    (getprop ro.vendor.build.security_patch; getprop ro.keymaster.xxx.security_patch) |sort |tail -n 1 |while read v;do
+-        [ -n "$v" ] && resetprop_phh ro.build.version.security_patch "$v"
+-    done
++    copyprop ro.product.system.manufacturer ro.product.vendor.manufacturer
++    copyprop ro.product.product.manufacturer ro.product.vendor.manufacturer
++    copyprop ro.product.system_ext.manufacturer ro.product.vendor.manufacturer
+ 
+-    resetprop_phh ro.build.user nobody
+-    resetprop_phh ro.build.host android-build
+-    resetprop_phh ro.build.tags release-keys
+-    resetprop_phh ro.product.build.tags release-keys
+-    resetprop_phh ro.system.build.tags release-keys
+-    resetprop_phh ro.system_ext.build.tags release-keys
+-    resetprop_phh ro.vendor.build.tags release-keys
+-    resetprop_phh ro.boot.vbmeta.device_state locked
+-    resetprop_phh ro.boot.verifiedbootstate green
+-    resetprop_phh ro.boot.flash.locked 1
+-    resetprop_phh ro.boot.veritymode enforcing
+-    resetprop_phh ro.boot.warranty_bit 0
+-    resetprop_phh ro.warranty_bit 0
++    # spoof security-sensitive props early so root detection apps cannot read
++    # the real values before phh-on-boot.sh reinforces them post-boot
+     resetprop_phh ro.debuggable 0
+     resetprop_phh ro.secure 1
+-    resetprop_phh ro.build.type user
+-    resetprop_phh ro.product.build.type user
+-    resetprop_phh ro.system.build.type user
+-    resetprop_phh ro.system_ext.build.type user
+-    resetprop_phh ro.vendor.build.type user
+-    resetprop_phh --delete ro.build.selinux
+-
+-    resetprop_phh ro.adb.secure 1
+-
+-    # Hide system/xbin/su
+-    mount /mnt/phh/empty_dir /system/xbin
+-    mount /mnt/phh/empty_dir /system/app/me.phh.superuser
+-    mount /mnt/phh/empty /system/xbin/phh-su
+-else
+-    mkdir /mnt/phh/xbin
+-    chmod 0755 /mnt/phh/xbin
+-    chcon u:object_r:system_file:s0 /mnt/phh/xbin
+ 
+-    #phh-su will bind over this empty file to make a real su
+-    touch /mnt/phh/xbin/su
+-    chcon u:object_r:system_file:s0 /mnt/phh/xbin/su
+-
+-    mount -o bind /mnt/phh/xbin /system/xbin
++    # update usb gadget strings so the device appears correctly when connected
++    model="$(getprop ro.product.model)"
++    manufacturer="$(getprop ro.product.manufacturer)"
++    gadget_strings="/config/usb_gadget/g1/strings/0x409"
++    legacy_usb="/sys/class/android_usb/android0"
++    if [ -d "$gadget_strings" ]; then
++        [ -n "$model" ] && echo "$model" > "$gadget_strings/product"
++        [ -n "$manufacturer" ] && echo "$manufacturer" > "$gadget_strings/manufacturer"
++    elif [ -d "$legacy_usb" ]; then
++        [ -n "$model" ] && echo "$model" > "$legacy_usb/iProduct"
++        [ -n "$manufacturer" ] && echo "$manufacturer" > "$legacy_usb/iManufacturer"
++    fi
+ fi
+ 
+ for abi in "" 64;do
+diff --git a/vndk.rc b/vndk.rc
+index 2bd6b35..a807273 100644
+--- a/vndk.rc
++++ b/vndk.rc
+@@ -44,6 +44,9 @@ on property:persist.sys.phh.oppo.gaming_mode=*
+ on property:sys.phh.oplus.fppress=*
+     exec u:r:phhsu_daemon:s0 root -- /system/bin/phh-prop-handler.sh "sys.phh.oplus.fppress"
+ 
++on property:persist.sys.phh.securize=*
++    exec u:r:phhsu_daemon:s0 root -- /system/bin/phh-prop-handler.sh "persist.sys.phh.securize"
++
+ on property:persist.sys.phh.oppo.usbotg=*
+     exec u:r:phhsu_daemon:s0 root -- /system/bin/phh-prop-handler.sh "persist.sys.phh.oppo.usbotg"
+ 
 -- 
 2.53.0
-

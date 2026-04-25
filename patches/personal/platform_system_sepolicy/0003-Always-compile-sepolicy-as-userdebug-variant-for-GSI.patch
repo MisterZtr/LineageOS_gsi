@@ -1,0 +1,66 @@
+From f651106c6179885ad4542a93de8fc99abf6738eb Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Sun, 29 Mar 2026 23:31:31 +0100
+Subject: [PATCH] Always compile sepolicy as userdebug variant for GSI compat
+
+Override buildVariant() to always return "userdebug" regardless of the
+actual build variant. GSI builds use the user variant for everything
+else (no debug compile flags, no debug packages, no verbose logging)
+but need the userdebug SELinux policy because TrebleDroid compat
+patches and many vendor partitions depend on rules inside
+userdebug_or_eng() blocks.
+
+Without this, a user-variant build strips all userdebug_or_eng()
+policy blocks, which can cause SELinux denials for PHH overlay
+operations and vendor HAL interactions.
+
+Remove the permissive declaration from the su domain. The su binary is
+not included in GSI builds (treble_arm64_bvN = no su) so the domain
+is never entered, and permissive domains are rejected by the build
+system in user builds.
+---
+ build/soong/policy.go | 11 ++++-------
+ private/su.te         |  5 +++--
+ 2 files changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/build/soong/policy.go b/build/soong/policy.go
+index 78f9992..312488e 100644
+--- a/build/soong/policy.go
++++ b/build/soong/policy.go
+@@ -157,13 +157,10 @@ func (c *policyConf) buildVariant(ctx android.ModuleContext) string {
+ 	if variant := proptools.String(c.properties.Build_variant); variant != "" {
+ 		return variant
+ 	}
+-	if ctx.Config().Eng() {
+-		return "eng"
+-	}
+-	if ctx.Config().Debuggable() {
+-		return "userdebug"
+-	}
+-	return "user"
++	// always compile sepolicy as userdebug regardless of the actual build
++	// variant. GSI builds need the userdebug_or_eng() policy blocks for
++	// TrebleDroid compat with vendor partitions that expect them.
++	return "userdebug"
+ }
+ 
+ func (c *policyConf) cts() bool {
+diff --git a/private/su.te b/private/su.te
+index fae9b98..9521a74 100644
+--- a/private/su.te
++++ b/private/su.te
+@@ -23,8 +23,9 @@ userdebug_or_eng(`
+   # own domain.
+   virtualizationservice_use(su)
+ 
+-  # su is also permissive to permit setenforce.
+-  permissive su;
++  # do not declare su as permissive. the su binary is not included in GSI
++  # builds (treble_arm64_bvN = no su) so the domain is never entered, and
++  # permissive domains are rejected by the build system in user builds.
+ 
+   app_domain(su)
+ 
+-- 
+2.53.0
+
