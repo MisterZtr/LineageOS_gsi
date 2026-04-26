@@ -1,7 +1,7 @@
 From ecbab60ab474172495fafa0425fcc318adc56e21 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Mon, 20 Apr 2026 17:18:37 +0100
-Subject: [PATCH 6/7] init: strip xperms CIL rules and extend detection to kernels
+Subject: [PATCH 6/8] init: strip xperms CIL rules and extend detection to kernels
  <5.4
 
 Many vendor kernels between 4.9 and 5.4 lack the ioctl

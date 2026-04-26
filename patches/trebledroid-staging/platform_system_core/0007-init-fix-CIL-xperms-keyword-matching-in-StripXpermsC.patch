@@ -1,7 +1,7 @@
 From 46bbf9153b7cb97ebb81cd38f345bef0be4a34b4 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 22 Apr 2026 18:44:21 +0100
-Subject: [PATCH 7/7] init: fix CIL xperms keyword matching in StripXpermsCil
+Subject: [PATCH 7/8] init: fix CIL xperms keyword matching in StripXpermsCil
 
 the StripXpermsCil function searched for (allowxperm ...) in CIL
 files, but the CIL language uses (allowx ...) not (allowxperm ...).

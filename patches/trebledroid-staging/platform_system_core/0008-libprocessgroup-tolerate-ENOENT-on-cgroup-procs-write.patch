@@ -1,0 +1,44 @@
+From 2c2a0d99a06a3d26feaf21beca8998d44d85ec3b Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Sun, 26 Apr 2026 16:30:27 +0100
+Subject: [PATCH 8/8] libprocessgroup: tolerate ENOENT on cgroup.procs write
+
+On vendor kernels that lack the full cgroup v2 hierarchy expected by
+APEX services, writing a PID to a non-existent cgroup.procs path fails
+with ENOENT. This currently propagates to the caller and kills the
+service (e.g. vendor.audio-hal-aidl exits 4 times and triggers init
+panic).
+
+Treat ENOENT the same way we already treat ESRCH (thread exiting)
+and ENOSPC (empty cpuset): log nothing and return success so the
+service continues to boot with degraded cgroup support. This aligns
+with the init-level fallback that already makes cgroup creation
+failures non-fatal.
+
+Fixes #44
+---
+ libprocessgroup/task_profiles.cpp | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/libprocessgroup/task_profiles.cpp b/libprocessgroup/task_profiles.cpp
+index 2730743..d35322c 100644
+--- a/libprocessgroup/task_profiles.cpp
++++ b/libprocessgroup/task_profiles.cpp
+@@ -322,6 +322,14 @@ bool SetCgroupAction::AddTidToCgroup(pid_t tid, int fd, ResourceCacheType cache_
+         return true;
+     }
+ 
++    // ENOENT is returned when the cgroup path does not exist on vendor
++    // kernels that lack the full hierarchy expected by APEX services.
++    // Treat it as non-fatal so boot can continue with degraded cgroup
++    // support (matching the init-level fallback in service.cpp).
++    if (errno == ENOENT) {
++        return true;
++    }
++
+     const char* controller_name = controller()->name();
+     // ENOSPC is returned when cpuset cgroup that we are joining has no online cpus
+     if (errno == ENOSPC && !strcmp(controller_name, "cpuset")) {
+-- 
+2.53.0
+
