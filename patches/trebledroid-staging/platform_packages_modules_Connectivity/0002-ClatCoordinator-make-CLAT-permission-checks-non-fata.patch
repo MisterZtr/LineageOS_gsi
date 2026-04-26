@@ -1,7 +1,7 @@
 From 47041ee473b5d7b1ddeee96963cad3c6f6176c40 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Tue, 17 Mar 2026 23:18:19 +0000
-Subject: [PATCH 2/5] ClatCoordinator: make CLAT permission checks non-fatal for
+Subject: [PATCH 2/6] ClatCoordinator: make CLAT permission checks non-fatal for
  GSI
 
 Make BPF obj_get failures in ClatCoordinator non-fatal (ALOGE instead

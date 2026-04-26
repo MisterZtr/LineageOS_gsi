@@ -1,7 +1,7 @@
 From 62948d34b27f284d2db00922d7da2b0a5a46d690 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Thu, 12 Mar 2026 22:57:31 +0000
-Subject: [PATCH 1/5] NetBpfLoad: Relax all kernel version and capability checks
+Subject: [PATCH 1/6] NetBpfLoad: Relax all kernel version and capability checks
  for GSI
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

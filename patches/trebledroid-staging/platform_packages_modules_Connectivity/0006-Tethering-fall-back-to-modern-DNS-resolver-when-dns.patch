@@ -1,43 +1,40 @@
-From d54ac17d764e6731c9918744763584790b655ad7 Mon Sep 17 00:00:00 2001
+From e78a106f7dc5b5c3b50661785de4288d7cc795ff Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
-Date: Fri, 24 Apr 2026 22:46:47 +0100
-Subject: [PATCH] Tethering: fall back to modern DNS resolver when dnsmasq is
- unavailable
+Date: Sun, 26 Apr 2026 16:07:16 +0100
+Subject: [PATCH 6/6] tethering: default to modern DNS resolver instead of dnsmasq
 
-On GSI builds running on devices with BPF-less kernels, dnsmasq may
-fail to start or communicate. The Tethering module hardcodes
-usingLegacyDnsProxy=true, which tells netd to rely on dnsmasq for
-DNS forwarding. When dnsmasq is not running, nothing listens on port 53
-and hotspot clients get ERR_NAME_NOT_RESOLVED.
+On GSI builds dnsmasq may not start or communicate properly with the
+vendor kernel/tethering stack. The modern NetworkStackService DNS
+resolver (tetherDnsProxy) does not depend on dnsmasq and is more
+reliable. Set usingLegacyDnsProxy=false for both the initial tetherStart
+call and the retry path.
 
-When the initial tetherStart with legacy DNS proxy fails, retry with
-usingLegacyDnsProxy=false. This uses NetworkStackService's built-in
-DNS resolver (DnsServerObserver tetherDnsProxy) which does not depend
-on dnsmasq at all.
+This removes the need for the fallback patch that retries on dnsmasq
+failure, since we now take the modern path from the start.
 
 Issue: #14
 ---
- .../src/com/android/networkstack/tethering/Tethering.java  | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ .../src/com/android/networkstack/tethering/Tethering.java     | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/Tethering/src/com/android/networkstack/tethering/Tethering.java b/Tethering/src/com/android/networkstack/tethering/Tethering.java
-index 00103d68af..4af61d9c8f 100644
+index 00103d6..5359fb7 100644
 --- a/Tethering/src/com/android/networkstack/tethering/Tethering.java
 +++ b/Tethering/src/com/android/networkstack/tethering/Tethering.java
-@@ -2060,7 +2060,12 @@ public class Tethering {
+@@ -2055,12 +2055,12 @@ public class Tethering {
+             final String[] dhcpRanges = cfg.useLegacyDhcpServer()
+                     ? cfg.legacyDhcpRanges : new String[0];
+             try {
+-                NetdUtils.tetherStart(mNetd, true /** usingLegacyDnsProxy */, dhcpRanges);
++                NetdUtils.tetherStart(mNetd, false /** usingLegacyDnsProxy */, dhcpRanges);
+             } catch (RemoteException | ServiceSpecificException e) {
                  try {
                      // Stop and retry.
                      mNetd.tetherStop();
 -                    NetdUtils.tetherStart(mNetd, true /** usingLegacyDnsProxy */, dhcpRanges);
-+                    // dnsmasq may have failed on BPF-less kernels. Retry
-+                    // without the legacy DNS proxy so that NetworkStackService
-+                    // provides its own DNS resolver (tetherDnsProxy) instead.
-+                    mLog.log("Legacy DNS proxy (dnsmasq) start failed, "
-+                            + "retrying with modern DNS resolver");
 +                    NetdUtils.tetherStart(mNetd, false /** usingLegacyDnsProxy */, dhcpRanges);
                  } catch (RemoteException | ServiceSpecificException ee) {
                      mLog.e(ee);
                      transitionTo(mStartTetheringErrorState);
 -- 
 2.53.0
-

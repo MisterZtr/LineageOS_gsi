@@ -1,7 +1,7 @@
 From 6cf99ecdac310722e54aef4e242482ce2d89fea7 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Tue, 17 Mar 2026 23:18:57 +0000
-Subject: [PATCH 3/5] BpfHandler and BpfNetMaps: convert fatal errors to non-fatal
+Subject: [PATCH 3/6] BpfHandler and BpfNetMaps: convert fatal errors to non-fatal
  for GSI
 
 Convert abort() calls in BpfHandler.initPrograms(), the infinite loop

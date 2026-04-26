@@ -1,7 +1,7 @@
 From 02a93f1e00e2d68dd364bed1332b5d7b5241ea23 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 3 Apr 2026 00:37:25 +0100
-Subject: [PATCH 5/5] treat non-optional BPF program load failures as non-fatal for
+Subject: [PATCH 5/6] treat non-optional BPF program load failures as non-fatal for
  GSI
 
 kernels that spoof their version string (e.g. 4.19 reporting as 5.4
