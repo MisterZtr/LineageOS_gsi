@@ -1,7 +1,7 @@
 From d9021dafbc0dea9e704b5e4d1662d887d2eddb84 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 10 Apr 2026 00:40:21 +0100
-Subject: [PATCH 3/12] power: auto-suppress unsupported vendor HAL power modes
+Subject: [PATCH 3/13] power: auto-suppress unsupported vendor HAL power modes
 
 replace the per-mode EXPENSIVE_RENDERING property check with a generic
 mechanism.  two-layer suppression:

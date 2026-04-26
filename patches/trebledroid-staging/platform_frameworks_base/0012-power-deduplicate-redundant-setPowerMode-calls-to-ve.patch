@@ -1,7 +1,7 @@
 From b8803f8b54aabd0a36d6177b1d7b280dd649d4f0 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 22 Apr 2026 11:15:44 +0100
-Subject: [PATCH 12/12] power: deduplicate redundant setPowerMode calls to vendor HAL
+Subject: [PATCH 12/13] power: deduplicate redundant setPowerMode calls to vendor HAL
 
 ---
  ...com_android_server_power_PowerManagerService.cpp | 13 +++++++++++++
