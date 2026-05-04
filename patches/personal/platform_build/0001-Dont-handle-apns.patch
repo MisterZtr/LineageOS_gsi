@@ -1,7 +1,12 @@
-From bdcba7bb7e5a6a076ec0b1ddeaac6dcad0070e86 Mon Sep 17 00:00:00 2001
+From 0075754b5a2932562e8274d56cb0129f1a052bc1 Mon Sep 17 00:00:00 2001
 From: MisterZtr <andey2004586@gmail.com>
-Date: Sun Jul 9 19:44:49 2023 +0300
-Subject: [PATCH] Dont-handle-apns.patch
+Date: Sun, 9 Jul 2023 19:44:49 +0300
+Subject: [PATCH 1/4] Dont-handle-apns
+
+---
+ target/product/aosp_product.mk        | 7 -------
+ target/product/full_base_telephony.mk | 5 -----
+ 2 files changed, 12 deletions(-)
 
 diff --git a/target/product/aosp_product.mk b/target/product/aosp_product.mk
 index 67ab7a7433..5dae7dbc84 100644
@@ -33,3 +38,6 @@ index e4f5a162bb..5470ad2be5 100644
 -
  $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_base.mk)
  $(call inherit-product, $(SRC_TARGET_DIR)/product/telephony.mk)
+-- 
+2.54.0
+
