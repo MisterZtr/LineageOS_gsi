@@ -1,7 +1,7 @@
-From fd7d59c59617578f3c05f0653adccae42cf5e5da Mon Sep 17 00:00:00 2001
+From 7eee7a9db843c0ca2d944f167ebcaabcca3e0eed Mon Sep 17 00:00:00 2001
 From: MisterZtr <andey2004586@gmail.com>
 Date: Sun, 8 Dec 2024 12:35:20 +0300
-Subject: [PATCH 5/9] base: providing a choice of additional vndk to build
+Subject: [PATCH 05/10] base: providing a choice of additional vndk to build
  image with ext4
 
 ---

@@ -1,7 +1,7 @@
-From 2028efee006c000f180142761c1e9fb30ee3c5a2 Mon Sep 17 00:00:00 2001
+From a75471dd904be8ae8eee8aa5110c3fe80270bc05 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 27 Mar 2026 11:03:04 +0000
-Subject: [PATCH 4/9] remove stale property overrides from rw-system.sh and
+Subject: [PATCH 04/10] remove stale property overrides from rw-system.sh and
  base.mk
 
 remove ro.adb.secure=0: LineageOS has its own mechanism for setting this parameter.

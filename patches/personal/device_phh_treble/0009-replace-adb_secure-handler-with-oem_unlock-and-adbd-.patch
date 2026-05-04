@@ -1,7 +1,7 @@
-From 7277139ed5edf9c435f62ef786bd47b84969a7eb Mon Sep 17 00:00:00 2001
+From 5cab4daf13e45f9ac475188d2970139a06edc42d Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 22 Apr 2026 18:15:39 +0100
-Subject: [PATCH 9/9] replace adb_secure handler with oem_unlock and adbd
+Subject: [PATCH 09/10] replace adb_secure handler with oem_unlock and adbd
  hiding triggers
 
 remove the old persist.sys.phh.adb_secure=1 handler that just set
