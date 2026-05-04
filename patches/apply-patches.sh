@@ -32,11 +32,6 @@ apply_patch_dir() {
         pushd "$tree" > /dev/null
 
         for patch in "$patch_dir"/"$path"/*.patch; do
-            if patch -f -p1 --dry-run -R < "$patch" > /dev/null; then
-                printf "### ALREADY APPLIED: %s \n" "$patch"
-                continue
-            fi
-
             if git apply --check "$patch"; then
                 git am "$patch"
             elif patch -f -p1 --dry-run < "$patch" > /dev/null; then
