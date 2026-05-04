@@ -1,0 +1,42 @@
+From 4f6e36357a2f2db7c754b1cb872d394a6a46fec8 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 17 Mar 2026 23:27:35 +0000
+Subject: [PATCH 2/8] Restore old kernel support in init and libprocessgroup
+
+Revert making cgroup setup failures fatal:
+Convert cgroup controller mount failures from fatal (return false) to
+warning-only, allowing boot to continue with degraded cgroup support
+on devices with older kernels that may not have all required cgroup
+controllers.
+---
+ libprocessgroup/setup/cgroup_map_write.cpp | 6 +++---
+ rootdir/init.rc                            | 4 ++++
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/libprocessgroup/setup/cgroup_map_write.cpp b/libprocessgroup/setup/cgroup_map_write.cpp
+index 899b4e9..458e4cd 100644
+--- a/libprocessgroup/setup/cgroup_map_write.cpp
++++ b/libprocessgroup/setup/cgroup_map_write.cpp
+@@ -174,7 +174,7 @@ static bool ActivateV2CgroupController(const CgroupDescriptor& descriptor) {
+
+     if (!Mkdir(controller->path(), descriptor.mode(), descriptor.uid(), descriptor.gid())) {
+         LOG(ERROR) << "Failed to create directory for " << controller->name() << " cgroup";
+-        return descriptor.controller()->flags() & CGROUPRC_CONTROLLER_FLAG_OPTIONAL;
++        return false;
+     }
+
+     return ::ActivateControllers(controller->path(), {{controller->name(), descriptor}});
+@@ -291,8 +291,8 @@ bool CgroupSetup() {
+         }
+
+         if (!SetupCgroup(descriptor)) {
+-            LOG(ERROR) << "Failed to setup " << name << " cgroup";
+-            return false;
++            // issue a warning and proceed with the next cgroup
++            LOG(WARNING) << "Failed to setup " << name << " cgroup";
+         }
+     }
+
+-- 
+2.53.0
+
