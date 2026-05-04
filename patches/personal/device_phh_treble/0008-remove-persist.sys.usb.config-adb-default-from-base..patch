@@ -1,4 +1,4 @@
-From 20c2c42843f70094ffff738affdea269053aa8e4 Mon Sep 17 00:00:00 2001
+From 20ad5f6bc592849a689dadc52aecce335d1358d1 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Tue, 24 Mar 2026 12:44:06 +0000
 Subject: [PATCH 08/10] remove persist.sys.usb.config=adb default from base.mk

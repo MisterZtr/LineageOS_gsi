@@ -1,4 +1,4 @@
-From a75471dd904be8ae8eee8aa5110c3fe80270bc05 Mon Sep 17 00:00:00 2001
+From 25b70317ba170c5cb5d4e47b8e8e88519be9b37e Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 27 Mar 2026 11:03:04 +0000
 Subject: [PATCH 04/10] remove stale property overrides from rw-system.sh and

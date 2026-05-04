@@ -1,4 +1,4 @@
-From 5cab4daf13e45f9ac475188d2970139a06edc42d Mon Sep 17 00:00:00 2001
+From b4b05e5739f97d4749d98a83024d6a51bfa37484 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 22 Apr 2026 18:15:39 +0100
 Subject: [PATCH 09/10] replace adb_secure handler with oem_unlock and adbd
