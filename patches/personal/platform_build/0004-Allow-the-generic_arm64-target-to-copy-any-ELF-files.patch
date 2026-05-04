@@ -1,0 +1,23 @@
+From feaed09a2b8f8873444b135ec4486551081ec1e0 Mon Sep 17 00:00:00 2001
+From: MisterZtr <andey2004586@gmail.com>
+Date: Mon, 4 May 2026 15:43:43 +0300
+Subject: [PATCH 4/4] Allow the generic_arm64 target to copy any ELF files
+
+Change-Id: Id27e18b14821c0fe372dd0731dac5e056588e6a0
+---
+ target/board/generic_arm64/BoardConfig.mk | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/target/board/generic_arm64/BoardConfig.mk b/target/board/generic_arm64/BoardConfig.mk
+index e6eac7f064..407f5fc19c 100644
+--- a/target/board/generic_arm64/BoardConfig.mk
++++ b/target/board/generic_arm64/BoardConfig.mk
+@@ -65,3 +65,5 @@ include build/make/target/board/BoardConfigGsiCommon.mk
+ # TODO(b/36764215): remove this setting when the generic system image
+ # no longer has QCOM-specific directories under /.
+ BOARD_SEPOLICY_DIRS += build/make/target/board/generic_arm64/sepolicy
++
++BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
+-- 
+2.54.0
+
