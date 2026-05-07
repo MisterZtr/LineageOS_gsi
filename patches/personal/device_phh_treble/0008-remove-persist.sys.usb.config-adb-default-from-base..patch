@@ -1,7 +1,7 @@
 From 02bfc9926999213cf20d806bdfc9eeb322d6a5e1 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Tue, 24 Mar 2026 12:44:06 +0000
-Subject: [PATCH 08/11] remove persist.sys.usb.config=adb default from base.mk
+Subject: [PATCH 08/12] remove persist.sys.usb.config=adb default from base.mk
 
 adb is disabled by default on release builds; enabling it requires
 the usual developer options + usb debugging toggle. debug builds

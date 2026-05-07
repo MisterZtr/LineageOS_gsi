@@ -1,7 +1,7 @@
 From c9003f84f8851da490d586039254333714e84774 Mon Sep 17 00:00:00 2001
 From: MisterZtr <andey2004586@gmail.com>
 Date: Fri, 18 Apr 2025 17:12:06 +0300
-Subject: [PATCH 06/11] Add own product prop
+Subject: [PATCH 06/12] Add own product prop
 
 ---
  product.prop | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++

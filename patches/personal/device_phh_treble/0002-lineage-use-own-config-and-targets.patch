@@ -1,7 +1,7 @@
 From a2e9f59e132e1323f1ba158820f6206735110f60 Mon Sep 17 00:00:00 2001
 From: MisterZtr <andey2004586@gmail.com>
 Date: Fri, 5 Jun 2026 10:00:00 +0300
-Subject: [PATCH 02/11] lineage: use own config and targets
+Subject: [PATCH 02/12] lineage: use own config and targets
 
 ---
  AndroidProducts.mk    | 11 +++++++++++
