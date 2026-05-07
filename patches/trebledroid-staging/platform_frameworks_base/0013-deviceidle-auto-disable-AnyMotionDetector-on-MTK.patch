@@ -1,7 +1,7 @@
 From 8553ba7b8e8730f1707aa114cd46c774f70e59b6 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Sun, 26 Apr 2026 16:43:59 +0100
-Subject: [PATCH 13/13] deviceidle: auto-disable AnyMotionDetector on MTK devices
+Subject: [PATCH 13/14] deviceidle: auto-disable AnyMotionDetector on MTK devices
 
 MTK vendor HALs on A16 kernels continuously fire motion events,
 preventing doze and burning battery. The AnyMotionDetector wake

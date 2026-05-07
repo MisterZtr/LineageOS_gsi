@@ -1,0 +1,49 @@
+From a3d82e1237dfbaf75660130e6973d96eca6a35c3 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Thu, 7 May 2026 13:35:37 +0100
+Subject: [PATCH 14/14] EuiccManager: force-enable when eUICC slots are forced via
+ prop
+
+Devices with eSIM hardware that does not report EID through standard
+AOSP paths (e.g. MediaTek DL2005/HCT eSIM without vendor MTK patches)
+never get a valid cardId from getCardIdForDefaultEuicc(). This leaves
+mCardId as UNINITIALIZED_CARD_ID, so isEnabled() returns false even
+when UiccSlot.mIsEuicc is forced true by persist.sys.phh.force_euicc_slots.
+
+Skip the refreshCardIdIfUninitialized() check when the force prop is
+set, so that EuiccManager.isEnabled() returns true and the eSIM toggle
+appears in settings.
+
+verified: patch stack applies cleanly
+---
+ telephony/java/android/telephony/euicc/EuiccManager.java | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/telephony/java/android/telephony/euicc/EuiccManager.java b/telephony/java/android/telephony/euicc/EuiccManager.java
+index ae7346eb6..695dfc283 100644
+--- a/telephony/java/android/telephony/euicc/EuiccManager.java
++++ b/telephony/java/android/telephony/euicc/EuiccManager.java
+@@ -36,6 +36,7 @@ import android.content.pm.PackageManager;
+ import android.os.Build;
+ import android.os.Bundle;
+ import android.os.RemoteException;
++import android.os.SystemProperties;
+ import android.telephony.SubscriptionInfo;
+ import android.telephony.SubscriptionManager;
+ import android.telephony.TelephonyFrameworkInitializer;
+@@ -950,6 +951,12 @@ public class EuiccManager {
+     public boolean isEnabled() {
+         // In the future, this may reach out to IEuiccController (if non-null) to check any dynamic
+         // restrictions.
++        // on devices with forced eUICC slot detection (e.g. MediaTek DL2005/HCT eSIM that
++        // does not report EID through standard AOSP paths), skip the cardId check since
++        // the EID-based cardId will never initialise.
++        if (!SystemProperties.get("persist.sys.phh.force_euicc_slots", "").isEmpty()) {
++            return getIEuiccController() != null;
++        }
+         return getIEuiccController() != null && refreshCardIdIfUninitialized();
+     }
+ 
+-- 
+2.53.0
+
