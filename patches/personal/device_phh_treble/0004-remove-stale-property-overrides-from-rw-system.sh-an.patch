@@ -1,7 +1,7 @@
-From 93393b6759f3de4ac0d65633ea1f9c9e040e2af4 Mon Sep 17 00:00:00 2001
+From aa015aaea093d7239eb63d14de0e4ba9c0990dc9 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 27 Mar 2026 11:03:04 +0000
-Subject: [PATCH 04/12] remove stale property overrides from rw-system.sh and
+Subject: [PATCH 04/10] remove stale property overrides from rw-system.sh and
  base.mk
 
 remove ro.adb.secure=0: LineageOS has its own mechanism for setting this parameter.
@@ -18,7 +18,7 @@ than forcing a specific step count and default volume.
  3 files changed, 6 deletions(-)
 
 diff --git a/base.mk b/base.mk
-index 7924b08..6451219 100644
+index b1ee206..f6f3982 100644
 --- a/base.mk
 +++ b/base.mk
 @@ -33,7 +33,6 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
@@ -30,10 +30,10 @@ index 7924b08..6451219 100644
      ro.logd.kernel=true \
  
 diff --git a/rw-system.sh b/rw-system.sh
-index ecba25e..3c0438a 100644
+index 80eeb2f..1cb84b1 100644
 --- a/rw-system.sh
 +++ b/rw-system.sh
-@@ -1131,7 +1131,6 @@ if getprop ro.build.overlay.deviceid |grep -iq -e RMX2185 -e RMX1941 -e RMX1945
+@@ -1146,7 +1146,6 @@ if getprop ro.build.overlay.deviceid |grep -iq -e RMX2185 -e RMX1941 -e RMX1945
      setprop persist.sys.overlay.devinputjack true
  fi
  
@@ -41,7 +41,7 @@ index ecba25e..3c0438a 100644
  
  board="$(getprop ro.board.platform)"
  
-@@ -1308,9 +1307,6 @@ if getprop ro.product.vendor.device | grep -q -e TECNO-LG8n; then
+@@ -1323,9 +1322,6 @@ if getprop ro.product.vendor.device | grep -q -e TECNO-LG8n; then
      chown -R system:system /sys/class/leds/vibrator_single/
  fi
  

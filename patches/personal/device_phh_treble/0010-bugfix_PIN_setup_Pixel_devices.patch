@@ -1,14 +1,14 @@
-From 7ad96ec33b61a575b4781937185694f643b76664 Mon Sep 17 00:00:00 2001
+From 31ee35bb6986e798556dedb66c01e2c43643e647 Mon Sep 17 00:00:00 2001
 From: harvey186 <harvey186@hotmail.com>
 Date: Thu, 7 May 2026 06:53:25 +0200
-Subject: [PATCH 12/12] bugfix_PIN_setup_Pixel_devices
+Subject: [PATCH 10/10] bugfix_PIN_setup_Pixel_devices
 
 ---
  phh-on-boot.sh | 15 ++++++++-------
  1 file changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/phh-on-boot.sh b/phh-on-boot.sh
-index 1adb226..de026dd 100644
+index f05013f..1c7084c 100644
 --- a/phh-on-boot.sh
 +++ b/phh-on-boot.sh
 @@ -101,15 +101,16 @@ if grep -qF android.hardware.boot /vendor/manifest.xml || grep -qF android.hardw

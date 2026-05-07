@@ -1,17 +1,17 @@
-From f6e7fa32e1b9517a73104c1e7ccbac4d10b0e04e Mon Sep 17 00:00:00 2001
+From f6de58564dfbc27306f539c96de7853f603715c6 Mon Sep 17 00:00:00 2001
 From: MisterZtr <andey2004586@gmail.com>
 Date: Sat, 18 Apr 2026 13:20:20 +0300
-Subject: [PATCH 07/12] base: Remove non-existent healthd and vr_hwc modules
+Subject: [PATCH 07/10] base: Remove non-existent healthd and vr_hwc modules
 
 ---
  base.mk | 4 +---
  1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/base.mk b/base.mk
-index f9bac0a..439bef8 100644
+index 705afbf..abcfd3f 100644
 --- a/base.mk
 +++ b/base.mk
-@@ -197,9 +197,7 @@ PRODUCT_PACKAGES += \
+@@ -196,9 +196,7 @@ PRODUCT_PACKAGES += \
      android.hardware.biometrics.fingerprint@2.1-service.oplus.compat \
  
  PRODUCT_PACKAGES += \

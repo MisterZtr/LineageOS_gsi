@@ -1,7 +1,7 @@
-From 3e22bfb3b036a192edbf74494d569c1388f485a6 Mon Sep 17 00:00:00 2001
+From c41ad0b4da746bc201190a15ff9ff7fe25fdc012 Mon Sep 17 00:00:00 2001
 From: MisterZtr <andey2004586@gmail.com>
 Date: Thu, 7 May 2026 08:38:34 +0300
-Subject: [PATCH 11/12] device: Add TARGET_SYSTEM_PROP to lineage.mk
+Subject: [PATCH 09/10] device: Add TARGET_SYSTEM_PROP to lineage.mk
 
 To avoid the issue where TARGET_SYSTEM_PROP is not applied from board-base.mk, we are adding a duplicate of this value to lineage.mk
 ---

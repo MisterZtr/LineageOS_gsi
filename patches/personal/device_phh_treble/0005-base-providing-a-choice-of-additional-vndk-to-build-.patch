@@ -1,7 +1,7 @@
-From 24225a675c8c0afa94e8acbc0d050603922d124a Mon Sep 17 00:00:00 2001
+From 6311cdcc466ef93b8d6337827e8b048f7242a667 Mon Sep 17 00:00:00 2001
 From: MisterZtr <andey2004586@gmail.com>
 Date: Sun, 8 Dec 2024 12:35:20 +0300
-Subject: [PATCH 05/12] base: providing a choice of additional vndk to build
+Subject: [PATCH 05/10] base: providing a choice of additional vndk to build
  image with ext4
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH 05/12] base: providing a choice of additional vndk to build
  1 file changed, 2 deletions(-)
 
 diff --git a/base.mk b/base.mk
-index 6451219..f9bac0a 100644
+index f6f3982..705afbf 100644
 --- a/base.mk
 +++ b/base.mk
-@@ -255,5 +255,3 @@ PRODUCT_PACKAGES += \
+@@ -254,5 +254,3 @@ PRODUCT_PACKAGES += \
  $(call inherit-product, $(SRC_TARGET_DIR)/product/window_extensions.mk)
  PRODUCT_PRODUCT_PROPERTIES += \
      persist.settings.large_screen_opt.enabled=true
