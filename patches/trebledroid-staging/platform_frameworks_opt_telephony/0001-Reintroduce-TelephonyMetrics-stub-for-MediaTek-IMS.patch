@@ -1,7 +1,7 @@
 From 4b2c5bf0ebc327c478c348364c2f0996d3ee60cc Mon Sep 17 00:00:00 2001
 From: ironydelerium <42721860+ironydelerium@users.noreply.github.com>
 Date: Fri, 31 Dec 2021 02:20:28 -0800
-Subject: [PATCH] Reintroduce TelephonyMetrics stub for MediaTek IMS
+Subject: [PATCH 1/2] Reintroduce TelephonyMetrics stub for MediaTek IMS
  compatibility
 
 The MediaTek IMS package invokes several TelephonyMetrics methods via the

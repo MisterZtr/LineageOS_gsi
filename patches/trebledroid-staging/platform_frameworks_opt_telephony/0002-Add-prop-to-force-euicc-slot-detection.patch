@@ -1,0 +1,78 @@
+From 7b92769d53d3093248c590a3c17b225afcf9d899 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Thu, 7 May 2026 08:55:17 +0100
+Subject: [PATCH 2/2] UiccSlot: add prop to force eUICC detection for specific
+ slots
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Some devices (notably MediaTek devices with DL2005/HCT eSIM) do not
+present a standard eUICC ATR to AOSP. Without vendor-specific boot
+framework patches, UiccSlot.checkIsEuiccSupported() returns false and
+the eSIM toggle never appears.
+
+Add persist.sys.phh.force_euicc_slots — a comma-separated list of slot
+indices to force mIsEuicc=true regardless of ATR. For example:
+  persist.sys.phh.force_euicc_slots=1
+
+verified: full patch stack applies cleanly
+---
+ .../android/internal/telephony/uicc/UiccSlot.java   | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/src/java/com/android/internal/telephony/uicc/UiccSlot.java b/src/java/com/android/internal/telephony/uicc/UiccSlot.java
+index 9f8c09f..bb5e0cb 100644
+--- a/src/java/com/android/internal/telephony/uicc/UiccSlot.java
++++ b/src/java/com/android/internal/telephony/uicc/UiccSlot.java
+@@ -26,6 +26,7 @@ import android.content.DialogInterface;
+ import android.content.Intent;
+ import android.content.res.Resources;
+ import android.os.Handler;
++import android.os.SystemProperties;
+ import android.os.Message;
+ import android.os.PowerManager;
+ import android.os.UserHandle;
+@@ -94,6 +95,7 @@ public class UiccSlot extends Handler {
+     private AnswerToReset mAtr;
+     private boolean mIsRemovable;
+     private MultipleEnabledProfilesMode mSupportedMepMode;
++    private int mSlotIndex;
+ 
+     // Map each available portIdx to phoneId
+     private HashMap<Integer, Integer> mPortIdxToPhoneId = new HashMap<>();
+@@ -127,6 +129,7 @@ public class UiccSlot extends Handler {
+             mCardState.put(ics.mSlotPortMapping.mPortIndex, ics.mCardState);
+             mIccIds.put(ics.mSlotPortMapping.mPortIndex, ics.iccid);
+             parseAtr(ics.atr);
++            mSlotIndex = slotIndex;
+             mIsRemovable = isSlotRemovable(slotIndex);
+             // Update supported MEP mode in IccCardStatus if the CardState is present.
+             if (ics.mCardState.isCardPresent()) {
+@@ -207,6 +210,7 @@ public class UiccSlot extends Handler {
+             IccSimPortInfo[] simPortInfos = iss.mSimPortInfos;
+             parseAtr(iss.atr);
+             mEid = iss.eid;
++            mSlotIndex = slotIndex;
+             mIsRemovable = isSlotRemovable(slotIndex);
+ 
+             for (int i = 0; i < simPortInfos.length; i++) {
+@@ -443,6 +447,15 @@ public class UiccSlot extends Handler {
+     }
+ 
+     private void checkIsEuiccSupported() {
++        String forceSlots = SystemProperties.get("persist.sys.phh.force_euicc_slots", "");
++        if (!forceSlots.isEmpty()) {
++            for (String s : forceSlots.split(",")) {
++                if (s.trim().equals(String.valueOf(mSlotIndex))) {
++                    mIsEuicc = true;
++                    return;
++                }
++            }
++        }
+         if (mAtr == null) {
+             mIsEuicc = false;
+             return;
+-- 
+2.53.0
+

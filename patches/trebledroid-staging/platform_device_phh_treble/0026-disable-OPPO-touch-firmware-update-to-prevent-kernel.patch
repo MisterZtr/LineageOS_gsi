@@ -40,7 +40,7 @@ index e295b70..8d5aac3 100644
 +# a kernel panic during firmware change on some devices (notably OPPO F11
 +# CPH1911 MT6771).  Writing 0 to the firmware update flag prevents the
 +# driver from attempting the update.
-+for node in /proc/touchpanel/fw_update /sys/devices/platform/tpd/fw_update /proc/tfa98xx/oppo_tfa98xx_fw_update; do
++for node in /proc/touchpanel/fw_update /sys/devices/platform/tpd/fw_update; do
 +    if [ -f "$node" ]; then
 +        echo 0 > "$node" 2>/dev/null
 +        log -t rw-system "Disabled touch fw update at $node"
