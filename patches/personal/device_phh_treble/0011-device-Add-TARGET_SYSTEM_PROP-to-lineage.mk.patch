@@ -1,0 +1,23 @@
+From 3e22bfb3b036a192edbf74494d569c1388f485a6 Mon Sep 17 00:00:00 2001
+From: MisterZtr <andey2004586@gmail.com>
+Date: Thu, 7 May 2026 08:38:34 +0300
+Subject: [PATCH 11/11] device: Add TARGET_SYSTEM_PROP to lineage.mk
+
+To avoid the issue where TARGET_SYSTEM_PROP is not applied from board-base.mk, we are adding a duplicate of this value to lineage.mk
+---
+ lineage.mk | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/lineage.mk b/lineage.mk
+index c09703b..527e4a1 100644
+--- a/lineage.mk
++++ b/lineage.mk
+@@ -15,3 +15,5 @@ PRODUCT_PACKAGES += apns-conf.xml
+ 
+ #Oplus fingerprint
+ $(call soong_config_set,surfaceflinger,udfps_lib,//hardware/oplus:libudfps_extension.oplus)
++
++TARGET_SYSTEM_PROP += device/phh/treble/system.prop
+-- 
+2.54.0
+
