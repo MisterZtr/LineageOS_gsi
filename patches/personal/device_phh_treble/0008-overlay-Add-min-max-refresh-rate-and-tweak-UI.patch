@@ -1,0 +1,62 @@
+From e6de5b0bf10bab359d8d7f3601bb1610c16fc6d0 Mon Sep 17 00:00:00 2001
+From: MisterZtr <andey2004586@gmail.com>
+Date: Mon, 4 May 2026 07:50:42 +0300
+Subject: [PATCH 08/10] overlay: Add min/max refresh rate and tweak UI
+
+Add the ability to set minimum and maximum screen refresh rates
+Remove default color profiles that may affect smoothness
+Set status bar start padding to 18dp
+---
+ .../frameworks/base/core/res/res/values/config.xml   |  4 ----
+ .../base/packages/SystemUI/res/values/dimens.xml     |  2 ++
+ .../apps/Settings/res/values/lineage_config.xml      | 12 ++++++++++++
+ 3 files changed, 14 insertions(+), 4 deletions(-)
+ create mode 100644 overlay/packages/apps/Settings/res/values/lineage_config.xml
+
+diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
+index b832a66..616051b 100644
+--- a/overlay/frameworks/base/core/res/res/values/config.xml
++++ b/overlay/frameworks/base/core/res/res/values/config.xml
+@@ -38,10 +38,6 @@
+     <array name="config_availableColorModes">
+         <!-- ColorDisplayManager.COLOR_MODE_NATURAL -->
+         <item>0</item>
+-        <!-- ColorDisplayManager.COLOR_MODE_BOOSTED -->
+-        <item>1</item>
+-        <!-- ColorDisplayManager.COLOR_MODE_SATURATED -->
+-        <item>2</item>
+         <!-- ColorDisplayManager.COLOR_MODE_AUTOMATIC -->
+         <item>3</item>
+     </array>
+diff --git a/overlay/frameworks/base/packages/SystemUI/res/values/dimens.xml b/overlay/frameworks/base/packages/SystemUI/res/values/dimens.xml
+index 765848e..39c6e84 100644
+--- a/overlay/frameworks/base/packages/SystemUI/res/values/dimens.xml
++++ b/overlay/frameworks/base/packages/SystemUI/res/values/dimens.xml
+@@ -18,4 +18,6 @@
+ <resources>
+     <!-- Fix for the qs glitch on displays under sw372dp -->
+     <dimen name="rounded_corner_content_padding">4dp</dimen>
++
++    <dimen name="status_bar_padding_start">18.0dip</dimen>
+ </resources>
+diff --git a/overlay/packages/apps/Settings/res/values/lineage_config.xml b/overlay/packages/apps/Settings/res/values/lineage_config.xml
+new file mode 100644
+index 0000000..e3d37dc
+--- /dev/null
++++ b/overlay/packages/apps/Settings/res/values/lineage_config.xml
+@@ -0,0 +1,12 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++SPDX-FileCopyrightText: The LineageOS Project
++SPDX-License-Identifier: Apache-2.0
++-->
++<resources>
++    <!-- Whether to show peak refresh rate in display settings -->
++    <bool name="config_show_peak_refresh_rate_switch">true</bool>
++
++    <!-- Whether to show min refresh rate in display settings -->
++    <bool name="config_show_min_refresh_rate_switch">true</bool>
++</resources>
+-- 
+2.54.0
+
