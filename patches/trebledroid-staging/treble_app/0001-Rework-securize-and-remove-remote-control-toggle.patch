@@ -1,7 +1,7 @@
-From 39cbfa53c13bbeef121491d481435b32bcd3f469 Mon Sep 17 00:00:00 2001
+From 2d0d156769d8513d406afc613db6bbc3b0e20b43 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Thu, 10 Apr 2025 22:48:35 +0100
-Subject: [PATCH 01/8] Rework securize and remove remote control toggle
+Subject: [PATCH 1/9] Rework securize and remove remote control toggle
 
 Replace the old securize click-action (which ran shell commands to remove
 root via phh-securize.sh) with a simple on/off SwitchPreference that sets
@@ -57,7 +57,7 @@ index 030494b..58612c6 100644
 @@ -61,39 +60,6 @@ class MiscSettingsFragment : SettingsFragment() {
      override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
          super.onCreatePreferences(savedInstanceState, rootKey)
-
+ 
 -        val securizePref = findPreference<Preference>(MiscSettings.securize)
 -        securizePref!!.setOnPreferenceClickListener {
 -                val builder = AlertDialog.Builder( this.getActivity() )
@@ -93,7 +93,7 @@ index 030494b..58612c6 100644
 -
          val removeTelephonyPref = findPreference<Preference>(MiscSettings.removeTelephony)
          removeTelephonyPref!!.setOnPreferenceClickListener {
-
+ 
 diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
 index 875a08f..4d264a9 100644
 --- a/app/src/main/res/values/strings.xml
@@ -135,5 +135,5 @@ index bb46832..2016122 100644
      </PreferenceCategory>
  </PreferenceScreen>
 -- 
-2.53.0
+2.54.0
 

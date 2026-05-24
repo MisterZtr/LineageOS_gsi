@@ -1,7 +1,7 @@
 From be18ddb1c1d78c1299e38a3d6d413cbf98bdd45c Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 27 Mar 2026 11:02:01 +0000
-Subject: [PATCH 13/23] fix VNDK version detection and guard all vndk comparisons
+Subject: [PATCH 13/25] fix VNDK version detection and guard all vndk comparisons
 
 add fallback detection via ro.vndk.version and ro.vendor.build.version.sdk
 from vendor build.prop for Android 10+ vendors without nonplat_sepolicy.cil.

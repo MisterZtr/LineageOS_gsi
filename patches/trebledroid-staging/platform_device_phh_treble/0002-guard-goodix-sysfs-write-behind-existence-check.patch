@@ -1,7 +1,7 @@
 From 9bcebf01d9951b9e30b2dafb244a3e9cb23b3376 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 27 Mar 2026 11:02:39 +0000
-Subject: [PATCH 2/23] guard goodix sysfs write behind existence check
+Subject: [PATCH 2/25] guard goodix sysfs write behind existence check
 
 avoid errors on devices without the goodix_ts driver by checking for
 /sys/devices/platform/goodix_ts.0/support_pen before writing to it.

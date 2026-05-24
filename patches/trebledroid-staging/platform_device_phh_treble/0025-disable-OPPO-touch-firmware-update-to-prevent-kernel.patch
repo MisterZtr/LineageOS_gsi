@@ -1,8 +1,8 @@
-From bd3c4da9a1d0aca2b041b35afa955fd98c413a33 Mon Sep 17 00:00:00 2001
+From 437fa3aca0ce8037c2c9c34c2add86518cb1fb46 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 24 Apr 2026 20:56:08 +0100
-Subject: [PATCH] rw-system: disable OPPO touch firmware update on MT6771 to
- prevent kernel panic
+Subject: [PATCH 25/25] rw-system: disable OPPO touch firmware update on MT6771
+ to prevent kernel panic
 
 The OPPO F11 (CPH1911, MT6771/Helio P70) bootloops because the
 touchscreen driver (td4320_nf) triggers a kernel panic during
@@ -28,7 +28,7 @@ Fixes: #45
  1 file changed, 11 insertions(+)
 
 diff --git a/rw-system.sh b/rw-system.sh
-index e295b70..8d5aac3 100644
+index b67647a..413c6fc 100644
 --- a/rw-system.sh
 +++ b/rw-system.sh
 @@ -375,6 +375,17 @@ for part in /dev/block/bootdevice/by-name/oppodycnvbk  /dev/block/platform/bootd

@@ -1,7 +1,7 @@
 From 8124df107decd67642941441f06cd3dda0124a8f Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 10 Apr 2026 00:38:55 +0100
-Subject: [PATCH 16/23] base: disable C2 input surface by default for GSI
+Subject: [PATCH 16/25] base: disable C2 input surface by default for GSI
 
 set debug.stagefright.c2inputsurface=-1 as a build-time default so
 camera video recording uses the more compatible OMX path.  vendor C2

@@ -1,7 +1,7 @@
 From a3d82e1237dfbaf75660130e6973d96eca6a35c3 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Thu, 7 May 2026 13:35:37 +0100
-Subject: [PATCH 14/14] EuiccManager: force-enable when eUICC slots are forced via
+Subject: [PATCH 14/15] EuiccManager: force-enable when eUICC slots are forced via
  prop
 
 Devices with eSIM hardware that does not report EID through standard

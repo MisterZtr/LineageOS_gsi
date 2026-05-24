@@ -1,0 +1,194 @@
+From c9eaad024736cf0250782d40ef36257f297725b6 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 19 May 2026 09:51:16 +0100
+Subject: [PATCH 3/3] Add HIDL Boot HAL 1.1 fallback support for legacy vendor
+ devices
+
+QPR2 dropped support for Boot HAL HIDL 1.1 and earlier, causing
+update_engine and bootctl to fail on devices with legacy vendor
+implementations. This leaves A/B slots unmarked as successful,
+leading to bootloader fallback after retry count exhaustion.
+
+Add a BootControlClientHIDL11 wrapper class that implements the
+full BootControlClient interface on top of HIDL 1.1. All
+base methods (markBootSuccessful, getCurrentSlot, etc.) work
+normally. v1.2-only features (getActiveBootSlot) return -1
+with a warning.
+
+In WaitForService(), try AIDL first, then HIDL v1.2, then HIDL
+v1.1 before giving up. v1.0 is still unsupported.
+
+Issue: #65
+Change-Id: I8f2e0d6fc7a5d371e663366215879128be731e5c
+---
+ boot/aidl/client/BootControlClient.cpp       | 131 ++++++++++++++++++-
+ boot/aidl/client/include/BootControlClient.h |   2 +-
+ 2 files changed, 127 insertions(+), 6 deletions(-)
+
+diff --git a/boot/aidl/client/BootControlClient.cpp b/boot/aidl/client/BootControlClient.cpp
+index b212bb8..ed1fab7 100644
+--- a/boot/aidl/client/BootControlClient.cpp
++++ b/boot/aidl/client/BootControlClient.cpp
+@@ -388,6 +388,121 @@ class BootControlClientHIDL final : public BootControlClient {
+     android::sp<V1_2::IBootControl> module_;
+ };
+ 
++using namespace android::hardware::boot;
++
++class BootControlClientHIDL11 final : public BootControlClient {
++  public:
++    explicit BootControlClientHIDL11(android::sp<V1_1::IBootControl> module) : module_(module) {
++        CHECK(module_ != nullptr);
++    }
++    BootControlVersion GetVersion() const override { return BootControlVersion::BOOTCTL_V1_1; }
++    int32_t GetNumSlots() const override {
++        const auto ret = module_->getNumberSlots();
++        if (!ret.isOk()) {
++            LOG(ERROR) << __FUNCTION__ << " failed " << ret.description();
++        }
++        return ret.withDefault(-1);
++    }
++    int32_t GetCurrentSlot() const override {
++        const auto ret = module_->getCurrentSlot();
++        if (!ret.isOk()) {
++            LOG(ERROR) << __FUNCTION__ << " failed " << ret.description();
++        }
++        return ret.withDefault(-1);
++    }
++    std::string GetSuffix(int32_t slot) const override {
++        std::string suffix;
++        const auto ret = module_->getSuffix(
++                slot,
++                [&](const ::android::hardware::hidl_string& slotSuffix) { suffix = slotSuffix; });
++        if (!ret.isOk()) {
++            LOG(ERROR) << __FUNCTION__ << "(" << slot << ")" << " failed " << ret.description();
++        }
++        return suffix;
++    }
++    std::optional<bool> IsSlotBootable(int32_t slot) const override {
++        const auto ret = module_->isSlotBootable(slot);
++        if (!ret.isOk()) {
++            LOG(ERROR) << __FUNCTION__ << "(" << slot << ")" << " failed " << ret.description();
++            return {};
++        }
++        const auto bool_result = ret.withDefault(V1_0::BoolResult::INVALID_SLOT);
++        if (bool_result == V1_0::BoolResult::INVALID_SLOT) {
++            return {};
++        }
++        return bool_result == V1_0::BoolResult::TRUE;
++    }
++    CommandResult MarkSlotUnbootable(int32_t slot) override {
++        CommandResult result;
++        const auto ret = module_->setSlotAsUnbootable(slot, [&](const V1_0::CommandResult& error) {
++            result.success = error.success;
++            result.errMsg = error.errMsg;
++        });
++        if (!ret.isOk()) {
++            LOG(ERROR) << __FUNCTION__ << "(" << slot << ")" << " failed " << ret.description();
++        }
++        return result;
++    }
++    CommandResult SetActiveBootSlot(int32_t slot) override {
++        CommandResult result;
++        const auto ret = module_->setActiveBootSlot(slot, [&](const V1_0::CommandResult& error) {
++            result.success = error.success;
++            result.errMsg = error.errMsg;
++        });
++        if (!ret.isOk()) {
++            LOG(ERROR) << __FUNCTION__ << "(" << slot << ")" << " failed " << ret.description();
++        }
++        return result;
++    }
++    CommandResult MarkBootSuccessful() override {
++        CommandResult result;
++        const auto ret = module_->markBootSuccessful([&](const V1_0::CommandResult& error) {
++            result.success = error.success;
++            result.errMsg = error.errMsg;
++        });
++        if (!ret.isOk()) {
++            LOG(ERROR) << __FUNCTION__ << " failed " << ret.description();
++        }
++        return result;
++    }
++    std::optional<bool> IsSlotMarkedSuccessful(int32_t slot) const override {
++        const auto ret = module_->isSlotMarkedSuccessful(slot);
++        if (!ret.isOk()) {
++            LOG(ERROR) << __FUNCTION__ << "(" << slot << ")" << " failed " << ret.description();
++            return {};
++        }
++        const auto bool_result = ret.withDefault(V1_0::BoolResult::INVALID_SLOT);
++        if (bool_result == V1_0::BoolResult::INVALID_SLOT) {
++            return {};
++        }
++        return bool_result == V1_0::BoolResult::TRUE;
++    }
++    MergeStatus getSnapshotMergeStatus() const override {
++        const auto ret = module_->getSnapshotMergeStatus();
++        if (!ret.isOk()) {
++            LOG(ERROR) << __FUNCTION__ << " failed " << ret.description();
++        }
++        return static_cast<MergeStatus>(
++                ret.withDefault(static_cast<V1_1::MergeStatus>(MergeStatus::UNKNOWN)));
++    }
++    CommandResult SetSnapshotMergeStatus(MergeStatus merge_status) override {
++        const auto ret =
++                module_->setSnapshotMergeStatus(static_cast<V1_1::MergeStatus>(merge_status));
++        if (!ret.isOk()) {
++            LOG(ERROR) << __FUNCTION__ << "(" << merge_status << ")" << " failed "
++                       << ret.description();
++        }
++        return {.success = ret.isOk(), .errMsg = ret.description()};
++    }
++    int32_t GetActiveBootSlot() const override {
++        LOG(WARNING) << __FUNCTION__ << " is unsupported on boot v1.1, returning -1";
++        return -1;
++    }
++
++  private:
++    android::sp<V1_1::IBootControl> module_;
++};
++
+ std::unique_ptr<BootControlClient> BootControlClient::WaitForService() {
+     const auto instance_name =
+             std::string(::aidl::android::hardware::boot::IBootControl::descriptor) + "/default";
+@@ -410,13 +525,19 @@ std::unique_ptr<BootControlClient> BootControlClient::WaitForService() {
+         return nullptr;
+     }
+     android::sp<V1_2::IBootControl> v1_2_module = V1_2::IBootControl::castFrom(v1_0_module);
+-    if (v1_2_module == nullptr) {
+-        LOG(ERROR) << "IBootControl HIDL versions 1.1 and earlier are no longer supported";
+-        return nullptr;
++    if (v1_2_module != nullptr) {
++        LOG(INFO) << "Using HIDL version 1.2 of IBootControl";
++        return std::make_unique<BootControlClientHIDL>(v1_2_module);
++    }
++
++    android::sp<V1_1::IBootControl> v1_1_module = V1_1::IBootControl::castFrom(v1_0_module);
++    if (v1_1_module != nullptr) {
++        LOG(INFO) << "Using HIDL version 1.1 of IBootControl";
++        return std::make_unique<BootControlClientHIDL11>(v1_1_module);
+     }
+ 
+-    LOG(INFO) << "Using HIDL version 1.2 of IBootControl";
+-    return std::make_unique<BootControlClientHIDL>(v1_2_module);
++    LOG(ERROR) << "IBootControl HIDL version 1.0 is not supported";
++    return nullptr;
+ }
+ 
+ }  // namespace android::hal
+diff --git a/boot/aidl/client/include/BootControlClient.h b/boot/aidl/client/include/BootControlClient.h
+index ae66189..ae0b226 100644
+--- a/boot/aidl/client/include/BootControlClient.h
++++ b/boot/aidl/client/include/BootControlClient.h
+@@ -32,7 +32,7 @@ struct CommandResult {
+     constexpr bool IsOk() const { return success; }
+ };
+ 
+-enum class BootControlVersion { BOOTCTL_V1_2, BOOTCTL_AIDL };
++enum class BootControlVersion { BOOTCTL_V1_1, BOOTCTL_V1_2, BOOTCTL_AIDL };
+ 
+ class BootControlClient {
+   public:
+-- 
+2.53.0
+

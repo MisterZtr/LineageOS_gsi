@@ -1,7 +1,7 @@
-From f465f691c0fdd3bdd691d5856283e9c1f277a766 Mon Sep 17 00:00:00 2001
+From a7ce2bcd73e9dc1ce3693b7d6f462903c0ef3be7 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Fri, 24 Apr 2026 20:54:18 +0100
-Subject: [PATCH] phh-on-boot: restart fingerprint HAL after USB gadget
+Subject: [PATCH 24/25] phh-on-boot: restart fingerprint HAL after USB gadget
  recovery
 
 The USB gadget recovery code above cycles sys.usb.config to force the
@@ -20,10 +20,10 @@ Fixes: #31
  1 file changed, 9 insertions(+)
 
 diff --git a/phh-on-boot.sh b/phh-on-boot.sh
-index 1be78a2..85524c7 100644
+index ac9cf86..5f26430 100644
 --- a/phh-on-boot.sh
 +++ b/phh-on-boot.sh
-@@ -22,6 +22,15 @@ if [ -z "$udc_state" ] || [ "$udc_state" = "none" ]; then
+@@ -47,6 +47,15 @@ if [ -z "$udc_state" ] || [ "$udc_state" = "none" ]; then
      fi
  fi
  

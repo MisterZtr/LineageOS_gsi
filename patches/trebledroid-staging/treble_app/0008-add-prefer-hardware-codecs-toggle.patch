@@ -1,7 +1,7 @@
-From f45bb0c6b24bddf6d0082790abbee0aeeebad657 Mon Sep 17 00:00:00 2001
+From 3c3af1a92a3f44fdc4880a1d83589cec52c2e130 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 22 Apr 2026 18:20:16 +0100
-Subject: [PATCH 08/8] add prefer hardware codecs toggle
+Subject: [PATCH 8/9] add prefer hardware codecs toggle
 
 add an opt-in toggle for persist.sys.phh.prefer_hw_codecs which
 re-enables vendor C2 input surface for video recording.  defaults to
@@ -57,5 +57,5 @@ index f3c5050..b19dcb2 100644
              android:defaultValue="false"
              android:key="key_misc_treat_virtual_sensors_as_real"
 -- 
-2.53.0
+2.54.0
 

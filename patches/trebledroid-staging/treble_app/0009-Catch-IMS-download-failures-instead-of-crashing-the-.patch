@@ -1,0 +1,40 @@
+From 696eb2300dfc321994ece60919e98ee6869489fd Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 19 May 2026 10:14:15 +0100
+Subject: [PATCH 9/9] Catch IMS download failures instead of crashing the app
+
+The treble.phh.me SSL certificate expired, causing DownloadManager to
+throw an exception during IMS APK download. The unhandled exception
+kills the Treble app process.
+
+Wrap dm!!.enqueue() in a try/catch and show a Toast with the error
+message so the user knows what happened instead of experiencing a
+sudden crash.
+
+Issue: #66
+---
+ app/src/main/java/me/phh/treble/app/ImsSettings.kt | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/app/src/main/java/me/phh/treble/app/ImsSettings.kt b/app/src/main/java/me/phh/treble/app/ImsSettings.kt
+index 8a30a77..37d87b7 100644
+--- a/app/src/main/java/me/phh/treble/app/ImsSettings.kt
++++ b/app/src/main/java/me/phh/treble/app/ImsSettings.kt
+@@ -143,7 +143,13 @@ class ImsSettingsFragment : SettingsFragment() {
+ 
+             downloadRequest.setDestinationInExternalFilesDir(activity, Environment.DIRECTORY_DOWNLOADS, "ims.apk")
+ 
+-            val myId = dm!!.enqueue(downloadRequest)
++            val myId: Long
++            try {
++                myId = dm!!.enqueue(downloadRequest)
++            } catch (e: Exception) {
++                Toast.makeText(activity, "IMS download failed: " + e.message, Toast.LENGTH_LONG).show()
++                return@setOnPreferenceClickListener true
++            }
+ 
+             activity.registerReceiver(object: BroadcastReceiver() {
+                 override fun onReceive(context: Context, intent: Intent) {
+-- 
+2.54.0
+

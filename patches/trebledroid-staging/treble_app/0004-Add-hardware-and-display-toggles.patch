@@ -1,7 +1,7 @@
-From b5997d1e7885993e03f00448bc693b62ead70434 Mon Sep 17 00:00:00 2001
+From e26eb3b3b75a8cd76813c225df66d2a8e3808ac1 Mon Sep 17 00:00:00 2001
 From: ChonDoit <thphantomblog@gmail.com>
 Date: Mon, 10 Mar 2025 23:08:52 -0300
-Subject: [PATCH 04/8] Add hardware and display toggles
+Subject: [PATCH 4/9] Add hardware and display toggles
 
 add device-specific hardware and display toggles to the treble app
 for controlling MTK vendor features and display options on GSI.
@@ -110,5 +110,5 @@ index 2016122..bd6d439 100644
              android:defaultValue="false"
              android:key="key_misc_treat_virtual_sensors_as_real"
 -- 
-2.53.0
+2.54.0
 

@@ -1,7 +1,7 @@
 From 084f68d133636f987a1a24c2c952921f8d6a128f Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Tue, 31 Mar 2026 20:00:16 +0100
-Subject: [PATCH 18/23] label MTK LED sysfs nodes and grant light HAL access
+Subject: [PATCH 18/25] label MTK LED sysfs nodes and grant light HAL access
 
 MTK vendors expose backlight controls at
 /sys/devices/platform/soc/soc:mtk_leds/leds/ which the kernel labels

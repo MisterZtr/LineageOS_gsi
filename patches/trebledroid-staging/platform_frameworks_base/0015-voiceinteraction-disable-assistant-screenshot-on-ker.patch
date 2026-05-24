@@ -1,0 +1,66 @@
+From 16ac025039e6af0c1b47ee1ef53e66b0ea2d7c8e Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 19 May 2026 09:59:04 +0100
+Subject: [PATCH 15/15] voiceinteraction: disable assistant screenshot on kernels
+ below 4.14
+
+QPR2 assist screenshot capture uses ImageReader -> SurfaceFlinger -> GPU
+composition paths that depend on sync-fence / dma-buf semantics. Kernels
+below 4.14 (e.g. 4.9 on Galaxy Note 9) do not implement these
+sufficiently, causing GPU driver panics that kill system_server and
+reboot the device.
+
+For legacy kernel devices, force-disable the screenshot context in
+VoiceInteractionSessionConnection regardless of the user-facing
+assist_screenshot_enabled setting. This prevents the crash while still
+allowing text-based assist data to flow.
+
+Gated by runtime kernel version detection so modern devices are
+completely unaffected.
+
+Issue: #54, #67
+---
+ .../VoiceInteractionSessionConnection.java    | 24 +++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/services/voiceinteraction/java/com/android/server/voiceinteraction/VoiceInteractionSessionConnection.java b/services/voiceinteraction/java/com/android/server/voiceinteraction/VoiceInteractionSessionConnection.java
+index 59f4d87a5..1e30f7d7f 100644
+--- a/services/voiceinteraction/java/com/android/server/voiceinteraction/VoiceInteractionSessionConnection.java
++++ b/services/voiceinteraction/java/com/android/server/voiceinteraction/VoiceInteractionSessionConnection.java
+@@ -277,9 +277,33 @@ final class VoiceInteractionSessionConnection implements ServiceConnection,
+                 Settings.Secure.ASSIST_SCREENSHOT_ENABLED, 1, mUser) == 0) {
+             flags |= VoiceInteractionSession.SHOW_WITH_SCREENSHOT;
+         }
++        // Kernels below 4.14 do not implement the sync-fence / dma-buf semantics
++        // required by the GPU composition path used for assist screenshots.
++        // Taking a screenshot on these kernels causes a GPU driver panic that
++        // kills system_server. Force-disable the screenshot context.
++        if (isLegacyKernel()) {
++            flags |= VoiceInteractionSession.SHOW_WITH_SCREENSHOT;
++        }
+         return flags;
+     }
+ 
++    private static boolean isLegacyKernel() {
++        String kv = System.getProperty("os.version");
++        if (kv == null || kv.isEmpty()) return false;
++        try {
++            // version strings are typically "4.9.XXX-..."
++            int firstDot = kv.indexOf('.');
++            if (firstDot < 0) return false;
++            int major = Integer.parseInt(kv.substring(0, firstDot));
++            int secondDot = kv.indexOf('.', firstDot + 1);
++            String minorStr = (secondDot < 0) ? kv.substring(firstDot + 1) : kv.substring(firstDot + 1, secondDot);
++            int minor = Integer.parseInt(minorStr);
++            return major < 4 || (major == 4 && minor < 14);
++        } catch (NumberFormatException e) {
++            return false;
++        }
++    }
++
+     public boolean showLocked(@NonNull Bundle args, int flags, @Nullable String attributionTag,
+             int disabledContext, @Nullable IVoiceInteractionSessionShowCallback showCallback,
+             @NonNull List<ActivityAssistInfo> topActivities) {
+-- 
+2.53.0
+

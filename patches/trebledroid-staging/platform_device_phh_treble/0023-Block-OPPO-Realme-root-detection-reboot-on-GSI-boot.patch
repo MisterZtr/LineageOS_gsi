@@ -1,7 +1,7 @@
 From 6c570128cd9e64642d09c6212659fa7a30a13442 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 22 Apr 2026 18:11:15 +0100
-Subject: [PATCH 23/23] Block OPPO/Realme root detection reboot on GSI boot
+Subject: [PATCH 23/25] Block OPPO/Realme root detection reboot on GSI boot
 
 OPPO and Realme devices with MediaTek vendor kernels include an
 oppo_root_check kernel module that detects an unlocked bootloader

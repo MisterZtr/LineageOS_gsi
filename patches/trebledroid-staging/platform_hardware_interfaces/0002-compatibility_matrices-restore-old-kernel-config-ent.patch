@@ -1,7 +1,7 @@
 From dbee3ba4a8698af1ed00afa079e3b0611907ff61 Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Tue, 17 Mar 2026 23:23:49 +0000
-Subject: [PATCH 2/2] compatibility_matrices: restore old kernel config entries
+Subject: [PATCH 2/3] compatibility_matrices: restore old kernel config entries
 
 Add old kernel version configs to the compatibility matrices so they
 accept devices with older kernels:

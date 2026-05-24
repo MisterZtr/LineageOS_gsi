@@ -1,7 +1,7 @@
-From 6ffc23c16824d092b1e221a66fc327d24f03341a Mon Sep 17 00:00:00 2001
+From 32c5ecf1d61b9560988a65620ec97ebce94d283d Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
 Date: Wed, 22 Apr 2026 18:19:39 +0100
-Subject: [PATCH 07/8] add activity animation performance override toggle
+Subject: [PATCH 7/9] add activity animation performance override toggle
 
 add a toggle for persist.sys.activity_anim_perf_override which
 replaces stock AOSP XML-based activity transition animations with
@@ -57,5 +57,5 @@ index dcd83cc..f3c5050 100644
              android:defaultValue="false"
              android:key="key_misc_treat_virtual_sensors_as_real"
 -- 
-2.53.0
+2.54.0
 

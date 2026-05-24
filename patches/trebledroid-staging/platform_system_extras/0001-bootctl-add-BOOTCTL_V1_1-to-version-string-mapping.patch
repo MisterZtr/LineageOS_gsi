@@ -1,0 +1,33 @@
+From 4f3cb89b5e9b757f9de6dac2d30ae140139f5931 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Tue, 19 May 2026 14:21:06 +0100
+Subject: [PATCH] bootctl: add BOOTCTL_V1_1 to version string mapping
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Add the missing enum case for BOOTCTL_V1_1 in ToString() so that
+the build passes when hardware/interfaces adds HIDL 1.1 fallback
+support.
+
+No functional change — v1.1 is just a string label for hal-info.
+---
+ bootctl/bootctl.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/bootctl/bootctl.cpp b/bootctl/bootctl.cpp
+index 2dc679e..dc61c93 100644
+--- a/bootctl/bootctl.cpp
++++ b/bootctl/bootctl.cpp
+@@ -60,6 +60,8 @@ static void usage(FILE* where, int /* argc */, char* argv[]) {
+ 
+ static constexpr auto ToString(BootControlVersion ver) {
+     switch (ver) {
++        case BootControlVersion::BOOTCTL_V1_1:
++            return "android.hardware.boot@1.1::IBootControl";
+         case BootControlVersion::BOOTCTL_V1_2:
+             return "android.hardware.boot@1.2::IBootControl";
+         case BootControlVersion::BOOTCTL_AIDL:
+-- 
+2.53.0
+

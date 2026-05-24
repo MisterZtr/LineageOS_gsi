@@ -1,46 +1,22 @@
-From 2a94921185dc405bda6be830e74172aac6d0bf69 Mon Sep 17 00:00:00 2001
+From f2e1b223e40f6d95d62b37b114b374be12acd5ba Mon Sep 17 00:00:00 2001
 From: "Christopher A. Williamson" <contact@chrisaw.io>
-Date: Wed, 6 May 2026 23:06:48 +0100
+Date: Tue, 19 May 2026 21:20:21 +0100
 Subject: [PATCH 03/10] securize: rework to property-based toggle with GSI
  fingerprint tracking
 
-remove stale property overrides from rw-system.sh and base.mk, replace
-with post-boot spoofing in phh-on-boot.sh that hides build props from
-root detection. add property handler for persist.sys.phh.securize so
-the toggle survives factory resets. gate the anti-detection spoofing on
-/metadata/securize_disable.
-
-also track GSI fingerprint changes across upgrades so
-PackageManagerService detects upgrades correctly.
-
-remove persist.sys.usb.config=adb default from base.mk -- adb is
-disabled by default on release builds; enabling it requires the usual
-developer options + usb debugging toggle. debug builds re-enable it
-via the debug tier.
-
-replace old persist.sys.phh.adb_secure=1 handler with property
-trigger that uses magisk SELinux context to hide oem_unlock_allowed
-from root detection.
-
-note: adbd status hiding removed -- spoofing init.svc.adbd caused init
-segfaults on samsung exynos devices when usb config changed. release
-builds already disable adb by default; users who enable debugging can
-hide it via magisk modules instead.
-
-verified: all release-builds patches apply cleanly
 ---
  base.mk             |   2 -
  phh-on-boot.sh      |  23 ++++++++
- phh-prop-handler.sh |  12 ++++
- rw-system.sh        | 135 ++++++++++++++++++++++++++++++--------------
- vndk.rc             |   9 ++-
- 5 files changed, 135 insertions(+), 46 deletions(-)
+ phh-prop-handler.sh |  12 +++++
+ rw-system.sh        | 126 ++++++++++++++++++++++++++++++++++----------
+ vndk.rc             |   9 ++--
+ 5 files changed, 139 insertions(+), 33 deletions(-)
 
 diff --git a/base.mk b/base.mk
-index cc5841f..b1ee206 100644
+index f5177f0..2909d5f 100644
 --- a/base.mk
 +++ b/base.mk
-@@ -39,7 +39,6 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+@@ -40,7 +40,6 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
  
  # Huawei HiSuite (also other OEM custom programs I guess) it's of no use in AOSP builds
  PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
@@ -48,7 +24,7 @@ index cc5841f..b1ee206 100644
      ro.cust.cdrom=/dev/null
  
  # VNDK config files
-@@ -167,7 +166,6 @@ PRODUCT_PACKAGES += \
+@@ -174,7 +173,6 @@ PRODUCT_PACKAGES += \
      resetprop_phh
  
  PRODUCT_COPY_FILES += \
@@ -114,11 +90,11 @@ index cae90d6..84dc85d 100644
      if [[ "$prop_value" != "0" && "$prop_value" != "1" ]]; then
          exit 1
 diff --git a/rw-system.sh b/rw-system.sh
-index 5e1cc7d..5142bb5 100644
+index e04d256..45da31d 100644
 --- a/rw-system.sh
 +++ b/rw-system.sh
-@@ -831,74 +831,127 @@ if [ "$brand" = OPPO ] || [ "$brand" = realme ]; then
-     setprop ctl.stop oppo_root_check 2>/dev/null
+@@ -825,74 +825,127 @@ if [ "$brand" = OPPO ] || [ "$brand" = realme ]; then
+     resetprop_phh ro.boot.verifiedbootstate green
  fi
  
 -if [ -f /system/phh/secure ] || [ -f /metadata/phh/secure ];then
@@ -265,11 +241,11 @@ index 5e1cc7d..5142bb5 100644
 -    mkdir /mnt/phh/xbin
 -    chmod 0755 /mnt/phh/xbin
 -    chcon u:object_r:system_file:s0 /mnt/phh/xbin
--
+ 
 -    #phh-su will bind over this empty file to make a real su
 -    touch /mnt/phh/xbin/su
 -    chcon u:object_r:system_file:s0 /mnt/phh/xbin/su
- 
+-
 -    mount -o bind /mnt/phh/xbin /system/xbin
 +    # update usb gadget strings so the device appears correctly when connected
 +    model="$(getprop ro.product.model)"
@@ -311,5 +287,5 @@ index 2bd6b35..e3e6d11 100644
 +on property:sys.oem_unlock_allowed=*
 +    exec u:r:magisk:s0 root root -- /system/bin/resetprop_phh -n sys.oem_unlock_allowed 0
 -- 
-2.54.0
+2.53.0
 
