@@ -1,0 +1,128 @@
+From abc69217ad30c5727c4933d294f97143350ca556 Mon Sep 17 00:00:00 2001
+From: "Christopher A. Williamson" <contact@chrisaw.io>
+Date: Sat, 9 May 2026 01:57:05 +0100
+Subject: [PATCH 2/2] UiccSlot: force eUICC detection and EuiccCard creation for
+ non-standard eSIM
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Some devices (notably MediaTek devices with DL2005/HCT eSIM) do not
+present a standard eUICC ATR to AOSP. Without vendor-specific boot
+framework patches, UiccSlot.checkIsEuiccSupported() returns false and
+the eSIM toggle never appears.
+
+Add persist.sys.phh.force_euicc_slots — a comma-separated list of slot
+indices to force mIsEuicc=true regardless of ATR.
+
+On devices where the modem/RIL reports ABSENT for an eSIM slot
+(e.g. MTK DL2005 without vendor card-status patches), the existing
+update() flow never instantiates EuiccCard because CARDSTATE_ABSENT
+blocks the present-path branch. Without EuiccCard,
+loadEidAndNotifyRegistrants() never runs, so the EID stays empty and
+LPA fails with error 0x20009 (no EID).
+
+When the force prop is set on an eUICC slot with ABSENT state:
+- override CARDSTATE_ABSENT → CARDSTATE_PRESENT before mCardState.put()
+- ensure mSlotIndex is assigned BEFORE parseAtr() so that
+  checkIsEuiccSupported() reads the correct slot index
+- force-create EuiccCard if mUiccCard is null (safety net for the
+  present-path when the override fires)
+
+No EVENT_CARD_ADDED notification is sent in the forced path.
+Both behaviours are gated behind persist.sys.phh.force_euicc_slots —
+no prop set = zero behaviour change.
+
+verified: full patch stack applies cleanly
+---
+ .../internal/telephony/uicc/UiccSlot.java     | 34 ++++++++++++++++++-
+ 1 file changed, 33 insertions(+), 1 deletion(-)
+
+diff --git a/src/java/com/android/internal/telephony/uicc/UiccSlot.java b/src/java/com/android/internal/telephony/uicc/UiccSlot.java
+index 9f8c09f..27d5141 100644
+--- a/src/java/com/android/internal/telephony/uicc/UiccSlot.java
++++ b/src/java/com/android/internal/telephony/uicc/UiccSlot.java
+@@ -28,6 +28,7 @@ import android.content.res.Resources;
+ import android.os.Handler;
+ import android.os.Message;
+ import android.os.PowerManager;
++import android.os.SystemProperties;
+ import android.os.UserHandle;
+ import android.telephony.SubscriptionInfo;
+ import android.telephony.SubscriptionManager;
+@@ -94,6 +95,7 @@ public class UiccSlot extends Handler {
+     private AnswerToReset mAtr;
+     private boolean mIsRemovable;
+     private MultipleEnabledProfilesMode mSupportedMepMode;
++    private int mSlotIndex;
+ 
+     // Map each available portIdx to phoneId
+     private HashMap<Integer, Integer> mPortIdxToPhoneId = new HashMap<>();
+@@ -122,12 +124,23 @@ public class UiccSlot extends Handler {
+      */
+     public void update(CommandsInterface ci, IccCardStatus ics, int phoneId, int slotIndex) {
+         synchronized (mLock) {
++            String forceSlots = SystemProperties.get("persist.sys.phh.force_euicc_slots", "");
+             mPortIdxToPhoneId.put(ics.mSlotPortMapping.mPortIndex, phoneId);
+             CardState oldState = mCardState.get(ics.mSlotPortMapping.mPortIndex);
+-            mCardState.put(ics.mSlotPortMapping.mPortIndex, ics.mCardState);
++            mSlotIndex = slotIndex;
+             mIccIds.put(ics.mSlotPortMapping.mPortIndex, ics.iccid);
+             parseAtr(ics.atr);
+             mIsRemovable = isSlotRemovable(slotIndex);
++
++            // Force CARDSTATE_PRESENT for eUICC slots when prop is set.
++            // Must run AFTER parseAtr() so mIsEuicc is set, and BEFORE
++            // mCardState.put() so the map reflects the override.
++            if (!forceSlots.isEmpty() && mIsEuicc
++                    && ics.mCardState == CardState.CARDSTATE_ABSENT) {
++                log(phoneId, "update: forcing CARDSTATE_PRESENT for eUICC slot");
++                ics.mCardState = CardState.CARDSTATE_PRESENT;
++            }
++            mCardState.put(ics.mSlotPortMapping.mPortIndex, ics.mCardState);
+             // Update supported MEP mode in IccCardStatus if the CardState is present.
+             if (ics.mCardState.isCardPresent()) {
+                 updateSupportedMepMode(ics.mSupportedMepMode);
+@@ -190,6 +203,15 @@ public class UiccSlot extends Handler {
+                         mUiccCard.update(mContext, ci, ics, phoneId);
+                     }
+                 }
++            } else if (!forceSlots.isEmpty() && mIsEuicc && mUiccCard == null) {
++                // Force create EuiccCard for eUICC even when card state is ABSENT
++                // so APDU-based EID loading can run and attempt to read the EID
++                if (DBG) {
++                    log(phoneId,
++                            "update: forcing EuiccCard creation despite ABSENT state");
++                }
++                mUiccCard = new EuiccCard(mContext, ci, ics, phoneId, mLock,
++                        getSupportedMepMode());
+             } else {
+                 if (mUiccCard != null) {
+                     mUiccCard.update(mContext, ci, ics, phoneId);
+@@ -205,6 +227,7 @@ public class UiccSlot extends Handler {
+     public void update(CommandsInterface[] ci, IccSlotStatus iss, int slotIndex) {
+         synchronized (mLock) {
+             IccSimPortInfo[] simPortInfos = iss.mSimPortInfos;
++            mSlotIndex = slotIndex;
+             parseAtr(iss.atr);
+             mEid = iss.eid;
+             mIsRemovable = isSlotRemovable(slotIndex);
+@@ -443,6 +466,15 @@ public class UiccSlot extends Handler {
+     }
+ 
+     private void checkIsEuiccSupported() {
++        String forceSlots = SystemProperties.get("persist.sys.phh.force_euicc_slots", "");
++        if (!forceSlots.isEmpty()) {
++            for (String s : forceSlots.split(",")) {
++                if (s.trim().equals(String.valueOf(mSlotIndex))) {
++                    mIsEuicc = true;
++                    return;
++                }
++            }
++        }
+         if (mAtr == null) {
+             mIsEuicc = false;
+             return;
+-- 
+2.53.0
+
