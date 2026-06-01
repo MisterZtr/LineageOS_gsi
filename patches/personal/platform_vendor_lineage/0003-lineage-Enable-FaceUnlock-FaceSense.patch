@@ -1,0 +1,40 @@
+From 0a34a070aa3afa44aeb0496177c965c52a503bc4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=EA=B9=80=EB=B3=91=EA=B3=A4?= <bg.kim@legaltech.co.kr>
+Date: Mon, 1 Jun 2026 16:19:25 +0900
+Subject: [PATCH] lineage: Enable FaceUnlock (FaceSense)
+
+Add FaceUnlock package, ro.face.sense_service=true and the
+android.hardware.biometrics.face feature permission, gated on
+TARGET_FACE_UNLOCK_SUPPORTED.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+Change-Id: I324e938ed01cc6279a9c456c1fc65f248eccccc6
+---
+ config/common.mk | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/config/common.mk b/config/common.mk
+index e7ff451c..66661d45 100644
+--- a/config/common.mk
++++ b/config/common.mk
+@@ -292,6 +292,17 @@ PRODUCT_PACKAGE_OVERLAYS += vendor/crowdin/overlay
+ PRODUCT_EXTRA_RECOVERY_KEYS += \
+     vendor/lineage/build/target/product/security/lineage
+ 
++TARGET_FACE_UNLOCK_SUPPORTED ?= true
++ifeq ($(TARGET_FACE_UNLOCK_SUPPORTED),true)
++# Face Unlock (FaceSense / co.aospa.sense)
++PRODUCT_PACKAGES += \
++    FaceUnlock
++PRODUCT_SYSTEM_EXT_PROPERTIES += \
++    ro.face.sense_service=true
++PRODUCT_COPY_FILES += \
++    frameworks/native/data/etc/android.hardware.biometrics.face.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/android.hardware.biometrics.face.xml
++endif
++
+ include vendor/lineage/config/version.mk
+ 
+ -include vendor/lineage-priv/keys/keys.mk
+-- 
+2.43.0
+
