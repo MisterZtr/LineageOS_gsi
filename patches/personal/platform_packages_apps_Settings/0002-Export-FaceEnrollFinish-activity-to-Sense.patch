@@ -1,0 +1,29 @@
+From 00e774abe640dcfd440e5b07a89e06139eb6b1d4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=EA=B9=80=EB=B3=91=EA=B3=A4?= <bg.kim@legaltech.co.kr>
+Date: Mon, 1 Jun 2026 16:19:25 +0900
+Subject: [PATCH] Settings: Export FaceEnrollFinish activity to Sense
+
+Allow co.aospa.sense to launch FaceEnrollFinish after enrollment.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+Change-Id: I34307068bdfe0e1d8c9f976851bc78135d1d932e
+---
+ AndroidManifest.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index f4691b4c43e..f5117035076 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -3115,7 +3115,7 @@
+             android:screenOrientation="portrait"/>
+ 
+         <activity android:name=".biometrics.face.FaceEnrollFinish"
+-            android:exported="false"
++            android:exported="true"
+             android:theme="@style/GlifV4Theme.DayNight"
+             android:screenOrientation="portrait"/>
+ 
+-- 
+2.43.0
+
